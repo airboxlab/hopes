@@ -29,8 +29,8 @@ jobs:
           PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
         run: |
           poetry install -n
-          # for coverage
-          pip install toml
+          # for coverage badge
+          pip install coverage[toml]
 
       - name: Run tests
         env:
