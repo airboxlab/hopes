@@ -1,4 +1,5 @@
 [![tests](https://github.com/airboxlab/hopes/actions/workflows/tests.yml/badge.svg)](https://github.com/airboxlab/hopes/actions/workflows/tests.yml)
+[![coverage](https://github.com/airboxlab/hopes/blob/main/coverage.svg)](<>)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # HOPES
