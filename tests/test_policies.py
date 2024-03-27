@@ -2,6 +2,7 @@ import http
 import json
 import threading
 import unittest
+from http.server import BaseHTTPRequestHandler
 
 import numpy as np
 
@@ -12,17 +13,8 @@ from tests.action_probs_utils import generate_action_probs
 class TestPolicies(unittest.TestCase):
     def test_rnd_policy(self):
         rnd_policy = RandomPolicy(num_actions=3)
-
         log_probs = rnd_policy.log_likelihoods(obs=np.random.rand(10, 5))
-        self.assertIsInstance(log_probs, np.ndarray)
-        self.assertEqual(log_probs.shape, (10, 3))
-        self.assertTrue(np.all(log_probs <= 0.0))
-        self.assertTrue(np.all(log_probs >= -np.inf))
-
-        act_probs = np.exp(log_probs)
-        self.assertTrue(np.all(act_probs >= 0.0))
-        self.assertTrue(np.all(act_probs <= 1.0))
-        self.assertTrue(np.allclose(act_probs.sum(axis=1), 1.0))
+        self.assert_log_probs(log_probs, expected_shape=(10, 3))
 
     def test_regression_policy(self):
         # generate a random dataset of (obs, act) for target policy
@@ -40,15 +32,11 @@ class TestPolicies(unittest.TestCase):
         new_obs = np.random.rand(10, num_obs)
         act_probs = reg_policy.compute_action_probs(obs=new_obs)
 
-        self.assertIsInstance(act_probs, np.ndarray)
-        self.assertEqual(act_probs.shape, (10, 3))
-        self.assertTrue(np.all(act_probs >= 0.0))
-        self.assertTrue(np.all(act_probs <= 1.0))
-        self.assertTrue(np.allclose(act_probs.sum(axis=1), 1.0))
+        self.assert_act_probs(act_probs, expected_shape=(10, 3))
 
     def test_http_policy(self):
         # create a fake HTTP server
-        class DummyHttpPolicyRequestHandler(http.server.BaseHTTPRequestHandler):
+        class DummyHttpPolicyRequestHandler(BaseHTTPRequestHandler):
             """HTTPServer mock request handler."""
 
             def do_POST(self):
@@ -68,11 +56,11 @@ class TestPolicies(unittest.TestCase):
                 pass
 
         # start the server
-        server = http.server.ThreadingHTTPServer(
+        http_server = http.server.ThreadingHTTPServer(
             ("127.0.0.1", 8082), DummyHttpPolicyRequestHandler  # noqa
         )
-        with server:
-            server_thread = threading.Thread(target=server.serve_forever)
+        with http_server:
+            server_thread = threading.Thread(target=http_server.serve_forever)
             server_thread.daemon = True
             server_thread.start()
 
@@ -88,19 +76,19 @@ class TestPolicies(unittest.TestCase):
 
             # check if the policy returns valid log-likelihoods
             remote_log_probs = http_policy.log_likelihoods(obs=np.random.rand(10, 5))
-            server.shutdown()
+            http_server.shutdown()
 
-        self.assertIsInstance(remote_log_probs, np.ndarray)
-        self.assertEqual(remote_log_probs.shape, (10, 3))
-        self.assertTrue(np.all(remote_log_probs <= 0.0))
-        self.assertTrue(np.all(remote_log_probs >= -np.inf))
-        act_probs = np.exp(remote_log_probs)
-        self.assertTrue(np.allclose(act_probs.sum(axis=1), 1.0))
+        self.assert_log_probs(remote_log_probs, expected_shape=(10, 3))
 
     def test_compute_action_probs(self):
         rnd_policy = RandomPolicy(num_actions=3)
         act_probs = rnd_policy.compute_action_probs(obs=np.random.rand(10, 5))
+        self.assert_act_probs(act_probs, expected_shape=(10, 3))
 
+    def assert_log_probs(self, log_probs: np.ndarray, expected_shape: tuple):
+        self.assert_act_probs(np.exp(log_probs), expected_shape)
+
+    def assert_act_probs(self, act_probs: np.ndarray, expected_shape: tuple):
         self.assertIsInstance(act_probs, np.ndarray)
         self.assertEqual(act_probs.shape, (10, 3))
         self.assertTrue(np.all(act_probs >= 0.0))
