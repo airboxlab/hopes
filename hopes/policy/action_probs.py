@@ -1,6 +1,6 @@
 import numpy as np
 
-from sab_ope.policy.policies import Policy
+from hopes.policy.policies import Policy
 
 
 def compute_action_probs_from_policy(policy: Policy, obs: np.ndarray) -> np.ndarray:
