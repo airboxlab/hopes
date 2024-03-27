@@ -24,20 +24,10 @@ jobs:
           python-version: "3.10"
           cache: "poetry"
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-
       - name: Install
         env:
           PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
         run: |
-          CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain foobot --domain-owner 486771223329 --query authorizationToken --output text`
-          poetry config http-basic.sab aws $CODEARTIFACT_AUTH_TOKEN
-          poetry config http-basic.proxy aws $CODEARTIFACT_AUTH_TOKEN
           poetry install -n
 
       - name: Run tests
