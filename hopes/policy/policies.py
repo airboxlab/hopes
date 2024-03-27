@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
+import requests
 from sklearn.linear_model import LogisticRegression
 
 from hopes.dev_utils import override
@@ -86,19 +87,23 @@ class HttpPolicy(Policy):
             response.json()["log_likelihoods"]
         ),
         request_method: str = "POST",
+        headers: dict = {"content-type": "application/json"},  # noqa
         ssl: bool = False,
         port: int = 80,
         verify_ssl: bool = True,
+        batch_size: int = 1,
     ) -> None:
         """
         :param host: the host of the HTTP server.
         :param path: the path of the HTTP server.
         :param request_payload_fun: a function that takes observations as input and returns the payload for the request.
-        :param response_payload_fun: a function that takes the response from the server and returns the log likelihoods.
+        :param response_payload_fun: a function that takes the response from the server and returns the extracted log probs.
         :param request_method: the HTTP request method.
+        :param headers: the headers for the HTTP request.
         :param ssl: whether to use SSL.
         :param port: the port of the HTTP server.
         :param verify_ssl: whether to verify the SSL certificate.
+        :param batch_size: the batch size for sending requests to the server.
         """
         self.host = host
         self.port = port
@@ -106,9 +111,29 @@ class HttpPolicy(Policy):
         self.request_payload_fun = request_payload_fun
         self.response_payload_fun = response_payload_fun
         self.request_method = request_method
+        self.headers = headers
         self.ssl = ssl
         self.verify_ssl = verify_ssl
+        self.batch_size = batch_size
+
+        assert self.request_method in ["GET", "POST"], "Only GET and POST methods are supported."
+        assert callable(self.request_payload_fun), "Request payload function must be callable."
+        assert callable(self.response_payload_fun), "Response payload function must be callable."
+        assert self.batch_size > 0, "Batch size must be positive."
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
-        raise NotImplementedError
+        all_log_likelihoods = []
+        for chunk in np.array_split(obs, len(obs) // self.batch_size):
+            # Send HTTP request to server
+            response = requests.post(
+                f"http{'s' if self.ssl else ''}://{self.host}:{self.port}/{self.path}",
+                json=self.request_payload_fun(chunk),
+                verify=self.verify_ssl,
+                headers=self.headers,
+            )
+            # Extract log likelihoods from response
+            log_likelihoods = self.response_payload_fun(response)
+            all_log_likelihoods.append(log_likelihoods)
+
+        return np.concatenate(all_log_likelihoods, axis=0)
