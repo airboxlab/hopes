@@ -22,7 +22,7 @@ requests = "~2.27.1"
 pytz = "^2020.1"
 PyYAML = "~6.0.1"
 boto3 = "^1.24.32"
-dataclasses-json = "^0.5.12"
+dataclasses-json = "^0.6.4"
 tabulate = "~0.8.7"
 
 [tool.poetry.dev-dependencies]
