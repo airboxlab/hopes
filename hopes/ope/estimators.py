@@ -7,9 +7,7 @@ from hopes.dev_utils import override
 
 
 class BaseEstimator(ABC):
-    """
-    Base class for all estimators.
-    """
+    """Base class for all estimators."""
 
     def __init__(self):
         self.target_policy_action_probabilities: np.ndarray | None = None
@@ -20,13 +18,14 @@ class BaseEstimator(ABC):
         self,
         target_policy_action_probabilities: np.ndarray,
         behavior_policy_action_probabilities: np.ndarray,
-        rewards: np.ndarray
+        rewards: np.ndarray,
     ) -> None:
-        """
-        Set the parameters for estimating the policy value.
+        """Set the parameters for estimating the policy value.
 
-        :param target_policy_action_probabilities: the probabilities of taking actions under the target policy.
-        :param behavior_policy_action_probabilities: the probabilities of taking actions under the behavior policy.
+        :param target_policy_action_probabilities: the probabilities of taking actions under
+            the target policy.
+        :param behavior_policy_action_probabilities: the probabilities of taking actions
+            under the behavior policy.
         :param rewards: the rewards received under the behavior policy.
         :return: None
         """
@@ -37,48 +36,39 @@ class BaseEstimator(ABC):
         self.check_parameters()
 
     def check_parameters(self) -> None:
-        """
-        Check if the estimator parameters are valid.
-        This method should be called before estimating the policy value.
-        It can be overridden by subclasses to add additional checks.
+        """Check if the estimator parameters are valid.
+
+        This method should be called before estimating the policy value. It can be
+        overridden by subclasses to add additional checks.
         """
         if (
             self.target_policy_action_probabilities is None
             or self.behavior_policy_action_probabilities is None
             or self.rewards is None
         ):
-            raise ValueError(
-                "You must set the parameters before estimating the policy value."
-            )
+            raise ValueError("You must set the parameters before estimating the policy value.")
 
         for array, name, ndims in zip(
             [
                 self.target_policy_action_probabilities,
                 self.behavior_policy_action_probabilities,
-                self.rewards
+                self.rewards,
             ],
             [
                 "target_policy_action_probabilities",
                 "behavior_policy_action_probabilities",
-                "rewards"
+                "rewards",
             ],
-            [2, 2, 1]
+            [2, 2, 1],
         ):
-            check_array(
-                array=array,
-                name=name,
-                expected_ndim=ndims,
-                expected_dtype=float
-            )
+            check_array(array=array, name=name, expected_ndim=ndims, expected_dtype=float)
 
         if not (
             self.target_policy_action_probabilities.shape[0]
             == self.behavior_policy_action_probabilities.shape[0]
             == self.rewards.shape[0]
         ):
-            raise ValueError(
-                "The number of samples must be the same for all parameters."
-            )
+            raise ValueError("The number of samples must be the same for all parameters.")
 
         if not (
             self.target_policy_action_probabilities.shape[1]
@@ -96,18 +86,10 @@ class BaseEstimator(ABC):
             raise ValueError("The behavior policy action probabilities must be positive.")
 
         for array, name in zip(
-            [
-                self.target_policy_action_probabilities,
-                self.behavior_policy_action_probabilities
-            ],
-            [
-                "target_policy_action_probabilities",
-                "behavior_policy_action_probabilities"
-            ]
+            [self.target_policy_action_probabilities, self.behavior_policy_action_probabilities],
+            ["target_policy_action_probabilities", "behavior_policy_action_probabilities"],
         ):
-            if not np.allclose(
-                np.sum(array, axis=1), np.ones(array.shape[0], dtype=float)
-            ):
+            if not np.allclose(np.sum(array, axis=1), np.ones(array.shape[0], dtype=float)):
                 raise ValueError(f"The {name} must sum to 1 on each sample.")
 
     @abstractmethod
@@ -116,8 +98,7 @@ class BaseEstimator(ABC):
 
 
 class InverseProbabilityWeighting(BaseEstimator):
-    r"""
-    Inverse Probability Weighting (IPW) estimator.
+    r"""Inverse Probability Weighting (IPW) estimator.
 
     V_{IPW}(\pi_e, D)=\frac {1}{n} \sum_{t=1}^n p(s_t,a_t) r_t
 
@@ -151,8 +132,7 @@ class InverseProbabilityWeighting(BaseEstimator):
 
 
 class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
-    r"""
-    Self-Normalized Inverse Probability Weighting (SNIPW) estimator.
+    r"""Self-Normalized Inverse Probability Weighting (SNIPW) estimator.
 
     V_{SNIPW}(\pi_e, D)= \frac {\sum_{t=1}^n p(s_t,a_t) r_t}{\sum_{t=1}^n p(s_t,a_t)}
 
@@ -174,7 +154,6 @@ class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
     def estimate_policy_value(self) -> float:
         super().estimate_policy_value()
 
-        return (
-            np.sum(self.importance_weights * self.rewards.reshape(-1, 1))
-            / np.sum(self.importance_weights)
+        return np.sum(self.importance_weights * self.rewards.reshape(-1, 1)) / np.sum(
+            self.importance_weights
         )

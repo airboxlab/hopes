@@ -6,7 +6,6 @@ from hopes.policy.policies import RandomPolicy
 
 
 class TestPolicies(unittest.TestCase):
-
     def test_rnd_policy(self):
         rnd_policy = RandomPolicy(num_actions=3)
 
@@ -23,7 +22,7 @@ class TestPolicies(unittest.TestCase):
 
     def test_compute_action_probs(self):
         rnd_policy = RandomPolicy(num_actions=3)
-        act_probs = rnd_policy.compute_action_probs_from_policy(obs=np.random.rand(10, 5))
+        act_probs = rnd_policy.compute_action_probs(obs=np.random.rand(10, 5))
 
         self.assertIsInstance(act_probs, np.ndarray)
         self.assertEqual(act_probs.shape, (10, 3))

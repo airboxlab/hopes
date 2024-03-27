@@ -1,13 +1,15 @@
 import unittest
 
 import numpy as np
-
-from hopes.ope.estimators import InverseProbabilityWeighting, SelfNormalizedInverseProbabilityWeighting
 from action_probs_utils import generate_action_probs
+
+from hopes.ope.estimators import (
+    InverseProbabilityWeighting,
+    SelfNormalizedInverseProbabilityWeighting,
+)
 
 
 class TestEstimators(unittest.TestCase):
-
     def test_ipw(self):
         ipw = InverseProbabilityWeighting()
 
@@ -18,7 +20,7 @@ class TestEstimators(unittest.TestCase):
         ipw.set_parameters(
             target_policy_action_probabilities=target_policy_action_probabilities,
             behavior_policy_action_probabilities=behavior_policy_action_probabilities,
-            rewards=rewards
+            rewards=rewards,
         )
 
         policy_value = ipw.estimate_policy_value()
@@ -31,7 +33,7 @@ class TestEstimators(unittest.TestCase):
         ipw.set_parameters(
             target_policy_action_probabilities=target_policy_action_probabilities,
             behavior_policy_action_probabilities=behavior_policy_action_probabilities,
-            rewards=rewards
+            rewards=rewards,
         )
 
         policy_value = ipw.estimate_policy_value()
@@ -48,7 +50,7 @@ class TestEstimators(unittest.TestCase):
         snipw.set_parameters(
             target_policy_action_probabilities=target_policy_action_probabilities,
             behavior_policy_action_probabilities=behavior_policy_action_probabilities,
-            rewards=rewards
+            rewards=rewards,
         )
 
         policy_value = snipw.estimate_policy_value()
