@@ -1,6 +1,9 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
+from sklearn.linear_model import LogisticRegression
+
+from hopes.dev_utils import override
 
 
 class Policy(ABC):
@@ -35,10 +38,39 @@ class RandomPolicy(Policy):
         assert num_actions > 0, "Number of actions must be positive."
         self.num_actions = num_actions
 
+    @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
         action_probs = np.random.rand(obs.shape[0], self.num_actions)
         action_probs /= action_probs.sum(axis=1, keepdims=True)
         return np.log(action_probs)
+
+
+class RegressionBasedPolicy(Policy):
+    """A policy that uses a regression model to predict the log-likelihoods of actions given
+    observations."""
+
+    def __init__(
+        self, obs: np.ndarray, act: np.ndarray, regression_model: str = "logistic"
+    ) -> None:
+        """
+        :param obs: the observations for training the regression model, shape: (batch_size, obs_dim).
+        :param act: the actions for training the regression model, shape: (batch_size,).
+        :param regression_model: the type of regression model to use. For now, only logistic is supported.
+        """
+        assert regression_model in ["logistic"], "Only logistic regression is supported for now."
+        assert obs.ndim == 2, "Observations must have shape (batch_size, obs_dim)."
+        assert obs.shape[0] == act.shape[0], "Number of observations and actions must match."
+
+        self.model_x = obs
+        self.model_y = act
+        self.model = LogisticRegression()
+
+    def fit(self):
+        self.model.fit(self.model_x, self.model_y)
+
+    @override(Policy)
+    def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
+        return self.model.predict_log_proba(obs)
 
 
 class HttpPolicy(Policy):
@@ -57,7 +89,7 @@ class HttpPolicy(Policy):
         ssl: bool = False,
         port: int = 80,
         verify_ssl: bool = True,
-    ):
+    ) -> None:
         """
         :param host: the host of the HTTP server.
         :param path: the path of the HTTP server.
@@ -77,5 +109,6 @@ class HttpPolicy(Policy):
         self.ssl = ssl
         self.verify_ssl = verify_ssl
 
+    @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
         raise NotImplementedError
