@@ -1,0 +1,53 @@
+name: tests
+concurrency: tests
+
+on: [push]
+
+jobs:
+  test:
+    name: Test SAB Off-policy Evaluation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Poetry
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: "1.5.1"
+
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "poetry"
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Install
+        env:
+          PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
+        run: |
+          CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain foobot --domain-owner 486771223329 --query authorizationToken --output text`
+          poetry config http-basic.sab aws $CODEARTIFACT_AUTH_TOKEN
+          poetry config http-basic.proxy aws $CODEARTIFACT_AUTH_TOKEN
+          poetry install -n
+
+      - name: Run tests
+        env:
+          TESTING: "true"
+        run: poetry run coverage
+
+      - uses: 5monkeys/cobertura-action@master
+        with:
+          path: coverage.xml
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          minimum_coverage: 80
+          skip_covered: false
