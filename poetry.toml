@@ -1,0 +1,3 @@
+[repositories]
+[repositories.sab_stable]
+url = "https://foobot-486771223329.d.codeartifact.us-east-1.amazonaws.com/pypi/sab/"
