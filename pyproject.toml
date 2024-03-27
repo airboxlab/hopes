@@ -38,6 +38,8 @@ include = [
 ]
 omit = [
     "**/__init__.py",
+    "hopes/assert_utils.py",
+    "hopes/dev_utils.py",
 ]
 ignore_errors = true
 show_missing = true
