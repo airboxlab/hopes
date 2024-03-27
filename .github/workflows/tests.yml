@@ -5,7 +5,7 @@ on: [push]
 
 jobs:
   test:
-    name: Test SAB Off-policy Evaluation
+    name: HOPES testing
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
