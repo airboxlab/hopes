@@ -1,0 +1,20 @@
+.idea/
+**/__pycache__
+**/.mypy_cache
+
+# Poetry
+dist/
+
+# Poe
+_versions/**/version.toml
+
+# VS Code
+.vscode
+.env
+
+requirements.txt
+
+# coverage
+htmlcov/
+.coverage
+coverage.xml
