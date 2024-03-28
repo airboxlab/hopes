@@ -36,13 +36,15 @@ class RewardFunctionModel(RewardModel):
 
 
 class RegressionBasedRewardModel(RewardModel):
+    """A reward model that uses a fitted regression model to estimate rewards."""
+
     def __init__(
         self,
         obs: np.ndarray,
         act: np.ndarray,
         rew: np.ndarray,
         reward_model: str = "linear",
-        model_params: dict = {},
+        model_params: dict | None = None,
     ) -> None:
         """
         :param obs: the observations for training the reward model, shape: (batch_size, obs_dim).
@@ -51,7 +53,10 @@ class RegressionBasedRewardModel(RewardModel):
         :param reward_model: the type of reward model to use. For now, only linear, polynomial and mlp are supported.
         :param model_params: optional parameters for the reward model.
         """
+        if model_params is None:
+            model_params = {}
         supported_reward_models = ["linear", "polynomial", "mlp"]
+
         assert (
             reward_model in supported_reward_models
         ), f"Only {supported_reward_models} supported for now."
@@ -61,18 +66,19 @@ class RegressionBasedRewardModel(RewardModel):
         ), "The number of observations, actions, and rewards must be the same."
 
         self.obs = obs
-        if act.ndim == 1:
-            act = act.reshape(-1, 1)
-        self.act = act
-        if rew.ndim == 1:
-            rew = rew.reshape(-1, 1)
-        self.rew = rew
+        self.act = act.reshape(-1, 1) if act.ndim == 1 else act
+        self.rew = rew.reshape(-1, 1) if rew.ndim == 1 else rew
         self.model_params = model_params
         self.reward_model = reward_model
         self.poly_features = None
 
+        # both linear and polynomial models are implemented using sklearn LinearRegression
+        # for polynomial model, we use PolynomialFeatures to generate polynomial features then fit the linear model
         if self.reward_model == "linear" or self.reward_model == "polynomial":
             self.model = LinearRegression()
+
+        # mlp model is implemented using torch. We use a simple feedforward neural network and MSE loss.
+        # configuration is basic for now, but can be extended in the future
         elif self.reward_model == "mlp":
             hidden_size = model_params.get("hidden_size", 64)
             activation = model_params.get("activation", "relu")
@@ -84,12 +90,13 @@ class RegressionBasedRewardModel(RewardModel):
             )
 
     def fit(self) -> None:
+        """Fit the reward model to the training data."""
         model_in = np.concatenate((self.obs, self.act), axis=1)
 
         if self.reward_model == "mlp":
             optimizer = torch.optim.Adam(self.model.parameters())
             criterion = torch.nn.MSELoss()
-            for e in range(self.model_params.get("num_epochs", 1000)):
+            for _ in range(self.model_params.get("num_epochs", 1000)):
                 optimizer.zero_grad()
                 pred_rew = self.model(torch.tensor(model_in, dtype=torch.float32))
                 loss = criterion(pred_rew, torch.tensor(self.rew, dtype=torch.float32))
