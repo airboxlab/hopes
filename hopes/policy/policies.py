@@ -2,9 +2,12 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import requests
+import torch
+from scipy import optimize
 from sklearn.linear_model import LogisticRegression
 
 from hopes.dev_utils import override
+from hopes.fun_utils import piecewise_linear
 
 
 class Policy(ABC):
@@ -31,6 +34,16 @@ class Policy(ABC):
         action_probs = np.exp(log_likelihoods)
         return action_probs
 
+    def select_action(self, obs: np.ndarray) -> np.ndarray:
+        """Select actions under the policy for given observations.
+
+        :param obs: the observation(s) for which to select an action, shape (batch_size,
+            obs_dim).
+        :return: the selected action(s).
+        """
+        action_probs = self.compute_action_probs(obs)
+        return np.array([np.random.choice(len(probs), p=probs) for probs in action_probs])
+
 
 class RandomPolicy(Policy):
     """A random policy that selects actions uniformly at random."""
@@ -46,32 +59,163 @@ class RandomPolicy(Policy):
         return np.log(action_probs)
 
 
-class RegressionBasedPolicy(Policy):
-    """A policy that uses a regression model to predict the log-likelihoods of actions given
-    observations."""
+class ClassificationBasedPolicy(Policy):
+    """A policy that uses a classification model to predict the log-likelihoods of actions given
+    observations.
+
+    In absence of an actual control policy, this can be used to train a policy on a dataset
+    of (obs, act) pairs that would have been collected offline.
+    """
 
     def __init__(
-        self, obs: np.ndarray, act: np.ndarray, regression_model: str = "logistic"
+        self,
+        obs: np.ndarray,
+        act: np.ndarray,
+        classification_model: str = "logistic",
+        model_params: dict | None = None,
     ) -> None:
         """
-        :param obs: the observations for training the regression model, shape: (batch_size, obs_dim).
-        :param act: the actions for training the regression model, shape: (batch_size,).
-        :param regression_model: the type of regression model to use. For now, only logistic is supported.
+        :param obs: the observations for training the classification model, shape: (batch_size, obs_dim).
+        :param act: the actions for training the classification model, shape: (batch_size,).
+        :param classification_model: the type of classification model to use. For now, only logistic and mlp are supported.
+        :param model_params: optional parameters for the classification model.
         """
-        assert regression_model in ["logistic"], "Only logistic regression is supported for now."
+        supported_models = ["logistic", "mlp"]
+        assert (
+            classification_model in supported_models
+        ), f"Only {supported_models} supported for now."
         assert obs.ndim == 2, "Observations must have shape (batch_size, obs_dim)."
         assert obs.shape[0] == act.shape[0], "Number of observations and actions must match."
 
-        self.model_x = obs
-        self.model_y = act
-        self.model = LogisticRegression()
+        self.model_obs = obs
+        self.model_act = act
+        self.num_actions = len(np.unique(act))
+        self.classification_model = classification_model
+        self.model_params = model_params or {}
+
+        if self.classification_model == "logistic":
+            self.model = LogisticRegression()
+
+        elif self.classification_model == "mlp":
+            hidden_size = self.model_params.get("hidden_size", 64)
+            activation = self.model_params.get("activation", "relu")
+            act_cls = torch.nn.ReLU if activation == "relu" else torch.nn.Tanh
+            self.model = torch.nn.Sequential(
+                torch.nn.Linear(self.model_obs.shape[1], hidden_size),
+                act_cls(),
+                torch.nn.Linear(hidden_size, hidden_size),
+                act_cls(),
+                torch.nn.Linear(hidden_size, self.num_actions),
+            )
 
     def fit(self):
-        self.model.fit(self.model_x, self.model_y)
+        if self.classification_model == "mlp":
+            criterion = torch.nn.CrossEntropyLoss()
+            optimizer = torch.optim.Adam(
+                self.model.parameters(), lr=self.model_params.get("lr", 0.01)
+            )
+
+            for epoch in range(self.model_params.get("num_epochs", 1000)):
+                optimizer.zero_grad()
+                output = self.model(torch.tensor(self.model_obs, dtype=torch.float32))
+                loss = criterion(
+                    output, torch.tensor(self.model_act, dtype=torch.float32).view(-1).long()
+                )
+                loss.backward()
+                optimizer.step()
+                # print(f"Epoch {epoch}, Loss: {loss.item()}")
+
+        else:
+            self.model.fit(self.model_obs, self.model_act)
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
-        return self.model.predict_log_proba(obs)
+        if self.classification_model == "mlp":
+            with torch.no_grad():
+                output = self.model(torch.Tensor(obs))
+                return torch.log_softmax(output, dim=1).numpy()
+        else:
+            return self.model.predict_log_proba(obs)
+
+
+class PiecewiseLinearPolicy(Policy):
+    """A piecewise linear policy that selects actions based on a set of linear segments defined by
+    thresholds and slopes.
+
+    This can be used to estimate a probability distribution over actions drawn from a BMS
+    reset rule, for instance an outdoor air reset that is a function of outdoor air
+    temperature and is bounded by a minimum and maximum on both axis. This can also be
+    helpful to model a simple schedule, where action is a function of time.
+    """
+
+    def __init__(
+        self,
+        obs: np.ndarray,
+        act: np.ndarray,
+        actions_bins: list[float | int] | None = None,
+    ):
+        """
+        :param obs: the observations for training the piecewise linear model, shape: (batch_size, obs_dim).
+        :param act: the actions for training the piecewise linear model, shape: (batch_size,).
+        :param actions_bins: the bins for discretizing the action space. If not provided, we assume the action space
+            is already discretized.
+        """
+        assert (
+            len(obs.shape) == 1 or obs.shape[1] == 1
+        ), "Piecewise linear policy only supports 1D observations."
+        assert obs.shape[0] == act.shape[0], "Number of observations and actions must match."
+
+        self.model_obs = obs.squeeze() if obs.ndim == 2 else obs
+        self.model_act = act.squeeze() if act.ndim == 2 else act
+        self.model_params = None
+
+        # discretize the action space
+        self.actions_bins = actions_bins if actions_bins else np.unique(self.model_act)
+        self.num_actions = len(actions_bins)
+
+    def fit(self):
+        # estimate bounds from input data
+        left_cp_bound_percentile = 30
+        right_cp_bound_percentile = 70
+        left_cp, right_cp = np.percentile(
+            self.model_act, (left_cp_bound_percentile, right_cp_bound_percentile)
+        )
+        left_cp_min = left_cp
+        left_cp_max = right_cp
+        right_cp_min = left_cp
+        right_cp_max = right_cp
+        y0_min = np.min(self.model_act)
+        y0_max = np.max(self.model_act)
+        y1_min = np.min(self.model_act)
+        y1_max = np.max(self.model_act)
+        slope_min = -np.inf
+        slope_max = np.inf
+
+        output = optimize.curve_fit(
+            piecewise_linear,
+            self.model_obs,
+            self.model_act,
+            bounds=(
+                [left_cp_min, right_cp_min, slope_min, y0_min, y1_min],
+                [left_cp_max, right_cp_max, slope_max, y0_max, y1_max],
+            ),
+        )
+        self.model_params, error = output  # noqa
+        # print(f"Model params: {self.model_params}")
+        # print(f"Error: {error}")
+
+    @override(Policy)
+    def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
+        raw_actions = piecewise_linear(obs, *self.model_params)
+        # bin the action to the nearest action using the discretized action space
+        actions = [min(self.actions_bins, key=lambda x: abs(x - ra)) for ra in raw_actions]
+        # return the log-likelihoods
+        return np.array(
+            [
+                [np.log(1.0) if a == action else np.log(1e-6) for a in self.actions_bins]
+                for action in actions
+            ]
+        )
 
 
 class HttpPolicy(Policy):

@@ -43,22 +43,20 @@ class RegressionBasedRewardModel(RewardModel):
         obs: np.ndarray,
         act: np.ndarray,
         rew: np.ndarray,
-        reward_model: str = "linear",
+        regression_model: str = "linear",
         model_params: dict | None = None,
     ) -> None:
         """
         :param obs: the observations for training the reward model, shape: (batch_size, obs_dim).
         :param act: the actions for training the reward model, shape: (batch_size,).
         :param rew: the rewards for training the reward model, shape: (batch_size,).
-        :param reward_model: the type of reward model to use. For now, only linear, polynomial and mlp are supported.
+        :param regression_model: the type of reward model to use. For now, only linear, polynomial and mlp are supported.
         :param model_params: optional parameters for the reward model.
         """
-        if model_params is None:
-            model_params = {}
         supported_reward_models = ["linear", "polynomial", "mlp"]
 
         assert (
-            reward_model in supported_reward_models
+            regression_model in supported_reward_models
         ), f"Only {supported_reward_models} supported for now."
         assert obs.ndim == 2, "Observations must have shape (batch_size, obs_dim)."
         assert (
@@ -68,18 +66,18 @@ class RegressionBasedRewardModel(RewardModel):
         self.obs = obs
         self.act = act.reshape(-1, 1) if act.ndim == 1 else act
         self.rew = rew.reshape(-1, 1) if rew.ndim == 1 else rew
-        self.model_params = model_params
-        self.reward_model = reward_model
+        self.model_params = model_params or {}
+        self.regression_model = regression_model
         self.poly_features = None
 
         # both linear and polynomial models are implemented using sklearn LinearRegression
         # for polynomial model, we use PolynomialFeatures to generate polynomial features then fit the linear model
-        if self.reward_model == "linear" or self.reward_model == "polynomial":
+        if self.regression_model == "linear" or self.regression_model == "polynomial":
             self.model = LinearRegression()
 
         # mlp model is implemented using torch. We use a simple feedforward neural network and MSE loss.
         # configuration is basic for now, but can be extended in the future
-        elif self.reward_model == "mlp":
+        elif self.regression_model == "mlp":
             hidden_size = model_params.get("hidden_size", 64)
             activation = model_params.get("activation", "relu")
             act_cls = torch.nn.ReLU if activation == "relu" else torch.nn.Tanh
@@ -93,8 +91,10 @@ class RegressionBasedRewardModel(RewardModel):
         """Fit the reward model to the training data."""
         model_in = np.concatenate((self.obs, self.act), axis=1)
 
-        if self.reward_model == "mlp":
-            optimizer = torch.optim.Adam(self.model.parameters())
+        if self.regression_model == "mlp":
+            optimizer = torch.optim.Adam(
+                self.model.parameters(), lr=self.model_params.get("lr", 0.01)
+            )
             criterion = torch.nn.MSELoss()
             for _ in range(self.model_params.get("num_epochs", 1000)):
                 optimizer.zero_grad()
@@ -103,12 +103,12 @@ class RegressionBasedRewardModel(RewardModel):
                 loss.backward()
                 optimizer.step()
 
-        elif self.reward_model == "polynomial":
+        elif self.regression_model == "polynomial":
             self.poly_features = PolynomialFeatures(degree=self.model_params.get("degree", 2))
             self.model.fit(self.poly_features.fit_transform(model_in), self.rew)
 
-        elif isinstance(self.model, LinearRegression):
-            self.model.fit(np.concatenate((self.obs, self.act), axis=1), self.rew)
+        elif self.regression_model == "linear":
+            self.model.fit(model_in, self.rew)
 
     def estimate(self, obs: np.ndarray, act: np.ndarray) -> np.ndarray:
         """Estimate the rewards for a given set of observations and actions.
@@ -121,17 +121,12 @@ class RegressionBasedRewardModel(RewardModel):
         if act.ndim == 1:
             act = act.reshape(-1, 1)
 
-        if isinstance(self.model, torch.nn.Module):
+        inputs = np.concatenate((obs, act), axis=1)
+
+        if self.regression_model == "mlp":
             with torch.no_grad():
-                return (
-                    self.model(
-                        torch.tensor(np.concatenate((obs, act), axis=1), dtype=torch.float32)
-                    )
-                    .numpy()
-                    .flatten()
-                )
+                return self.model(torch.tensor(inputs, dtype=torch.float32)).numpy().flatten()
         else:
-            inputs = np.concatenate((obs, act), axis=1)
-            if self.reward_model == "polynomial":
+            if self.regression_model == "polynomial":
                 inputs = self.poly_features.transform(inputs)
             return np.squeeze(self.model.predict(inputs))
