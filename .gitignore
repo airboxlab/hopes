@@ -12,8 +12,6 @@ _versions/**/version.toml
 .vscode
 .env
 
-requirements.txt
-
 # coverage
 htmlcov/
 .coverage
