@@ -10,3 +10,24 @@
 control policies. It offers a set of estimators and tools to evaluate the performance of a target policy,
 compared to a set of baseline policies (characterized by an offline logged dataset), using off-policy evaluation
 techniques.
+
+## Installation
+
+Supported Python versions: 3.10+
+
+### From PyPI
+
+```bash
+pip install hopes
+```
+
+### From source (development version)
+
+```bash
+git clone https://github.com/airboxlab/hopes.git
+cd hopes
+# using poetry
+poetry install
+# using pip
+pip install -r requirements.txt
+```
