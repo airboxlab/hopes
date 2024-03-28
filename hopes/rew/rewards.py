@@ -78,8 +78,8 @@ class RegressionBasedRewardModel(RewardModel):
         # mlp model is implemented using torch. We use a simple feedforward neural network and MSE loss.
         # configuration is basic for now, but can be extended in the future
         elif self.regression_model == "mlp":
-            hidden_size = model_params.get("hidden_size", 64)
-            activation = model_params.get("activation", "relu")
+            hidden_size = self.model_params.get("hidden_size", 64)
+            activation = self.model_params.get("activation", "relu")
             act_cls = torch.nn.ReLU if activation == "relu" else torch.nn.Tanh
             self.model = torch.nn.Sequential(
                 torch.nn.Linear(obs.shape[1] + act.shape[1], hidden_size),
