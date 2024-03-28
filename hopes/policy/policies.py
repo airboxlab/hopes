@@ -218,6 +218,38 @@ class PiecewiseLinearPolicy(Policy):
         )
 
 
+class FunctionBasedPolicy(Policy):
+    """A policy based on a deterministic function that maps observations to actions.
+
+    Log-likelihoods are computed by assuming the function is deterministic and assigning a
+    probability of 1 to the action returned by the function and an almost zero probability
+    to all other actions.
+    """
+
+    def __init__(self, policy_function: callable, actions_bins: list[float | int]) -> None:
+        """
+        :param policy_function: a function that takes in observations and returns actions.
+        :param actions_bins: the bins for discretizing the action space.
+        """
+        assert callable(policy_function), "Policy function must be callable."
+        assert len(actions_bins) > 0, "Action bins must be non-empty."
+        self.policy_function = policy_function
+        self.actions_bins = actions_bins
+
+    @override(Policy)
+    def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
+        raw_actions = np.vectorize(self.policy_function)(obs)
+        # bin the action to the nearest action using the discretized action space
+        actions = [min(self.actions_bins, key=lambda x: abs(x - ra)) for ra in raw_actions]
+        # return the log-likelihoods
+        return np.array(
+            [
+                [np.log(1.0) if a == action else np.log(1e-6) for a in self.actions_bins]
+                for action in actions
+            ]
+        )
+
+
 class HttpPolicy(Policy):
     """A policy that uses a remote HTTP server that returns log likelihoods for actions given
     observations."""
