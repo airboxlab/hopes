@@ -147,17 +147,17 @@ class TestPolicies(unittest.TestCase):
 
         # deterministic action selection
         actions = [class_pol.select_action(obs=obs, deterministic=True) for _ in range(100)]
-        self.assertTrue(np.all([action == actions[0] for action in actions]))
+        self.assertTrue(np.var(actions) == 0)
 
         # stochastic action selection
         actions = [class_pol.select_action(obs=obs, deterministic=False) for _ in range(100)]
-        self.assertTrue(np.any([action != actions[0] for action in actions]))
+        self.assertTrue(np.var(actions) > 0)
 
         # epsilon-greedy action selection
         actions = [
             class_pol.select_action(obs=obs, deterministic=False, epsilon=0.5) for _ in range(100)
         ]
-        self.assertTrue(np.any([action != actions[0] for action in actions]))
+        self.assertTrue(np.var(actions) > 0)
 
     def assert_log_probs(self, log_probs: np.ndarray, expected_shape: tuple):
         self.assertTrue(np.all(np.isfinite(log_probs)))
