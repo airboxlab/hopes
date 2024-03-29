@@ -20,3 +20,10 @@ class TestSpaces(unittest.TestCase):
         self.assertTrue(np.all(binned_actions <= 100))
         self.assertEqual(len(bins), 6)
         self.assertTrue(np.all(binned_actions % 20 == 0))
+
+    def test_discretize_space_fd(self):
+        actions = np.arange(0, 400, 0.1)
+        bins, binned_actions = discretize_action_space(actions=actions, bins=None)
+        self.assertTrue(np.all(binned_actions >= 0))
+        self.assertTrue(np.all(binned_actions <= 400))
+        self.assertEqual(len(bins), 16)
