@@ -4,10 +4,10 @@ import numpy as np
 def discretize_action_space(
     actions: np.ndarray, bins: int | list[int] | None
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Discretize a (possibly) continuous action space into `num_bins` bins.
+    """Discretize a (possibly) continuous action space into `bins` bins.
 
     :param actions: the actions to discretize.
-    :param bins: the number of bins to discretize the actions into, or the bin edges.
+    :param bins: the number of bins to discretize the actions into, or the bin edges. If None, the Freedman-Diaconis estimator is used.
     :return: computed bins, the discretized actions.
     """
     assert isinstance(actions, np.ndarray), "actions must be a numpy array"
