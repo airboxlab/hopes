@@ -10,6 +10,25 @@ from hopes.ope.estimators import (
 
 
 class TestEstimators(unittest.TestCase):
+    def test_check_parameters(self):
+        ipw = InverseProbabilityWeighting()
+        with self.assertRaises(ValueError):
+            ipw.check_parameters()
+
+        with self.assertRaises(ValueError):
+            ipw.set_parameters(
+                target_policy_action_probabilities=np.random.rand(10, 3),
+                behavior_policy_action_probabilities=np.random.rand(10, 4),
+                rewards=np.random.rand(10),
+            )
+
+        with self.assertRaises(ValueError):
+            ipw.set_parameters(
+                target_policy_action_probabilities=np.random.rand(4, 3),
+                behavior_policy_action_probabilities=np.random.rand(10, 3),
+                rewards=np.random.rand(10),
+            )
+
     def test_ipw(self):
         ipw = InverseProbabilityWeighting()
 
