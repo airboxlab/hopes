@@ -32,7 +32,7 @@ class RewardFunctionModel(RewardModel):
         if obs.ndim == 1:
             return self.reward_function(obs, act)
         else:
-            return np.vectorize(self.reward_function)(obs, act)
+            return np.array([self.reward_function(o, a) for o, a in zip(obs, act)])
 
 
 class RegressionBasedRewardModel(RewardModel):
