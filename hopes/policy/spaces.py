@@ -7,7 +7,8 @@ def discretize_action_space(
     """Discretize a (possibly) continuous action space into `bins` bins.
 
     :param actions: the actions to discretize.
-    :param bins: the number of bins to discretize the actions into, or the bin edges. If None, the Freedman-Diaconis estimator is used.
+    :param bins: the number of bins to discretize the actions into, or the bin edges. If None,
+        the Freedman-Diaconis estimator is used.
     :return: computed bins, the discretized actions.
     """
     assert isinstance(actions, np.ndarray), "actions must be a numpy array"
