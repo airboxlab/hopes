@@ -138,6 +138,27 @@ class TestPolicies(unittest.TestCase):
         self.assertEqual(len(actions), 10)
         self.assertTrue(all(0 <= action < 3 for action in actions))
 
+    def test_select_action_rnd_determ_eps(self):
+        class_pol = ClassificationBasedPolicy(
+            obs=np.random.rand(10, 5), act=np.random.randint(5, size=10)
+        )
+        class_pol.fit()
+        obs = np.random.rand(1, 5)
+
+        # deterministic action selection
+        actions = [class_pol.select_action(obs=obs, deterministic=True) for _ in range(100)]
+        self.assertTrue(np.all([action == actions[0] for action in actions]))
+
+        # stochastic action selection
+        actions = [class_pol.select_action(obs=obs, deterministic=False) for _ in range(100)]
+        self.assertTrue(np.any([action != actions[0] for action in actions]))
+
+        # epsilon-greedy action selection
+        actions = [
+            class_pol.select_action(obs=obs, deterministic=False, epsilon=0.5) for _ in range(100)
+        ]
+        self.assertTrue(np.any([action != actions[0] for action in actions]))
+
     def assert_log_probs(self, log_probs: np.ndarray, expected_shape: tuple):
         self.assertTrue(np.all(np.isfinite(log_probs)))
         self.assertTrue(np.all(log_probs <= 0.0))
