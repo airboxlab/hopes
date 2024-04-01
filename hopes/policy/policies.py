@@ -11,6 +11,14 @@ from hopes.fun_utils import piecewise_linear
 
 
 class Policy(ABC):
+    epsilon: float | None = None
+
+    def with_epsilon(self, epsilon: float | None = None) -> "Policy":
+        """Set the epsilon value for epsilon-greedy action selection."""
+        assert epsilon is None or 0 <= epsilon <= 1, "Epsilon must be in [0, 1]."
+        self.epsilon = epsilon
+        return self
+
     @abstractmethod
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
         """Compute the log-likelihoods of the actions under the policy for a given set of
@@ -32,39 +40,31 @@ class Policy(ABC):
 
         log_likelihoods = self.log_likelihoods(obs)
         action_probs = np.exp(log_likelihoods)
+        # epsilon-greedy action selection
+        if self.epsilon is not None and (np.random.rand() < self.epsilon):
+            action_probs = np.ones_like(action_probs) / action_probs.shape[1]
         return action_probs
 
-    def select_action(
-        self, obs: np.ndarray, deterministic: float = False, epsilon: float | None = None
-    ) -> np.ndarray:
+    def select_action(self, obs: np.ndarray, deterministic: float = False) -> np.ndarray:
         """Select actions under the policy for given observations.
 
         :param obs: the observation(s) for which to select an action, shape (batch_size,
             obs_dim).
         :param deterministic: whether to select actions deterministically.
-        :param epsilon: the epsilon value for epsilon-greedy action selection.
         :return: the selected action(s).
         """
-        assert epsilon is None or 0 <= epsilon <= 1, "Epsilon must be in [0, 1]."
         assert not (
-            deterministic and epsilon is not None
+            deterministic and self.epsilon is not None
         ), "Cannot be deterministic and epsilon-greedy at the same time."
 
         action_probs = self.compute_action_probs(obs)
 
         # deterministic or greedy action selection
-        if deterministic or (epsilon is not None and np.random.rand() > epsilon):
+        if deterministic:
             return np.argmax(action_probs, axis=1)
 
         # action selection based on computed action probabilities
-        # or epsilon-greedy action selection
         else:
-            if epsilon is not None:
-                action_probs = (
-                    epsilon / len(action_probs[0]) * np.ones_like(action_probs)
-                    + (1 - epsilon) * action_probs
-                )
-
             return np.array([np.random.choice(len(probs), p=probs) for probs in action_probs])
 
 

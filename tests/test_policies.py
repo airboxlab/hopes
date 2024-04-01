@@ -154,9 +154,8 @@ class TestPolicies(unittest.TestCase):
         self.assertTrue(np.var(actions) > 0)
 
         # epsilon-greedy action selection
-        actions = [
-            class_pol.select_action(obs=obs, deterministic=False, epsilon=0.5) for _ in range(100)
-        ]
+        class_pol.with_epsilon(0.5)
+        actions = [class_pol.select_action(obs=obs, deterministic=False) for _ in range(100)]
         self.assertTrue(np.var(actions) > 0)
 
     def assert_log_probs(self, log_probs: np.ndarray, expected_shape: tuple):
