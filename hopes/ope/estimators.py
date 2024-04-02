@@ -40,6 +40,13 @@ class BaseEstimator(ABC):
 
         This method should be called before estimating the policy value. It can be
         overridden by subclasses to add additional checks.
+
+        Importance sampling estimators have several assumptions that must be met:
+        - coverage: the target and behavior policies must have non-zero probability of taking the actions.
+            This is not 100% necessary, i.e. if both policies have zero probability of taking an action under some
+            state, but we enforce this assumption here to avoid numerical issues.
+        - positivity: the rewards must be non-negative to be able to get a lower bound estimate of the
+            target policy.
         """
         if (
             self.target_policy_action_probabilities is None
@@ -87,8 +94,8 @@ class BaseEstimator(ABC):
 
         if np.any(self.rewards < 0):
             raise ValueError(
-                "The rewards must be non-negative. Use a positive reward function or an appropriate scaler "
-                "(ie MinMaxScaler) to scale the rewards."
+                "The rewards must be non-negative to be able to get a lower bound estimate of the target policy. "
+                "Use a positive reward function or an appropriate scaler (i.e MinMaxScaler) to scale the rewards."
             )
 
         for array, name in zip(
