@@ -75,3 +75,18 @@ class TestEstimators(unittest.TestCase):
         policy_value = snipw.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
+
+    def test_neg_rewards(self):
+        ipw = InverseProbabilityWeighting()
+
+        target_policy_action_probabilities = generate_action_probs(traj_length=10, num_actions=3)
+        behavior_policy_action_probabilities = generate_action_probs(traj_length=10, num_actions=3)
+        rewards = -np.random.rand(10)
+
+        with self.assertRaises(ValueError) as e:
+            ipw.set_parameters(
+                target_policy_action_probabilities=target_policy_action_probabilities,
+                behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+                rewards=rewards,
+            )
+            self.assertTrue("The rewards must be non-negative" in str(e.exception))

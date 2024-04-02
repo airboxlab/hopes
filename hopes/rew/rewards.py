@@ -7,6 +7,8 @@ from sklearn.preprocessing import PolynomialFeatures
 
 
 class RewardModel(ABC):
+    scaler = None
+
     @abstractmethod
     def estimate(self, obs: np.ndarray, act: np.ndarray) -> np.ndarray:
         """Estimate the rewards for a given set of observations and actions.
@@ -17,6 +19,17 @@ class RewardModel(ABC):
         :return: the estimated rewards.
         """
         raise NotImplementedError
+
+    def with_scaler(self, scaler: callable) -> "RewardModel":
+        assert callable(scaler), "scaler must be a callable"
+        self.scaler = scaler
+        return self
+
+    def _scale(self, rew: np.ndarray) -> np.ndarray:
+        if self.scaler:
+            return self.scaler(rew.reshape(-1, 1) if rew.ndim == 1 else rew)
+        else:
+            return rew
 
 
 class RewardFunctionModel(RewardModel):
@@ -30,9 +43,11 @@ class RewardFunctionModel(RewardModel):
 
     def estimate(self, obs: np.ndarray, act: np.ndarray) -> np.ndarray:
         if obs.ndim == 1:
-            return self.reward_function(obs, act)
+            rew = self.reward_function(obs, act)
         else:
-            return np.array([self.reward_function(o, a) for o, a in zip(obs, act)])
+            rew = np.array([self.reward_function(o, a) for o, a in zip(obs, act)])
+
+        return self._scale(rew)
 
 
 class RegressionBasedRewardModel(RewardModel):
@@ -125,8 +140,10 @@ class RegressionBasedRewardModel(RewardModel):
 
         if self.regression_model == "mlp":
             with torch.no_grad():
-                return self.model(torch.tensor(inputs, dtype=torch.float32)).numpy().flatten()
+                rew = self.model(torch.tensor(inputs, dtype=torch.float32)).numpy().flatten()
         else:
             if self.regression_model == "polynomial":
                 inputs = self.poly_features.transform(inputs)
-            return np.squeeze(self.model.predict(inputs))
+            rew = np.squeeze(self.model.predict(inputs))
+
+        return self._scale(rew)

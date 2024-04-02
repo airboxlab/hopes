@@ -85,6 +85,12 @@ class BaseEstimator(ABC):
         if np.any(self.behavior_policy_action_probabilities <= 0):
             raise ValueError("The behavior policy action probabilities must be positive.")
 
+        if np.any(self.rewards < 0):
+            raise ValueError(
+                "The rewards must be non-negative. Use a positive reward function or an appropriate scaler "
+                "(ie MinMaxScaler) to scale the rewards."
+            )
+
         for array, name in zip(
             [self.target_policy_action_probabilities, self.behavior_policy_action_probabilities],
             ["target_policy_action_probabilities", "behavior_policy_action_probabilities"],

@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 from hopes.rew.rewards import RegressionBasedRewardModel, RewardFunctionModel
 
@@ -49,3 +50,42 @@ class TestRewards(unittest.TestCase):
         rewards = reward_model.estimate(obs=obs, act=act)
 
         np.testing.assert_array_almost_equal(rew, rewards)
+
+    def test_scaler(self):
+        def neg_reward_fun(obs_, act_):
+            return -(np.sum(obs_, axis=0) + act_)
+
+        num_actions = 3
+        num_obs = 5
+        num_samples = 100
+        obs = np.random.rand(num_samples, num_obs)
+        act = np.random.randint(num_actions, size=num_samples)
+        rew = np.array([neg_reward_fun(o, a) for o, a in zip(obs, act) if o.ndim == 1])
+
+        rew_scaled = lambda x: (x - rew.min()) / (rew.max() - rew.min())
+
+        reward_model = RewardFunctionModel(reward_function=neg_reward_fun).with_scaler(rew_scaled)
+        rewards = reward_model.estimate(obs=obs, act=act)
+
+        self.assertTrue(np.all(rewards >= 0) and np.all(rewards <= 1))
+
+    def test_external_scaler(self):
+        def neg_reward_fun(obs_, act_):
+            return -(np.sum(obs_, axis=0) + act_)
+
+        num_actions = 3
+        num_obs = 5
+        num_samples = 100
+        obs = np.random.rand(num_samples, num_obs)
+        act = np.random.randint(num_actions, size=num_samples)
+        rew = np.array([neg_reward_fun(o, a) for o, a in zip(obs, act) if o.ndim == 1])
+
+        rew_scaled = MinMaxScaler()
+        rew_scaled.fit(rew.reshape(-1, 1))
+
+        reward_model = RewardFunctionModel(reward_function=neg_reward_fun).with_scaler(
+            rew_scaled.transform
+        )
+        rewards = reward_model.estimate(obs=obs, act=act)
+
+        self.assertTrue(np.all(rewards >= 0) and np.all(rewards <= 1))
