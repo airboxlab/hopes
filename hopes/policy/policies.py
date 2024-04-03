@@ -255,7 +255,7 @@ class FunctionBasedPolicy(Policy):
         assert callable(policy_function), "Policy function must be callable."
         assert len(actions_bins) > 0, "Action bins must be non-empty."
         self.policy_function = policy_function
-        self.actions_bins = np.ndarray(actions_bins)
+        self.actions_bins = np.array(actions_bins)
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
