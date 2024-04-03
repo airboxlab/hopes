@@ -1,14 +1,14 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
+import pwlf
 import requests
 import torch
-from scipy import optimize
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 
 from hopes.dev_utils import override
-from hopes.fun_utils import piecewise_linear
+from hopes.policy.utils import bin_actions, deterministic_log_probs
 
 
 class Policy(ABC):
@@ -188,72 +188,55 @@ class PiecewiseLinearPolicy(Policy):
 
     def __init__(
         self,
+        num_segments: int,
         obs: np.ndarray,
         act: np.ndarray,
         actions_bins: list[float | int] | None = None,
     ):
         """
+        :param num_segments: the number of segments for the piecewise linear model.
         :param obs: the observations for training the piecewise linear model, shape: (batch_size, obs_dim).
         :param act: the actions for training the piecewise linear model, shape: (batch_size,).
         :param actions_bins: the bins for discretizing the action space. If not provided, we assume the action space
             is already discretized.
         """
+        assert num_segments > 0, "Number of segments must be positive."
         assert (
             len(obs.shape) == 1 or obs.shape[1] == 1
         ), "Piecewise linear policy only supports 1D observations."
         assert obs.shape[0] == act.shape[0], "Number of observations and actions must match."
 
+        self.num_segments = num_segments
         self.model_obs = obs.squeeze() if obs.ndim == 2 else obs
         self.model_act = act.squeeze() if act.ndim == 2 else act
-        self.model_params = None
+        self.model = None
 
         # discretize the action space
         self.actions_bins = actions_bins if actions_bins else np.unique(self.model_act)
         self.num_actions = len(actions_bins)
 
-    def fit(self):
-        # estimate bounds from input data
-        left_cp_bound_percentile = 30
-        right_cp_bound_percentile = 70
-        left_cp, right_cp = np.percentile(
-            self.model_act, (left_cp_bound_percentile, right_cp_bound_percentile)
-        )
-        left_cp_min = left_cp
-        left_cp_max = right_cp
-        right_cp_min = left_cp
-        right_cp_max = right_cp
-        y0_min = np.min(self.model_act)
-        y0_max = np.max(self.model_act)
-        y1_min = np.min(self.model_act)
-        y1_max = np.max(self.model_act)
-        slope_min = -np.inf
-        slope_max = np.inf
+    def fit(self) -> dict[str, float]:
+        # initialize piecewise linear fit with your x and y data
+        self.model = pwlf.PiecewiseLinFit(self.model_obs, self.model_act)
 
-        output = optimize.curve_fit(
-            piecewise_linear,
-            self.model_obs,
-            self.model_act,
-            bounds=(
-                [left_cp_min, right_cp_min, slope_min, y0_min, y1_min],
-                [left_cp_max, right_cp_max, slope_max, y0_max, y1_max],
-            ),
-        )
-        self.model_params, error = output  # noqa
-        # print(f"Model params: {self.model_params}")
-        # print(f"Error: {error}")
+        # fit the data for four line segments
+        self.model.fit(self.num_segments)
+
+        yp = self.model.predict(self.model_obs)
+        y = self.model_act
+        rmse = np.sqrt(np.mean([(i - j) ** 2 for i, j in zip(y, yp)]))
+        return {"rmse": rmse}
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
-        raw_actions = piecewise_linear(obs, *self.model_params)
+        if obs.ndim == 1:
+            raw_actions = self.model.predict(obs)
+        else:
+            raw_actions = np.array([self.model.predict(o) for o in obs])
         # bin the action to the nearest action using the discretized action space
-        actions = [min(self.actions_bins, key=lambda x: abs(x - ra)) for ra in raw_actions]
+        actions = bin_actions(raw_actions, self.actions_bins)
         # return the log-likelihoods
-        return np.array(
-            [
-                [np.log(1.0) if a == action else np.log(1e-6) for a in self.actions_bins]
-                for action in actions
-            ]
-        )
+        return deterministic_log_probs(actions, self.actions_bins)
 
 
 class FunctionBasedPolicy(Policy):
@@ -272,20 +255,15 @@ class FunctionBasedPolicy(Policy):
         assert callable(policy_function), "Policy function must be callable."
         assert len(actions_bins) > 0, "Action bins must be non-empty."
         self.policy_function = policy_function
-        self.actions_bins = actions_bins
+        self.actions_bins = np.ndarray(actions_bins)
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
         raw_actions = np.vectorize(self.policy_function)(obs)
         # bin the action to the nearest action using the discretized action space
-        actions = [min(self.actions_bins, key=lambda x: abs(x - ra)) for ra in raw_actions]
+        actions = bin_actions(raw_actions, self.actions_bins)
         # return the log-likelihoods
-        return np.array(
-            [
-                [np.log(1.0) if a == action else np.log(1e-6) for a in self.actions_bins]
-                for action in actions
-            ]
-        )
+        return deterministic_log_probs(actions, self.actions_bins)
 
 
 class HttpPolicy(Policy):

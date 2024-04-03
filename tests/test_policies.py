@@ -6,7 +6,6 @@ from http.server import BaseHTTPRequestHandler
 
 import numpy as np
 
-from hopes.fun_utils import piecewise_linear
 from hopes.policy.policies import (
     ClassificationBasedPolicy,
     FunctionBasedPolicy,
@@ -14,6 +13,7 @@ from hopes.policy.policies import (
     PiecewiseLinearPolicy,
     RandomPolicy,
 )
+from hopes.policy.utils import piecewise_linear
 from tests.action_probs_utils import generate_action_probs
 
 
@@ -62,15 +62,26 @@ class TestPolicies(unittest.TestCase):
         obs = np.arange(-10, 30, 0.1)
         # supply air temperatures
         act = piecewise_linear(obs, y0=30, y1=15, left_cp=10, right_cp=20, slope=-0.5)
+        # action bins for discretization
+        bins = list(range(15, 31))
 
         # create and fit a piecewise linear policy
-        reg_policy = PiecewiseLinearPolicy(obs=obs, act=act, actions_bins=list(range(15, 31)))
-        reg_policy.fit()
+        reg_policy = PiecewiseLinearPolicy(num_segments=3, obs=obs, act=act, actions_bins=bins)
+        fit_stats = reg_policy.fit()
+        self.assertIsInstance(fit_stats, dict)
+        self.assertIn("rmse", fit_stats)
 
         # check if the policy returns valid log-likelihoods
         new_obs = np.random.randint(-10, 30, 10).reshape(-1, 1)
         act_probs = reg_policy.compute_action_probs(obs=new_obs)
         self.assert_act_probs(act_probs, expected_shape=(10, 16))
+
+        # check if the piecewise linear policy returns the expected actions
+        new_act = reg_policy.select_action(obs=new_obs)
+        # bin to the nearest action
+        new_act = np.array([bins[a] for a in new_act])
+        true_act = piecewise_linear(new_obs, y0=30, y1=15, left_cp=10, right_cp=20, slope=-0.5)
+        self.assertTrue(np.allclose(new_act, true_act.squeeze(), atol=2.0))
 
     def test_function_based_policy(self):
         # function that associates observations with actions
