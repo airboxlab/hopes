@@ -4,6 +4,7 @@ import numpy as np
 import requests
 import torch
 from scipy import optimize
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 
 from hopes.dev_utils import override
@@ -100,10 +101,11 @@ class ClassificationBasedPolicy(Policy):
         """
         :param obs: the observations for training the classification model, shape: (batch_size, obs_dim).
         :param act: the actions for training the classification model, shape: (batch_size,).
-        :param classification_model: the type of classification model to use. For now, only logistic and mlp are supported.
+        :param classification_model: the type of classification model to use. For now, only logistic, mlp and
+            random_forest are supported.
         :param model_params: optional parameters for the classification model.
         """
-        supported_models = ["logistic", "mlp"]
+        supported_models = ["logistic", "mlp", "random_forest"]
         assert (
             classification_model in supported_models
         ), f"Only {supported_models} supported for now."
@@ -119,6 +121,12 @@ class ClassificationBasedPolicy(Policy):
         if self.classification_model == "logistic":
             self.model = LogisticRegression()
 
+        elif self.classification_model == "random_forest":
+            self.model = RandomForestClassifier(
+                max_depth=self.model_params.get("max_depth", 10),
+                n_estimators=self.model_params.get("n_estimators", 100),
+            )
+
         elif self.classification_model == "mlp":
             hidden_size = self.model_params.get("hidden_size", 64)
             activation = self.model_params.get("activation", "relu")
@@ -131,7 +139,7 @@ class ClassificationBasedPolicy(Policy):
                 torch.nn.Linear(hidden_size, self.num_actions),
             )
 
-    def fit(self):
+    def fit(self) -> dict[str, float]:
         if self.classification_model == "mlp":
             criterion = torch.nn.CrossEntropyLoss()
             optimizer = torch.optim.Adam(
@@ -141,15 +149,22 @@ class ClassificationBasedPolicy(Policy):
             for epoch in range(self.model_params.get("num_epochs", 1000)):
                 optimizer.zero_grad()
                 output = self.model(torch.tensor(self.model_obs, dtype=torch.float32))
-                loss = criterion(
-                    output, torch.tensor(self.model_act, dtype=torch.float32).view(-1).long()
-                )
+                ground_truth = torch.tensor(self.model_act, dtype=torch.float32).view(-1).long()
+                loss = criterion(output, ground_truth)
                 loss.backward()
                 optimizer.step()
-                # print(f"Epoch {epoch}, Loss: {loss.item()}")
 
         else:
             self.model.fit(self.model_obs, self.model_act)
+
+        if self.classification_model == "mlp":
+            predicted = self.model(torch.tensor(self.model_obs, dtype=torch.float32)).argmax(dim=1)
+            ground_truth = torch.tensor(self.model_act, dtype=torch.float32).view(-1).long()
+            accuracy = (predicted == ground_truth).float().mean().item()
+        else:
+            accuracy = self.model.score(self.model_obs, self.model_act)
+
+        return {"accuracy": accuracy}
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:

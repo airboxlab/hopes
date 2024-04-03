@@ -29,6 +29,9 @@ class TestPolicies(unittest.TestCase):
     def test_mlp_based_policy(self):
         self._test_classification_policy("mlp")
 
+    def test_random_forest_based_policy(self):
+        self._test_classification_policy("random_forest")
+
     def _test_classification_policy(self, model_type: str) -> None:
         # generate a random dataset of (obs, act) for target policy
         num_actions = 3
@@ -39,7 +42,9 @@ class TestPolicies(unittest.TestCase):
 
         # create and fit a classification-based policy
         reg_policy = ClassificationBasedPolicy(obs=obs, act=act, classification_model=model_type)
-        reg_policy.fit()
+        fit_stats = reg_policy.fit()
+        self.assertIsInstance(fit_stats, dict)
+        self.assertIn("accuracy", fit_stats)
 
         # check if the policy returns valid log-likelihoods
         new_obs = np.random.rand(10, num_obs)
