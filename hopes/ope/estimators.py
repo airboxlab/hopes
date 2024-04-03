@@ -135,7 +135,7 @@ class InverseProbabilityWeighting(BaseEstimator):
     Where:
         - D is the offline collected dataset.
         - p(s_t,a_t) is the importance weight defined as p(s_t,a_t)=\frac{\pi_e(a_t|s_t)}{\pi_b(a_t|s_t)}.
-        - \pi_e is the target policy and \pi_b is the behavior policy.
+        - pi_e is the target policy and pi_b is the behavior policy.
         - r_t is the reward at time t.
         - n is the number of samples.
 
@@ -172,7 +172,7 @@ class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
     Where:
         - D is the offline collected dataset.
         - p(s_t,a_t) is the importance weight defined as p(s_t,a_t)=\frac{\pi_e(a_t|s_t)}{\pi_b(a_t|s_t)}.
-        - \pi_e is the target policy and \pi_b is the behavior policy.
+        - pi_e is the target policy and pi_b is the behavior policy.
         - r_t is the reward at time t.
         - n is the number of samples.
 
@@ -195,14 +195,14 @@ class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
 class DirectMethod(BaseEstimator):
     r"""Direct Method (DM) estimator.
 
-    V_{DM}(\pi_e, D, Q)=\frac {1}{n} \sum_{t=1}^n \sum_{a \in A} \pi_e(a_t|s_0) Q(s_0, a)
+    V_{DM}(\pi_e, D, Q)=\frac {1}{n} \sum_{t=1}^n \sum_{a \in A} \pi_e(a|s_0) Q(s_0, a)
 
     Where:
         - D is the offline collected dataset.
-        - \pi_e is the target policy.
+        - pi_e is the target policy.
         - Q is the Q model trained to estimate the expected reward of the initial state under the behavior policy.
         - n is the number of samples.
-        - a_t is the action taken at time t.
+        - a is the action taken.
 
     This estimator trains a Q model using supervised learning, then uses it to estimate the expected reward of the
     initial state under the target policy. The performance of this estimator depends on the quality of the Q model.
@@ -218,6 +218,20 @@ class DirectMethod(BaseEstimator):
         q_model_type: str = "random_forest",
         q_model_params: dict | None = None,
     ) -> None:
+        """Initialize the Direct Method estimator.
+
+        :param q_model_cls: the class of the Q model to use.
+        :param behavior_policy_obs: the observations for training the Q model, shape:
+            (batch_size, obs_dim).
+        :param behavior_policy_act: the actions for training the Q model, shape:
+            (batch_size,).
+        :param behavior_policy_rewards: the rewards for training the Q model, shape:
+            (batch_size,).
+        :param steps_per_episode: the number of steps per episode. The number of samples
+            must be divisible by this number.
+        :param q_model_type: the type of regression model to use for the Q model.
+        :param q_model_params: the parameters of the regression model.
+        """
         super().__init__()
 
         assert issubclass(
