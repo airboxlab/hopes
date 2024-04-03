@@ -50,8 +50,13 @@ class RewardFunctionModel(RewardModel):
         assert (
             obs.shape[0] == act.shape[0]
         ), "The number of pairs of observations and actions passed to the reward function must be the same."
-        act = act.reshape(-1, 1) if act.ndim == 1 else act
-        return np.vectorize(self._scale)([self.reward_function(o, a) for o, a in zip(obs, act)])
+
+        if obs.ndim == 1:
+            rew = self.reward_function(obs, act)
+        else:
+            rew = np.array([self.reward_function(o, a) for o, a in zip(obs, act)])
+
+        return self._scale(rew)
 
 
 class RegressionBasedRewardModel(RewardModel):
