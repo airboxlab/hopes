@@ -59,7 +59,7 @@ class Policy(ABC):
 
         action_probs = self.compute_action_probs(obs)
 
-        # deterministic or greedy action selection
+        # deterministic action selection
         if deterministic:
             return np.argmax(action_probs, axis=1)
 

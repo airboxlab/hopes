@@ -16,6 +16,9 @@ class TestRewards(unittest.TestCase):
     def test_mlp_reward_model(self):
         self._test_reward_model("mlp")
 
+    def test_rf_reward_model(self):
+        self._test_reward_model("random_forest")
+
     def _test_reward_model(self, model_type: str) -> None:
         num_actions = 3
         num_obs = 5
@@ -27,7 +30,7 @@ class TestRewards(unittest.TestCase):
         mlp_reward_model = RegressionBasedRewardModel(
             obs=obs, act=act, rew=rew, regression_model=model_type
         )
-        mlp_reward_model.fit()
+        print(f"{model_type} stats: ", mlp_reward_model.fit())
 
         new_obs = np.random.rand(10, num_obs)
         new_act = np.random.randint(num_actions, size=10)
@@ -49,7 +52,7 @@ class TestRewards(unittest.TestCase):
         reward_model = RewardFunctionModel(reward_function=reward_fun)
         rewards = reward_model.estimate(obs=obs, act=act)
 
-        np.testing.assert_array_almost_equal(rew, rewards)
+        np.testing.assert_array_almost_equal(rew, rewards.squeeze())
 
     def test_scaler(self):
         def neg_reward_fun(obs_, act_):

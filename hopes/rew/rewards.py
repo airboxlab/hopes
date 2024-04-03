@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 import numpy as np
 import torch
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import PolynomialFeatures
 
@@ -39,15 +40,18 @@ class RewardFunctionModel(RewardModel):
         """
         :param reward_function: a function that takes in observations and actions and returns rewards.
         """
+        assert callable(reward_function), "reward_function must be a callable"
+        assert (
+            reward_function.__code__.co_argcount == 2
+        ), "reward_function must take two arguments (obs, act)"
         self.reward_function = reward_function
 
     def estimate(self, obs: np.ndarray, act: np.ndarray) -> np.ndarray:
-        if obs.ndim == 1:
-            rew = self.reward_function(obs, act)
-        else:
-            rew = np.array([self.reward_function(o, a) for o, a in zip(obs, act)])
-
-        return self._scale(rew)
+        assert (
+            obs.shape[0] == act.shape[0]
+        ), "The number of pairs of observations and actions passed to the reward function must be the same."
+        act = act.reshape(-1, 1) if act.ndim == 1 else act
+        return np.vectorize(self._scale)([self.reward_function(o, a) for o, a in zip(obs, act)])
 
 
 class RegressionBasedRewardModel(RewardModel):
@@ -65,10 +69,11 @@ class RegressionBasedRewardModel(RewardModel):
         :param obs: the observations for training the reward model, shape: (batch_size, obs_dim).
         :param act: the actions for training the reward model, shape: (batch_size,).
         :param rew: the rewards for training the reward model, shape: (batch_size,).
-        :param regression_model: the type of reward model to use. For now, only linear, polynomial and mlp are supported.
+        :param regression_model: the type of reward model to use. For now, only linear, polynomial, random_forest
+            and mlp are supported.
         :param model_params: optional parameters for the reward model.
         """
-        supported_reward_models = ["linear", "polynomial", "mlp"]
+        supported_reward_models = ["linear", "polynomial", "mlp", "random_forest"]
 
         assert (
             regression_model in supported_reward_models
@@ -102,7 +107,13 @@ class RegressionBasedRewardModel(RewardModel):
                 torch.nn.Linear(hidden_size, 1),
             )
 
-    def fit(self) -> None:
+        elif self.regression_model == "random_forest":
+            self.model = RandomForestRegressor(
+                max_depth=self.model_params.get("max_depth", 10),
+                n_estimators=self.model_params.get("n_estimators", 100),
+            )
+
+    def fit(self) -> dict[str, float] | None:
         """Fit the reward model to the training data."""
         model_in = np.concatenate((self.obs, self.act), axis=1)
 
@@ -122,8 +133,13 @@ class RegressionBasedRewardModel(RewardModel):
             self.poly_features = PolynomialFeatures(degree=self.model_params.get("degree", 2))
             self.model.fit(self.poly_features.fit_transform(model_in), self.rew)
 
-        elif self.regression_model == "linear":
+        elif self.regression_model == "linear" or self.regression_model == "random_forest":
             self.model.fit(model_in, self.rew)
+
+        # report RMSE
+        pred_rew = self.estimate(self.obs, self.act)
+        rmse = np.sqrt(np.mean((pred_rew - self.rew) ** 2))
+        return {"rmse": rmse}
 
     def estimate(self, obs: np.ndarray, act: np.ndarray) -> np.ndarray:
         """Estimate the rewards for a given set of observations and actions.
