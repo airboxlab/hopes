@@ -169,7 +169,7 @@ class ClassificationBasedPolicy(Policy):
             y_pred = self.model.predict(self.model_obs)
             y_true = self.model_act
             accuracy = accuracy_score(y_true, y_pred)
-            f1 = f1_score(y_true, y_pred)
+            f1 = f1_score(y_true, y_pred, average="weighted")
 
         return {"accuracy": accuracy, "f1": f1}
 
