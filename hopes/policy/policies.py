@@ -140,17 +140,20 @@ class ClassificationBasedPolicy(Policy):
             )
 
     def fit(self) -> dict[str, float]:
+        """Fit the classification model on the training data and return the accuracy on the
+        training."""
         if self.classification_model == "mlp":
-            criterion = torch.nn.CrossEntropyLoss()
-            optimizer = torch.optim.Adam(
-                self.model.parameters(), lr=self.model_params.get("lr", 0.01)
-            )
+            num_epochs = self.model_params.get("num_epochs", 1000)
+            lr = self.model_params.get("lr", 0.01)
 
-            for epoch in range(self.model_params.get("num_epochs", 1000)):
+            optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
+            criterion = torch.nn.CrossEntropyLoss()
+
+            for epoch in range(num_epochs):
                 optimizer.zero_grad()
                 output = self.model(torch.tensor(self.model_obs, dtype=torch.float32))
-                ground_truth = torch.tensor(self.model_act, dtype=torch.float32).view(-1).long()
-                loss = criterion(output, ground_truth)
+                predicted = torch.tensor(self.model_act, dtype=torch.float32).view(-1).long()
+                loss = criterion(output, predicted)
                 loss.backward()
                 optimizer.step()
 
@@ -211,17 +214,17 @@ class PiecewiseLinearPolicy(Policy):
         self.model_act = act.squeeze() if act.ndim == 2 else act
         self.model = None
 
-        # discretize the action space
+        # bins used to discretize the action space
         self.actions_bins = actions_bins if actions_bins else np.unique(self.model_act)
-        self.num_actions = len(actions_bins)
 
     def fit(self) -> dict[str, float]:
         # initialize piecewise linear fit with your x and y data
         self.model = pwlf.PiecewiseLinFit(self.model_obs, self.model_act)
 
-        # fit the data for four line segments
+        # fit the data for specified number of segments
         self.model.fit(self.num_segments)
 
+        # compute and report RMSE
         yp = self.model.predict(self.model_obs)
         y = self.model_act
         rmse = np.sqrt(np.mean([(i - j) ** 2 for i, j in zip(y, yp)]))

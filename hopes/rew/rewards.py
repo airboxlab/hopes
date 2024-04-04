@@ -123,11 +123,12 @@ class RegressionBasedRewardModel(RewardModel):
         model_in = np.concatenate((self.obs, self.act), axis=1)
 
         if self.regression_model == "mlp":
-            optimizer = torch.optim.Adam(
-                self.model.parameters(), lr=self.model_params.get("lr", 0.01)
-            )
+            num_epochs = self.model_params.get("num_epochs", 100)
+            lr = self.model_params.get("lr", 0.01)
+
+            optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
             criterion = torch.nn.MSELoss()
-            for _ in range(self.model_params.get("num_epochs", 1000)):
+            for _ in range(num_epochs):
                 optimizer.zero_grad()
                 pred_rew = self.model(torch.tensor(model_in, dtype=torch.float32))
                 loss = criterion(pred_rew, torch.tensor(self.rew, dtype=torch.float32))
