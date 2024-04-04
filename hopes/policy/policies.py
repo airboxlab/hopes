@@ -157,7 +157,7 @@ class ClassificationBasedPolicy(Policy):
             for epoch in range(num_epochs):
                 optimizer.zero_grad()
                 predicted = self.model(torch.tensor(self.model_obs, dtype=torch.float32))
-                loss = criterion(targets, predicted)
+                loss = criterion(predicted, targets)
                 loss.backward()
                 optimizer.step()
 
