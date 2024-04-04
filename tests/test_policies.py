@@ -45,6 +45,7 @@ class TestPolicies(unittest.TestCase):
         fit_stats = reg_policy.fit()
         self.assertIsInstance(fit_stats, dict)
         self.assertIn("accuracy", fit_stats)
+        self.assertIn("f1", fit_stats)
 
         # check if the policy returns valid log-likelihoods
         new_obs = np.random.rand(10, num_obs)

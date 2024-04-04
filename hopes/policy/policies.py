@@ -6,6 +6,7 @@ import requests
 import torch
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score
 
 from hopes.dev_utils import override
 from hopes.policy.utils import bin_actions, deterministic_log_probs
@@ -140,34 +141,37 @@ class ClassificationBasedPolicy(Policy):
             )
 
     def fit(self) -> dict[str, float]:
-        """Fit the classification model on the training data and return the accuracy on the
-        training."""
+        """Fit the classification model on the training data and return performance statistics
+        computed on the training data.
+
+        :return: the accuracy and F1 score on the training data.
+        """
         if self.classification_model == "mlp":
             num_epochs = self.model_params.get("num_epochs", 1000)
             lr = self.model_params.get("lr", 0.01)
 
             optimizer = torch.optim.Adam(self.model.parameters(), lr=lr)
             criterion = torch.nn.CrossEntropyLoss()
+            targets = torch.tensor(self.model_act, dtype=torch.float32).view(-1).long()
 
             for epoch in range(num_epochs):
                 optimizer.zero_grad()
-                output = self.model(torch.tensor(self.model_obs, dtype=torch.float32))
-                predicted = torch.tensor(self.model_act, dtype=torch.float32).view(-1).long()
-                loss = criterion(output, predicted)
+                predicted = self.model(torch.tensor(self.model_obs, dtype=torch.float32))
+                loss = criterion(targets, predicted)
                 loss.backward()
                 optimizer.step()
 
+            predicted = self.model(torch.tensor(self.model_obs, dtype=torch.float32)).argmax(dim=1)
+            accuracy = (predicted == targets).float().mean().item()
+            f1 = f1_score(targets, predicted, average="weighted")
         else:
             self.model.fit(self.model_obs, self.model_act)
+            y_pred = self.model.predict(self.model_obs)
+            y_true = self.model_act
+            accuracy = accuracy_score(y_true, y_pred)
+            f1 = f1_score(y_true, y_pred)
 
-        if self.classification_model == "mlp":
-            predicted = self.model(torch.tensor(self.model_obs, dtype=torch.float32)).argmax(dim=1)
-            ground_truth = torch.tensor(self.model_act, dtype=torch.float32).view(-1).long()
-            accuracy = (predicted == ground_truth).float().mean().item()
-        else:
-            accuracy = self.model.score(self.model_obs, self.model_act)
-
-        return {"accuracy": accuracy}
+        return {"accuracy": accuracy, "f1": f1}
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
@@ -223,22 +227,22 @@ class PiecewiseLinearPolicy(Policy):
 
         :return: the RMSE ('rmse') and R² ('r2') on the training data.
         """
-        # initialize piecewise linear fit with your x and y data
+        # initialize piecewise linear fit
         self.model = pwlf.PiecewiseLinFit(self.model_obs, self.model_act)
 
         # fit the data for specified number of segments
         self.model.fit(self.num_segments)
 
-        yp = self.model.predict(self.model_obs)
-        y = self.model_act
+        y_pred = self.model.predict(self.model_obs)
+        y_true = self.model_act
 
         # compute RMSE
-        diff_res = y - yp
+        diff_res = y_true - y_pred
         ss_res = np.dot(diff_res, diff_res)
-        rmse = np.sqrt(ss_res / len(y))
+        rmse = np.sqrt(ss_res / len(y_true))
 
         # compute R²
-        diff_tot = y - np.mean(y)
+        diff_tot = y_true - np.mean(y_true)
         ss_tot = np.dot(diff_tot, diff_tot)
         r_squared = 1 - (ss_res / ss_tot)
 
