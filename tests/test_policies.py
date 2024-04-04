@@ -70,6 +70,7 @@ class TestPolicies(unittest.TestCase):
         fit_stats = reg_policy.fit()
         self.assertIsInstance(fit_stats, dict)
         self.assertIn("rmse", fit_stats)
+        self.assertIn("r2", fit_stats)
 
         # check if the policy returns valid log-likelihoods
         new_obs = np.random.randint(-10, 30, 10).reshape(-1, 1)

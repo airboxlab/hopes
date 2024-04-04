@@ -218,17 +218,31 @@ class PiecewiseLinearPolicy(Policy):
         self.actions_bins = actions_bins if actions_bins else np.unique(self.model_act)
 
     def fit(self) -> dict[str, float]:
+        """Fit the piecewise linear model on the training data and return the RMSE and R² on the
+        training.
+
+        :return: the RMSE ('rmse') and R² ('r2') on the training data.
+        """
         # initialize piecewise linear fit with your x and y data
         self.model = pwlf.PiecewiseLinFit(self.model_obs, self.model_act)
 
         # fit the data for specified number of segments
         self.model.fit(self.num_segments)
 
-        # compute and report RMSE
         yp = self.model.predict(self.model_obs)
         y = self.model_act
-        rmse = np.sqrt(np.mean([(i - j) ** 2 for i, j in zip(y, yp)]))
-        return {"rmse": rmse}
+
+        # compute RMSE
+        diff_res = y - yp
+        ss_res = np.dot(diff_res, diff_res)
+        rmse = np.sqrt(ss_res / len(y))
+
+        # compute R²
+        diff_tot = y - np.mean(y)
+        ss_tot = np.dot(diff_tot, diff_tot)
+        r_squared = 1 - (ss_res / ss_tot)
+
+        return {"rmse": rmse, "r2": r_squared}
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
