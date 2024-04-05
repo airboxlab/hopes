@@ -3,8 +3,6 @@ from pathlib import Path
 
 import numpy as np
 import onnxruntime as rt
-import torch
-from torch.distributions import Categorical
 
 from hopes.dev_utils import override
 from hopes.policy.policies import Policy
@@ -236,6 +234,5 @@ class OnnxModelBasedPolicy(Policy):
         else:
             dist_index = self.output_names.index(self.action_dist_inputs_output_name)
             action_dist_inputs = np.array(output[dist_index]).squeeze()
-            action_dist = Categorical(logits=torch.tensor(action_dist_inputs))
-            log_probs = action_dist.log_prob(torch.arange(len(action_dist_inputs)))
-            return log_probs.numpy().reshape(1, -1)
+            log_probs = action_dist_inputs - np.logaddexp.reduce(action_dist_inputs, axis=-1)
+            return log_probs.reshape(1, -1)
