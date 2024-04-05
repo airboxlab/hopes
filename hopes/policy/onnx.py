@@ -236,7 +236,6 @@ class OnnxModelBasedPolicy(Policy):
         else:
             dist_index = self.output_names.index(self.action_dist_inputs_output_name)
             action_dist_inputs = np.array(output[dist_index]).squeeze()
-            log_probs = Categorical(logits=torch.tensor(action_dist_inputs)).log_prob(
-                torch.arange(len(action_dist_inputs))
-            )
+            action_dist = Categorical(logits=torch.tensor(action_dist_inputs))
+            log_probs = action_dist.log_prob(torch.arange(len(action_dist_inputs)))
             return log_probs.numpy().reshape(1, -1)
