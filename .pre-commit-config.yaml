@@ -18,7 +18,7 @@ repos:
       - id: debug-statements
       - id: detect-private-key
       - id: check-added-large-files
-        args: ["--maxkb=500", "--enforce-all"]
+        args: ["--maxkb=750", "--enforce-all"]
         exclude: |
           (?x)^(
           )$

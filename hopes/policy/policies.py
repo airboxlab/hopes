@@ -1,3 +1,4 @@
+"""Policy classes to help model a target or behavior policy."""
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -13,6 +14,11 @@ from hopes.policy.utils import bin_actions, deterministic_log_probs
 
 
 class Policy(ABC):
+    """An abstract class for policies.
+
+    The policy must be subclassed and the log_likelihoods method must be implemented.
+    """
+
     epsilon: float | None = None
 
     def with_epsilon(self, epsilon: float | None = None) -> "Policy":

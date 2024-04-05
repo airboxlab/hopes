@@ -15,13 +15,14 @@ from hopes.policy.policies import (
 )
 from hopes.policy.utils import piecewise_linear
 from tests.action_probs_utils import generate_action_probs
+from tests.utils import assert_act_probs, assert_log_probs
 
 
 class TestPolicies(unittest.TestCase):
     def test_rnd_policy(self):
         rnd_policy = RandomPolicy(num_actions=3)
         log_probs = rnd_policy.log_likelihoods(obs=np.random.rand(10, 5))
-        self.assert_log_probs(log_probs, expected_shape=(10, 3))
+        assert_log_probs(log_probs, expected_shape=(10, 3))
 
     def test_logistic_based_policy(self):
         self._test_classification_policy("logistic")
@@ -50,7 +51,7 @@ class TestPolicies(unittest.TestCase):
         # check if the policy returns valid log-likelihoods
         new_obs = np.random.rand(10, num_obs)
         act_probs = reg_policy.compute_action_probs(obs=new_obs)
-        self.assert_act_probs(act_probs, expected_shape=(10, num_actions))
+        assert_act_probs(act_probs, expected_shape=(10, num_actions))
 
         actions = reg_policy.select_action(obs=new_obs)
         self.assertIsInstance(actions, np.ndarray)
@@ -76,7 +77,7 @@ class TestPolicies(unittest.TestCase):
         # check if the policy returns valid log-likelihoods
         new_obs = np.random.randint(-10, 30, 10).reshape(-1, 1)
         act_probs = reg_policy.compute_action_probs(obs=new_obs)
-        self.assert_act_probs(act_probs, expected_shape=(10, 16))
+        assert_act_probs(act_probs, expected_shape=(10, 16))
 
         # check if the piecewise linear policy returns the expected actions
         new_act = reg_policy.select_action(obs=new_obs)
@@ -96,7 +97,7 @@ class TestPolicies(unittest.TestCase):
         # check if the policy returns valid log-likelihoods
         obs = np.random.randint(-10, 30, 100).reshape(-1, 1)
         act_probs = reg_policy.compute_action_probs(obs=obs)
-        self.assert_act_probs(act_probs, expected_shape=(100, 4))
+        assert_act_probs(act_probs, expected_shape=(100, 4))
 
     def test_http_policy(self):
         # create a fake HTTP server
@@ -142,12 +143,12 @@ class TestPolicies(unittest.TestCase):
             remote_log_probs = http_policy.log_likelihoods(obs=np.random.rand(10, 5))
             http_server.shutdown()
 
-        self.assert_log_probs(remote_log_probs, expected_shape=(10, 3))
+        assert_log_probs(remote_log_probs, expected_shape=(10, 3))
 
     def test_compute_action_probs(self):
         rnd_policy = RandomPolicy(num_actions=3)
         act_probs = rnd_policy.compute_action_probs(obs=np.random.rand(10, 5))
-        self.assert_act_probs(act_probs, expected_shape=(10, 3))
+        assert_act_probs(act_probs, expected_shape=(10, 3))
 
     def test_select_action(self):
         rnd_policy = RandomPolicy(num_actions=3)
@@ -175,15 +176,3 @@ class TestPolicies(unittest.TestCase):
         class_pol.with_epsilon(0.5)
         actions = [class_pol.select_action(obs=obs, deterministic=False) for _ in range(100)]
         self.assertTrue(np.var(actions) > 0)
-
-    def assert_log_probs(self, log_probs: np.ndarray, expected_shape: tuple):
-        self.assertTrue(np.all(np.isfinite(log_probs)))
-        self.assertTrue(np.all(log_probs <= 0.0))
-        self.assert_act_probs(np.exp(log_probs), expected_shape)
-
-    def assert_act_probs(self, act_probs: np.ndarray, expected_shape: tuple):
-        self.assertIsInstance(act_probs, np.ndarray)
-        self.assertEqual(act_probs.shape, expected_shape)
-        self.assertTrue(np.all(act_probs >= 0.0))
-        self.assertTrue(np.all(act_probs <= 1.0))
-        self.assertTrue(np.allclose(act_probs.sum(axis=1), 1.0, atol=1e-3))
