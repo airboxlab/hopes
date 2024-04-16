@@ -33,6 +33,11 @@ autodoc_mock_imports = [
     "torch",
 ]
 
+suppress_warnings = [
+    "ref.citation",
+    "parallel.write",
+]
+
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 
