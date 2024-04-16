@@ -27,7 +27,11 @@ extensions = [
     "sphinx.ext.autosummary",
 ]
 
-autodoc_mock_imports = ["sklearn"]
+autodoc_mock_imports = [
+    "sklearn",
+    "numpy",
+    "torch",
+]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
