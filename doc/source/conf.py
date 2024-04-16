@@ -29,13 +29,7 @@ extensions = [
 
 autodoc_mock_imports = [
     "sklearn",
-    "numpy",
     "torch",
-]
-
-suppress_warnings = [
-    "ref.citation",
-    "parallel.write",
 ]
 
 templates_path = ["_templates"]
