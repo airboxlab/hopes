@@ -3,7 +3,6 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 import os
-import pathlib
 import sys
 
 # -- Project information -----------------------------------------------------
@@ -45,13 +44,6 @@ html_static_path = ["_static"]
 html_theme = "pydata_sphinx_theme"
 
 
-def render_svg_logo(path):
-    with open(pathlib.Path(__file__).parent / path) as f:
-        content = f.read()
-
-    return content
-
-
 def find_version():
     with open("../../pyproject.toml") as f:
         for line in f:
@@ -64,11 +56,21 @@ release = find_version()
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
+
+html_logo = "_static/img/logo.svg"
+
+# The name for this set of Sphinx documents.  If None, it defaults to
+# "<project> v<release> documentation".
+html_title = f"Hopes v{release}"
+
 html_theme_options = {
-    "use_edit_page_button": True,
+    "use_edit_page_button": False,
     "announcement": None,
     "logo": {
-        "svg": render_svg_logo("_static/img/logo.svg"),
+        "alt_text": f"{html_title}",
+        "text": f"{html_title}",
+        "image_light": "_static/img/logo.svg",
+        "image_dark": "_static/img/logo.svg",
     },
     # "navbar_start": ["navbar-ray-logo"],
     # "navbar_end": [
@@ -76,7 +78,7 @@ html_theme_options = {
     #     "navbar-anyscale",
     # ],
     # "navbar_center": ["navbar-links"],
-    # "navbar_align": "left",
+    "navbar_align": "left",
     # "navbar_persistent": [
     #     "search-button-field",
     #     "theme-switcher",
@@ -89,7 +91,6 @@ html_theme_options = {
     #     "csat",
     # ],
     "navigation_depth": 2,
-    # "analytics": {"google_analytics_id": "UA-110413294-1"},
     "pygment_light_style": "stata-dark",
     "pygment_dark_style": "stata-dark",
 }
@@ -99,12 +100,8 @@ html_sidebars = {
 }
 
 html_context = {
-    "github_user": "hopes",
+    "github_user": "airboxlab",
     "github_repo": "hopes",
     "github_version": "master",
     "doc_path": "doc/source/",
 }
-
-# The name for this set of Sphinx documents.  If None, it defaults to
-# "<project> v<release> documentation".
-html_title = f"Hopes v{release}"
