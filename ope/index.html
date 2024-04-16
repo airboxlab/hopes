@@ -38,6 +38,7 @@
     <script src="../_static/documentation_options.js?v=d45e8c67"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ope/index';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -324,11 +325,175 @@ document.write(`
 <h1>Off-Policy Evaluation: Estimators<a class="headerlink" href="#off-policy-evaluation-estimators" title="Link to this heading">#</a></h1>
 <section id="implemented-estimators">
 <h2>Implemented estimators<a class="headerlink" href="#implemented-estimators" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.ope.estimators.InverseProbabilityWeighting">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.estimators.</span></span><span class="sig-name descname"><span class="pre">InverseProbabilityWeighting</span></span><a class="headerlink" href="#hopes.ope.estimators.InverseProbabilityWeighting" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.ope.estimators.BaseEstimator" title="hopes.ope.estimators.BaseEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a></p>
+<p>Inverse Probability Weighting (IPW) estimator.</p>
+<p><span class="math notranslate nohighlight">\(V_{IPW}(\pi_e, D)=\frac {1}{n} \sum_{t=1}^n p(s_t,a_t) r_t\)</span></p>
+<dl class="simple">
+<dt>Where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(D\)</span> is the offline collected dataset.</p></li>
+<li><p><span class="math notranslate nohighlight">\(p(s_t,a_t)\)</span> is the importance weight defined as <span class="math notranslate nohighlight">\(p(s_t,a_t)=\frac{\pi_e(a_t|s_t)}{\pi_b(a_t|s_t)}\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\pi_e\)</span> is the target policy and <span class="math notranslate nohighlight">\(\pi_b\)</span> is the behavior policy.</p></li>
+<li><p><span class="math notranslate nohighlight">\(r_t\)</span> is the reward observed at time <span class="math notranslate nohighlight">\(t\)</span> for the behavior policy.</p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of samples.</p></li>
+</ul>
+</dd>
+</dl>
+<p>This estimator has generally high variance, especially on small datasets, and can be improved by using
+self-normalized importance weights.</p>
+<dl class="simple">
+<dt>References:</dt><dd><p><a class="reference external" href="https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&amp;context=cs_faculty_pubs">https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&amp;context=cs_faculty_pubs</a></p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.InverseProbabilityWeighting.estimate_policy_value">
+<span class="sig-name descname"><span class="pre">estimate_policy_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#hopes.ope.estimators.InverseProbabilityWeighting.estimate_policy_value" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the value of the target policy using the IPW estimator.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.estimators.</span></span><span class="sig-name descname"><span class="pre">SelfNormalizedInverseProbabilityWeighting</span></span><a class="headerlink" href="#hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.ope.estimators.InverseProbabilityWeighting" title="hopes.ope.estimators.InverseProbabilityWeighting"><code class="xref py py-class docutils literal notranslate"><span class="pre">InverseProbabilityWeighting</span></code></a></p>
+<p>Self-Normalized Inverse Probability Weighting (SNIPW) estimator.</p>
+<p><span class="math notranslate nohighlight">\(V_{SNIPW}(\pi_e, D)= \frac {\sum_{t=1}^n p(s_t,a_t) r_t}{\sum_{t=1}^n p(s_t,a_t)}\)</span></p>
+<dl class="simple">
+<dt>Where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(D\)</span> is the offline collected dataset.</p></li>
+<li><p><span class="math notranslate nohighlight">\(p(s_t,a_t)\)</span> is the importance weight defined as <span class="math notranslate nohighlight">\(p(s_t,a_t)=\frac{\pi_e(a_t|s_t)}{\pi_b(a_t|s_t)}\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\pi_e\)</span> is the target policy and <span class="math notranslate nohighlight">\(\pi_b\)</span> is the behavior policy.</p></li>
+<li><p><span class="math notranslate nohighlight">\(r_t\)</span> is the reward at time <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of samples.</p></li>
+</ul>
+</dd>
+<dt>References:</dt><dd><p><a class="reference external" href="https://papers.nips.cc/paper_files/paper/2015/hash/39027dfad5138c9ca0c474d71db915c3-Abstract.html">https://papers.nips.cc/paper_files/paper/2015/hash/39027dfad5138c9ca0c474d71db915c3-Abstract.html</a></p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting.estimate_policy_value">
+<span class="sig-name descname"><span class="pre">estimate_policy_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting.estimate_policy_value" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the value of the target policy using the SNIPW estimator.</p>
+<p>This essentially normalizes the importance weights to avoid high variance.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.ope.estimators.DirectMethod">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.estimators.</span></span><span class="sig-name descname"><span class="pre">DirectMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q_model_cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">RegressionBasedRewardModel</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy_obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy_act</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy_rewards</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps_per_episode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_model_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'random_forest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_model_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.ope.estimators.DirectMethod" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.ope.estimators.BaseEstimator" title="hopes.ope.estimators.BaseEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a></p>
+<p>Direct Method (DM) estimator.</p>
+<p><span class="math notranslate nohighlight">\(V_{DM}(\pi_e, D, Q)=\frac {1}{n} \sum_{t=1}^n \sum_{a \in A} \pi_e(a|s_0) Q(s_0, a)\)</span></p>
+<dl class="simple">
+<dt>Where:</dt><dd><ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(D\)</span> is the offline collected dataset.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\pi_e\)</span> is the target policy.</p></li>
+<li><p><span class="math notranslate nohighlight">\(Q\)</span> is the Q model trained to estimate the expected reward of the initial state under the behavior policy.</p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of samples.</p></li>
+<li><p><span class="math notranslate nohighlight">\(a\)</span> is the action taken in the set of actions <span class="math notranslate nohighlight">\(A\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(s_0\)</span> is the initial state.</p></li>
+</ul>
+</dd>
+</dl>
+<p>This estimator trains a Q model using supervised learning, then uses it to estimate the expected reward of the
+initial state under the target policy. The performance of this estimator depends on the quality of the Q model.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.DirectMethod.check_parameters">
+<span class="sig-name descname"><span class="pre">check_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hopes.ope.estimators.DirectMethod.check_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Check if the estimator parameters are valid.</p>
+<p>Base estimator checks plus additional checks for the Q model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.DirectMethod.estimate_policy_value">
+<span class="sig-name descname"><span class="pre">estimate_policy_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#hopes.ope.estimators.DirectMethod.estimate_policy_value" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the value of the target policy using the Direct Method estimator.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.DirectMethod.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#hopes.ope.estimators.DirectMethod.fit" title="Link to this definition">#</a></dt>
+<dd><p>Fit the Q model to estimate the expected reward of the initial state under the behavior
+policy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the fit statistics of the Q model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="implementing-a-new-estimator">
 <h2>Implementing a new estimator<a class="headerlink" href="#implementing-a-new-estimator" title="Link to this heading">#</a></h2>
-<p>To implement a new estimator, you need to subclass <code class="xref py py-class docutils literal notranslate"><span class="pre">hopes.ope.estimators.BaseEstimator</span></code> and implement the <code class="xref py py-meth docutils literal notranslate"><span class="pre">hopes.ope.estimators.BaseEstimator.estimate_policy_value()</span></code>. It should return the estimated value of the target policy value function.</p>
+<p>To implement a new estimator, you need to subclass <a class="reference internal" href="#hopes.ope.estimators.BaseEstimator" title="hopes.ope.estimators.BaseEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">hopes.ope.estimators.BaseEstimator</span></code></a> and implement the <a class="reference internal" href="#hopes.ope.estimators.BaseEstimator.estimate_policy_value" title="hopes.ope.estimators.BaseEstimator.estimate_policy_value"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hopes.ope.estimators.BaseEstimator.estimate_policy_value()</span></code></a>. It should return the estimated value of the target policy value function.</p>
 <p>Below is the <cite>BaseEstimator</cite> class documentation.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.ope.estimators.BaseEstimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.estimators.</span></span><span class="sig-name descname"><span class="pre">BaseEstimator</span></span><a class="headerlink" href="#hopes.ope.estimators.BaseEstimator" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Base class for all estimators.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.BaseEstimator.check_parameters">
+<span class="sig-name descname"><span class="pre">check_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hopes.ope.estimators.BaseEstimator.check_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Check if the estimator parameters are valid.</p>
+<p>This method should be called before estimating the policy value. It can be
+overridden by subclasses to add additional checks.</p>
+<p>Importance sampling estimators have several assumptions that must be met:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>coverage: the target and behavior policies must have non-zero probability of taking the actions.</dt><dd><p>This is not 100% necessary, i.e. if both policies have zero probability of taking an action under some
+state, but we enforce this assumption here to avoid numerical issues.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>positivity: the rewards must be non-negative to be able to get a lower bound estimate of the</dt><dd><p>target policy.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.BaseEstimator.estimate_policy_value">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">estimate_policy_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#hopes.ope.estimators.BaseEstimator.estimate_policy_value" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the value of the target policy.</p>
+<p>This method should be overridden by subclasses to implement the specific estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the estimated value of the target policy.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.BaseEstimator.set_parameters">
+<span class="sig-name descname"><span class="pre">set_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_policy_action_probabilities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy_action_probabilities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewards</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hopes.ope.estimators.BaseEstimator.set_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Set the parameters for estimating the policy value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target_policy_action_probabilities</strong> – the probabilities of taking actions under
+the target policy.</p></li>
+<li><p><strong>behavior_policy_action_probabilities</strong> – the probabilities of taking actions
+under the behavior policy.</p></li>
+<li><p><strong>rewards</strong> – the rewards received under the behavior policy.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 </section>
 
@@ -369,8 +534,32 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implemented-estimators">Implemented estimators</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementing-a-new-estimator">Implementing a new estimator</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implemented-estimators">Implemented estimators</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.InverseProbabilityWeighting"><code class="docutils literal notranslate"><span class="pre">InverseProbabilityWeighting</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.InverseProbabilityWeighting.estimate_policy_value"><code class="docutils literal notranslate"><span class="pre">InverseProbabilityWeighting.estimate_policy_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting"><code class="docutils literal notranslate"><span class="pre">SelfNormalizedInverseProbabilityWeighting</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting.estimate_policy_value"><code class="docutils literal notranslate"><span class="pre">SelfNormalizedInverseProbabilityWeighting.estimate_policy_value()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.DirectMethod"><code class="docutils literal notranslate"><span class="pre">DirectMethod</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.DirectMethod.check_parameters"><code class="docutils literal notranslate"><span class="pre">DirectMethod.check_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.DirectMethod.estimate_policy_value"><code class="docutils literal notranslate"><span class="pre">DirectMethod.estimate_policy_value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.DirectMethod.fit"><code class="docutils literal notranslate"><span class="pre">DirectMethod.fit()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementing-a-new-estimator">Implementing a new estimator</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.BaseEstimator"><code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.BaseEstimator.check_parameters"><code class="docutils literal notranslate"><span class="pre">BaseEstimator.check_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.BaseEstimator.estimate_policy_value"><code class="docutils literal notranslate"><span class="pre">BaseEstimator.estimate_policy_value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.BaseEstimator.set_parameters"><code class="docutils literal notranslate"><span class="pre">BaseEstimator.set_parameters()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
   </nav></div>
 
