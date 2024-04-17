@@ -123,11 +123,89 @@ class BaseEstimator(ABC):
             if not np.allclose(np.sum(array, axis=1), np.ones(array.shape[0], dtype=float)):
                 raise ValueError(f"The {name} must sum to 1 on each sample.")
 
+    def estimate_policy_value_with_confidence_interval(
+        self,
+        num_samples: int = 1000,
+        significance_level: float = 0.05,
+    ) -> dict[str, float]:
+        """Estimate the confidence interval of the policy value.
+
+        This method uses bootstrapping to estimate the confidence interval of the policy value. The input data is
+        sampled from the estimated weighted rewards, using :meth:`estimate_weighted_rewards`.
+
+        Example:
+
+        .. code-block:: python
+
+            ipw = InverseProbabilityWeighting()
+            ipw.set_parameters(
+                target_policy_action_probabilities=target_policy_action_probabilities,
+                behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+                rewards=rewards,
+            )
+            metrics = ipw.estimate_policy_value_with_confidence_interval(
+                num_samples=1000, significance_level=0.05
+            )
+            print(metrics)
+
+        Should output:
+
+        .. code-block:: python
+
+            {
+                "lower_bound": 0.2,
+                "upper_bound": 4.0,
+                "mean": 3.2,
+                "std": 0.4,
+            }
+
+        :param num_samples: the number of bootstrap samples to use.
+        :param significance_level: the significance level of the confidence interval.
+        :return: a dictionary containing the confidence interval of the policy value. The keys are:
+
+            - "lower_bound": the lower bound of the policy value, given the significance level.
+            - "upper_bound": the upper bound of the policy value, given the significance level.
+            - "mean": the mean of the policy value.
+            - "std": the standard deviation of the policy value.
+        """
+        weighted_rewards = self.estimate_weighted_rewards()
+        assert (
+            weighted_rewards is not None and len(weighted_rewards) > 0
+        ), "The weighted rewards must not be empty."
+
+        weighted_rewards = weighted_rewards.reshape(-1)
+        boot_samples = []
+        for _ in np.arange(num_samples):
+            boot_samples.append(
+                np.mean(np.random.choice(num_samples, size=weighted_rewards.shape[0]))
+            )
+
+        lower_bound = np.quantile(boot_samples, significance_level / 2)
+        upper_bound = np.quantile(boot_samples, 1 - significance_level / 2)
+
+        return {
+            "lower_bound": lower_bound,
+            "upper_bound": upper_bound,
+            "mean": np.mean(boot_samples),
+            "std": np.std(boot_samples),
+        }
+
+    @abstractmethod
+    def estimate_weighted_rewards(self) -> np.ndarray:
+        """Estimate the weighted rewards.
+
+        This method should be overridden by subclasses to implement the specific estimator.
+
+        :return: the weighted rewards.
+        """
+        pass
+
     @abstractmethod
     def estimate_policy_value(self) -> float:
         """Estimate the value of the target policy.
 
-        This method should be overridden by subclasses to implement the specific estimator.
+        This method should be overridden by subclasses to implement the specific estimator. The typical implementation
+        should call :meth:`estimate_weighted_rewards` to compute the weighted rewards, then compute the policy value.
 
         :return: the estimated value of the target policy.
         """
@@ -161,15 +239,20 @@ class InverseProbabilityWeighting(BaseEstimator):
         self.importance_weights: np.ndarray | None = None
 
     @override(BaseEstimator)
-    def estimate_policy_value(self) -> float:
-        """Estimate the value of the target policy using the IPW estimator."""
+    def estimate_weighted_rewards(self) -> np.ndarray:
+        """Estimate the weighted rewards using the IPW estimator."""
         self.importance_weights = None
         self.check_parameters()
 
         self.importance_weights = (
             self.target_policy_action_probabilities / self.behavior_policy_action_probabilities
         )
-        return np.mean(self.importance_weights * self.rewards.reshape(-1, 1))
+        return self.importance_weights * self.rewards.reshape(-1, 1)
+
+    @override(BaseEstimator)
+    def estimate_policy_value(self) -> float:
+        """Estimate the value of the target policy using the IPW estimator."""
+        return np.mean(self.estimate_weighted_rewards())
 
 
 class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
@@ -192,16 +275,20 @@ class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
         super().__init__()
 
     @override(BaseEstimator)
+    def estimate_weighted_rewards(self) -> np.ndarray:
+        """Estimate the weighted rewards using the SNIPW estimator."""
+        super().estimate_weighted_rewards()
+
+        weighted_rewards = self.importance_weights * self.rewards.reshape(-1, 1)
+        return weighted_rewards / self.importance_weights
+
+    @override(BaseEstimator)
     def estimate_policy_value(self) -> float:
-        """Estimate the value of the target policy using the SNIPW estimator.
+        """Estimate the value of the target policy using the SNIPW estimator."""
+        super().estimate_weighted_rewards()
 
-        This essentially normalizes the importance weights to avoid high variance.
-        """
-        super().estimate_policy_value()
-
-        return np.sum(self.importance_weights * self.rewards.reshape(-1, 1)) / np.sum(
-            self.importance_weights
-        )
+        weighted_rewards = self.importance_weights * self.rewards.reshape(-1, 1)
+        return np.sum(weighted_rewards) / np.sum(self.importance_weights)
 
 
 class DirectMethod(BaseEstimator):
@@ -301,8 +388,8 @@ class DirectMethod(BaseEstimator):
         ), "The number of samples must be the same for the behavior policy and the target policy."
 
     @override(BaseEstimator)
-    def estimate_policy_value(self) -> float:
-        """Estimate the value of the target policy using the Direct Method estimator."""
+    def estimate_weighted_rewards(self) -> np.ndarray:
+        """Estimate the weighted rewards using the Direct Method estimator."""
         self.check_parameters()
 
         # use the Q model to predict the expected rewards
@@ -318,4 +405,10 @@ class DirectMethod(BaseEstimator):
             .reshape(-1, self.steps_per_episode)
         )
         initial_state_value = state_value[:, 0]
-        return np.mean(initial_state_value)
+
+        return initial_state_value
+
+    @override(BaseEstimator)
+    def estimate_policy_value(self) -> float:
+        """Estimate the value of the target policy using the Direct Method estimator."""
+        return np.mean(self.estimate_weighted_rewards())
