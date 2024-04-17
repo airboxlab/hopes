@@ -4,6 +4,8 @@
 
 # HOPES
 
+**[Docs](https://hopes.foobot.io/)**
+
 ## What is HOPES?
 
 **HOPES** - HVAC Off-Policy Evaluation and Selection - is a Python package for evaluating and selecting RL-based
