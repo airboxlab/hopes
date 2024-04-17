@@ -1,0 +1,798 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Hopes: Policies &#8212; Hopes v0.0.1</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'policy/index';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Hopes: Estimators" href="../ope/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.svg" class="logo__image only-light" alt="Hopes v0.0.1"/>
+    <script>document.write(`<img src="../_static/logo.svg" class="logo__image only-dark" alt="Hopes v0.0.1"/>`);</script>
+  
+  
+    <p class="title logo__title">Hopes v0.0.1</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../ope/index.html">
+                        Estimators
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        Policies
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../ope/index.html">
+                        Estimators
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        Policies
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item"><nav id="main-sidebar" class="bd-docs-nav bd-links" aria-label="Section Navigation">
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ope/index.html">Estimators</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Policies</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Hopes: Policies</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="hopes-policies">
+<h1>Hopes: Policies<a class="headerlink" href="#hopes-policies" title="Link to this heading">#</a></h1>
+<section id="implemented-policies">
+<h2>Implemented policies<a class="headerlink" href="#implemented-policies" title="Link to this heading">#</a></h2>
+<p>The base, abstract policy class is <a class="reference internal" href="#hopes.policy.Policy" title="hopes.policy.policies.Policy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Policy</span></code></a>.</p>
+<p>Following policies implement it:</p>
+<table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hopes.policy.RandomPolicy" title="hopes.policy.RandomPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.policy.RandomPolicy</span></code></a></p></td>
+<td><p>A random policy that selects actions uniformly at random.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hopes.policy.ClassificationBasedPolicy" title="hopes.policy.ClassificationBasedPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.policy.ClassificationBasedPolicy</span></code></a></p></td>
+<td><p>A policy that uses a classification model to predict the log-likelihoods of actions given observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hopes.policy.PiecewiseLinearPolicy" title="hopes.policy.PiecewiseLinearPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.policy.PiecewiseLinearPolicy</span></code></a></p></td>
+<td><p>A piecewise linear policy that selects actions based on a set of linear segments defined by thresholds and slopes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hopes.policy.FunctionBasedPolicy" title="hopes.policy.FunctionBasedPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.policy.FunctionBasedPolicy</span></code></a></p></td>
+<td><p>A policy based on a deterministic function that maps observations to actions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.policy.HttpPolicy</span></code></p></td>
+<td><p>A policy that uses a remote HTTP server that returns log likelihoods for actions given observations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hopes.policy.OnnxModelBasedPolicy" title="hopes.policy.OnnxModelBasedPolicy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.policy.OnnxModelBasedPolicy</span></code></a></p></td>
+<td><p>A policy that uses an existing ONNX model to predict the log-likelihoods of actions given observations.</p></td>
+</tr>
+</tbody>
+</table>
+<p>They aim to provide an integration with actual policies, which can be used in off-policy evaluation.</p>
+</section>
+<section id="policies-documentation">
+<h2>Policies documentation<a class="headerlink" href="#policies-documentation" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.policy.ClassificationBasedPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.policy.</span></span><span class="sig-name descname"><span class="pre">ClassificationBasedPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classification_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'logistic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.policy.ClassificationBasedPolicy" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.policy.Policy" title="hopes.policy.policies.Policy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Policy</span></code></a></p>
+<p>A policy that uses a classification model to predict the log-likelihoods of actions given
+observations.</p>
+<p>In absence of an actual control policy, this can be used to train a policy on a dataset
+of (obs, act) pairs that would have been collected offline.</p>
+<p>It currently supports logistic regression, random forest and MLP models.</p>
+<p>Example usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># train a classification-based policy</span>
+<span class="n">reg_policy</span> <span class="o">=</span> <span class="n">ClassificationBasedPolicy</span><span class="p">(</span><span class="n">obs</span><span class="o">=</span><span class="n">train_obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">train_act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span><span class="p">)</span>
+<span class="n">fit_stats</span> <span class="o">=</span> <span class="n">reg_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+<span class="c1"># compute action probabilities for new observations</span>
+<span class="n">act_probs</span> <span class="o">=</span> <span class="n">reg_policy</span><span class="o">.</span><span class="n">compute_action_probs</span><span class="p">(</span><span class="n">obs</span><span class="o">=</span><span class="n">new_obs</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.ClassificationBasedPolicy.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hopes.policy.ClassificationBasedPolicy.fit" title="Link to this definition">#</a></dt>
+<dd><p>Fit the classification model on the training data and return performance statistics
+computed on the training data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the accuracy and F1 score on the training data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.ClassificationBasedPolicy.log_likelihoods">
+<span class="sig-name descname"><span class="pre">log_likelihoods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.policy.ClassificationBasedPolicy.log_likelihoods" title="Link to this definition">#</a></dt>
+<dd><p>Compute the log-likelihoods of the actions under the classification-based policy for a
+given set of observations.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.policy.PiecewiseLinearPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.policy.</span></span><span class="sig-name descname"><span class="pre">PiecewiseLinearPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_segments</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">act</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actions_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.policy.PiecewiseLinearPolicy" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.policy.Policy" title="hopes.policy.policies.Policy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Policy</span></code></a></p>
+<p>A piecewise linear policy that selects actions based on a set of linear segments defined by
+thresholds and slopes.</p>
+<p>This can be used to estimate a probability distribution over actions drawn from a BMS
+reset rule, for instance an outdoor air reset that is a function of outdoor air
+temperature and is bounded by a minimum and maximum on both axis. This can also be
+helpful to model a simple schedule, where action is a function of time.</p>
+<p>Since the output of a piecewise linear model is deterministic, the log-likelihoods are
+computed by assuming the function is deterministic and assigning a probability of 1 to
+the action returned by the function and an almost zero probability to all other actions.</p>
+<p>Also, the piecewise linear policy output being continuous, we need to discretize the
+action space to compute the log-likelihoods. This is done by binning the actions to the
+nearest action in the discretized action space.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.PiecewiseLinearPolicy.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hopes.policy.PiecewiseLinearPolicy.fit" title="Link to this definition">#</a></dt>
+<dd><p>Fit the piecewise linear model on the training data and return the RMSE and R² on the
+training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the RMSE (‘rmse’) and R² (‘r2’) on the training data.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.PiecewiseLinearPolicy.log_likelihoods">
+<span class="sig-name descname"><span class="pre">log_likelihoods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.policy.PiecewiseLinearPolicy.log_likelihoods" title="Link to this definition">#</a></dt>
+<dd><p>Compute the log-likelihoods of the actions under the piecewise linear policy for a given
+set of observations.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.policy.OnnxModelBasedPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.policy.</span></span><span class="sig-name descname"><span class="pre">OnnxModelBasedPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">onnx_model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_len</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_n_actions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_n_rewards</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_len_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_actions_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_rewards_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state_output_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_output_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_probs_output_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_log_probs_output_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action_dist_inputs_output_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.policy.OnnxModelBasedPolicy" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.policy.Policy" title="hopes.policy.policies.Policy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Policy</span></code></a></p>
+<p>A policy that uses an existing ONNX model to predict the log-likelihoods of actions given
+observations.</p>
+<p>This class makes some opinionated assumptions about the structure of the ONNX model. You may need to override some
+methods if your model does not fit this structure.</p>
+<p>It supports models with attention mechanisms, where the state of the model is updated at each step.
+The action log likelihoods are computed from the output of the model, with 3 options depending on the output layer
+of the underlying model:</p>
+<ul class="simple">
+<li><p>from the action probabilities output.</p></li>
+<li><p>from the action log probabilities output.</p></li>
+<li><p>from the action distribution inputs output.</p></li>
+</ul>
+<p>Example of usage, based on a pre-trained model in Ray RLlib, saved using <code class="xref py py-meth docutils literal notranslate"><span class="pre">ray.rllib.algorithms.algorithm.Algorithm.export_policy_model()</span></code>.
+This model uses an Attention-based Transformer model and passes 10 previous actions as inputs to the model. The action
+log likelihoods are computed from the action distribution inputs output.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">onnx_file_path</span> <span class="o">=</span> <span class="s2">&quot;model.onnx&quot;</span>
+<span class="n">policy</span> <span class="o">=</span> <span class="n">OnnxModelBasedPolicy</span><span class="p">(</span>
+    <span class="n">onnx_model_path</span><span class="o">=</span><span class="n">onnx_file_path</span><span class="p">,</span>
+    <span class="n">obs_input</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;default_policy/obs:0&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+    <span class="n">state_dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span>  <span class="c1"># (num_transformers, memory, attention_dim)</span>
+    <span class="n">seq_len</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">prev_n_actions</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+    <span class="n">prev_n_rewards</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">state_input</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;default_policy/state_in_0:0&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+    <span class="n">seq_len_input</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;default_policy/seq_lens:0&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="n">prev_actions_input</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;default_policy/prev_actions:0&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+    <span class="n">state_output_name</span><span class="o">=</span><span class="s2">&quot;default_policy/Reshape_5:0&quot;</span><span class="p">,</span>
+    <span class="n">action_output_name</span><span class="o">=</span><span class="s2">&quot;default_policy/cond_1/Merge:0&quot;</span><span class="p">,</span>
+    <span class="n">action_probs_output_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">action_log_probs_output_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">action_dist_inputs_output_name</span><span class="o">=</span><span class="s2">&quot;default_policy/model_2/dense_6/BiasAdd:0&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">policy</span><span class="o">.</span><span class="n">log_likelihoods</span><span class="p">(</span><span class="n">obs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.OnnxModelBasedPolicy.compute_reward">
+<span class="sig-name descname"><span class="pre">compute_reward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">action</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#hopes.policy.OnnxModelBasedPolicy.compute_reward" title="Link to this definition">#</a></dt>
+<dd><p>Compute the reward for the given observations and actions. Only necessary if
+prev_n_rewards is &gt; 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs</strong> – the observations for which to compute the reward.</p></li>
+<li><p><strong>action</strong> – the action for which to compute the reward.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the computed reward.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.OnnxModelBasedPolicy.log_likelihoods">
+<span class="sig-name descname"><span class="pre">log_likelihoods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.policy.OnnxModelBasedPolicy.log_likelihoods" title="Link to this definition">#</a></dt>
+<dd><p>Compute the log-likelihoods of the actions under the policy for a given set of
+observations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obs</strong> – the observation for which to compute the log-likelihoods, shape:
+(batch_size, obs_dim).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.OnnxModelBasedPolicy.map_inputs">
+<span class="sig-name descname"><span class="pre">map_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hopes.policy.OnnxModelBasedPolicy.map_inputs" title="Link to this definition">#</a></dt>
+<dd><p>Prepare the inputs for the ONNX model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obs</strong> – the observations for which to prepare the inputs.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the inputs for the ONNX model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hopes.policy.OnnxModelBasedPolicy.output_names">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hopes.policy.OnnxModelBasedPolicy.output_names" title="Link to this definition">#</a></dt>
+<dd><p>The names of the outputs of the ONNX model.</p>
+<p>By default, returns all output names. It can be overridden to return a subset of
+output names.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.OnnxModelBasedPolicy.reset_state">
+<span class="sig-name descname"><span class="pre">reset_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hopes.policy.OnnxModelBasedPolicy.reset_state" title="Link to this definition">#</a></dt>
+<dd><p>Reset the state of the policy.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.policy.FunctionBasedPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.policy.</span></span><span class="sig-name descname"><span class="pre">FunctionBasedPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">policy_function</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">callable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">actions_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.policy.FunctionBasedPolicy" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.policy.Policy" title="hopes.policy.policies.Policy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Policy</span></code></a></p>
+<p>A policy based on a deterministic function that maps observations to actions.</p>
+<p>Log-likelihoods are computed by assuming the function is deterministic and assigning a
+probability of 1 to the action returned by the function and an almost zero probability
+to all other actions.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.FunctionBasedPolicy.log_likelihoods">
+<span class="sig-name descname"><span class="pre">log_likelihoods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.policy.FunctionBasedPolicy.log_likelihoods" title="Link to this definition">#</a></dt>
+<dd><p>Compute the log-likelihoods of the actions under the function-based policy for a given
+set of observations.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.policy.RandomPolicy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.policy.</span></span><span class="sig-name descname"><span class="pre">RandomPolicy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_actions</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.policy.RandomPolicy" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.policy.Policy" title="hopes.policy.policies.Policy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Policy</span></code></a></p>
+<p>A random policy that selects actions uniformly at random.</p>
+<p>It can serve as a baseline policy for comparison with other policies.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.RandomPolicy.log_likelihoods">
+<span class="sig-name descname"><span class="pre">log_likelihoods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.policy.RandomPolicy.log_likelihoods" title="Link to this definition">#</a></dt>
+<dd><p>Compute the log-likelihoods of the actions under the random policy for a given set of
+observations.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="implementing-a-new-policy">
+<h2>Implementing a new policy<a class="headerlink" href="#implementing-a-new-policy" title="Link to this heading">#</a></h2>
+<p>To implement a new policy, you need to subclass <a class="reference internal" href="#hopes.policy.Policy" title="hopes.policy.policies.Policy"><code class="xref py py-class docutils literal notranslate"><span class="pre">Policy</span></code></a> and implement the
+<a class="reference internal" href="#hopes.policy.Policy.log_likelihoods" title="hopes.policy.Policy.log_likelihoods"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hopes.policy.Policy.log_likelihoods()</span></code></a> method.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.policy.Policy">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.policy.</span></span><span class="sig-name descname"><span class="pre">Policy</span></span><a class="headerlink" href="#hopes.policy.Policy" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>An abstract class for policies.</p>
+<p>The policy must be subclassed and the log_likelihoods method must be implemented.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.Policy.compute_action_probs">
+<span class="sig-name descname"><span class="pre">compute_action_probs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.policy.Policy.compute_action_probs" title="Link to this definition">#</a></dt>
+<dd><p>Compute the action probabilities under a given policy for a given set of observations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obs</strong> – the observation for which to compute the action probabilities.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the action probabilities.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="hopes.policy.Policy.epsilon">
+<span class="sig-name descname"><span class="pre">epsilon</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#hopes.policy.Policy.epsilon" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.Policy.log_likelihoods">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">log_likelihoods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.policy.Policy.log_likelihoods" title="Link to this definition">#</a></dt>
+<dd><p>Compute the log-likelihoods of the actions under the policy for a given set of
+observations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obs</strong> – the observation for which to compute the log-likelihoods, shape:
+(batch_size, obs_dim).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.Policy.select_action">
+<span class="sig-name descname"><span class="pre">select_action</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deterministic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.policy.Policy.select_action" title="Link to this definition">#</a></dt>
+<dd><p>Select actions under the policy for given observations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obs</strong> – the observation(s) for which to select an action, shape (batch_size,
+obs_dim).</p></li>
+<li><p><strong>deterministic</strong> – whether to select actions deterministically.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the selected action(s).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.Policy.with_epsilon">
+<span class="sig-name descname"><span class="pre">with_epsilon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hopes.policy.Policy" title="hopes.policy.policies.Policy"><span class="pre">Policy</span></a></span></span><a class="headerlink" href="#hopes.policy.Policy.with_epsilon" title="Link to this definition">#</a></dt>
+<dd><p>Set the epsilon value for epsilon-greedy action selection.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../ope/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Hopes: Estimators</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implemented-policies">Implemented policies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#policies-documentation">Policies documentation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.ClassificationBasedPolicy"><code class="docutils literal notranslate"><span class="pre">ClassificationBasedPolicy</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.ClassificationBasedPolicy.fit"><code class="docutils literal notranslate"><span class="pre">ClassificationBasedPolicy.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.ClassificationBasedPolicy.log_likelihoods"><code class="docutils literal notranslate"><span class="pre">ClassificationBasedPolicy.log_likelihoods()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.PiecewiseLinearPolicy"><code class="docutils literal notranslate"><span class="pre">PiecewiseLinearPolicy</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.PiecewiseLinearPolicy.fit"><code class="docutils literal notranslate"><span class="pre">PiecewiseLinearPolicy.fit()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.PiecewiseLinearPolicy.log_likelihoods"><code class="docutils literal notranslate"><span class="pre">PiecewiseLinearPolicy.log_likelihoods()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.OnnxModelBasedPolicy"><code class="docutils literal notranslate"><span class="pre">OnnxModelBasedPolicy</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.OnnxModelBasedPolicy.compute_reward"><code class="docutils literal notranslate"><span class="pre">OnnxModelBasedPolicy.compute_reward()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.OnnxModelBasedPolicy.log_likelihoods"><code class="docutils literal notranslate"><span class="pre">OnnxModelBasedPolicy.log_likelihoods()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.OnnxModelBasedPolicy.map_inputs"><code class="docutils literal notranslate"><span class="pre">OnnxModelBasedPolicy.map_inputs()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.OnnxModelBasedPolicy.output_names"><code class="docutils literal notranslate"><span class="pre">OnnxModelBasedPolicy.output_names</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.OnnxModelBasedPolicy.reset_state"><code class="docutils literal notranslate"><span class="pre">OnnxModelBasedPolicy.reset_state()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.FunctionBasedPolicy"><code class="docutils literal notranslate"><span class="pre">FunctionBasedPolicy</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.FunctionBasedPolicy.log_likelihoods"><code class="docutils literal notranslate"><span class="pre">FunctionBasedPolicy.log_likelihoods()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.RandomPolicy"><code class="docutils literal notranslate"><span class="pre">RandomPolicy</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.RandomPolicy.log_likelihoods"><code class="docutils literal notranslate"><span class="pre">RandomPolicy.log_likelihoods()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementing-a-new-policy">Implementing a new policy</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy"><code class="docutils literal notranslate"><span class="pre">Policy</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.compute_action_probs"><code class="docutils literal notranslate"><span class="pre">Policy.compute_action_probs()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.epsilon"><code class="docutils literal notranslate"><span class="pre">Policy.epsilon</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.log_likelihoods"><code class="docutils literal notranslate"><span class="pre">Policy.log_likelihoods()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.select_action"><code class="docutils literal notranslate"><span class="pre">Policy.select_action()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.with_epsilon"><code class="docutils literal notranslate"><span class="pre">Policy.with_epsilon()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/policy/index.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, EnergyWise.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><div>
+    <img src="../_static/logo.svg" style="width: 1.5rem; height: 1.5rem"/>&nbsp;<a href="https://foobot.io">The Foobot Team</a>
+</div></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
