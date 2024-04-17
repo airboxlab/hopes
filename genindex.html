@@ -156,6 +156,13 @@
                       </a>
                     </li>
                 
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="ops/index.html">
+                        Selection
+                      </a>
+                    </li>
+                
   </ul>
 </nav></div>
       
@@ -256,6 +263,13 @@ document.write(`
                       </a>
                     </li>
                 
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="ops/index.html">
+                        Selection
+                      </a>
+                    </li>
+                
   </ul>
 </nav></div>
         
@@ -287,6 +301,7 @@ document.write(`
 <li class="toctree-l1"><a class="reference internal" href="overview/index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ope/index.html">Estimators</a></li>
 <li class="toctree-l1"><a class="reference internal" href="policy/index.html">Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ops/index.html">Selection</a></li>
 </ul>
 </div>
 </nav></div>
@@ -327,6 +342,7 @@ document.write(`
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
+ | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#R"><strong>R</strong></a>
@@ -373,8 +389,6 @@ document.write(`
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="policy/index.html#hopes.policy.Policy.epsilon">epsilon (hopes.policy.Policy attribute)</a>
-</li>
       <li><a href="ope/index.html#hopes.ope.estimators.BaseEstimator.estimate_policy_value">estimate_policy_value() (hopes.ope.estimators.BaseEstimator method)</a>
 
       <ul>
@@ -385,10 +399,10 @@ document.write(`
         <li><a href="ope/index.html#hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting.estimate_policy_value">(hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="ope/index.html#hopes.ope.estimators.BaseEstimator.estimate_policy_value_with_confidence_interval">estimate_policy_value_with_confidence_interval() (hopes.ope.estimators.BaseEstimator method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="ope/index.html#hopes.ope.estimators.BaseEstimator.estimate_weighted_rewards">estimate_weighted_rewards() (hopes.ope.estimators.BaseEstimator method)</a>
 
       <ul>
@@ -399,6 +413,8 @@ document.write(`
         <li><a href="ope/index.html#hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting.estimate_weighted_rewards">(hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting method)</a>
 </li>
       </ul></li>
+      <li><a href="ops/index.html#hopes.ope.evaluation.OffPolicyEvaluation.evaluate">evaluate() (hopes.ope.evaluation.OffPolicyEvaluation method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -456,13 +472,25 @@ document.write(`
   </ul></td>
 </tr></table>
 
+<h2 id="N">N</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policy/index.html#hopes.policy.Policy.name">name (hopes.policy.Policy property)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="policy/index.html#hopes.policy.OnnxModelBasedPolicy">OnnxModelBasedPolicy (class in hopes.policy)</a>
+      <li><a href="ops/index.html#hopes.ope.evaluation.OffPolicyEvaluation">OffPolicyEvaluation (class in hopes.ope.evaluation)</a>
+</li>
+      <li><a href="ops/index.html#hopes.ope.selection.OffPolicySelection">OffPolicySelection (class in hopes.ope.selection)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policy/index.html#hopes.policy.OnnxModelBasedPolicy">OnnxModelBasedPolicy (class in hopes.policy)</a>
+</li>
       <li><a href="policy/index.html#hopes.policy.OnnxModelBasedPolicy.output_names">output_names (hopes.policy.OnnxModelBasedPolicy property)</a>
 </li>
   </ul></td>
@@ -497,11 +525,15 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="policy/index.html#hopes.policy.Policy.select_action">select_action() (hopes.policy.Policy method)</a>
 </li>
+      <li><a href="ops/index.html#hopes.ope.selection.OffPolicySelection.select_top_k">select_top_k() (hopes.ope.selection.OffPolicySelection static method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="ope/index.html#hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting">SelfNormalizedInverseProbabilityWeighting (class in hopes.ope.estimators)</a>
 </li>
       <li><a href="ope/index.html#hopes.ope.estimators.BaseEstimator.set_parameters">set_parameters() (hopes.ope.estimators.BaseEstimator method)</a>
+</li>
+      <li><a href="ope/index.html#hopes.ope.estimators.BaseEstimator.short_name">short_name() (hopes.ope.estimators.BaseEstimator method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -510,6 +542,10 @@ document.write(`
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="policy/index.html#hopes.policy.Policy.with_epsilon">with_epsilon() (hopes.policy.Policy method)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="policy/index.html#hopes.policy.Policy.with_name">with_name() (hopes.policy.Policy method)</a>
 </li>
   </ul></td>
 </tr></table>

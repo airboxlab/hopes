@@ -43,6 +43,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'policy/index';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Hopes: Selection" href="../ops/index.html" />
     <link rel="prev" title="Hopes: Estimators" href="../ope/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -158,6 +159,13 @@
                       </a>
                     </li>
                 
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../ops/index.html">
+                        Selection
+                      </a>
+                    </li>
+                
   </ul>
 </nav></div>
       
@@ -260,6 +268,13 @@ document.write(`
                       </a>
                     </li>
                 
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../ops/index.html">
+                        Selection
+                      </a>
+                    </li>
+                
   </ul>
 </nav></div>
         
@@ -291,6 +306,7 @@ document.write(`
 <li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../ope/index.html">Estimators</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Policies</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ops/index.html">Selection</a></li>
 </ul>
 </div>
 </nav></div>
@@ -611,11 +627,6 @@ observations.</p>
 </dl>
 </dd></dl>
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hopes.policy.Policy.epsilon">
-<span class="sig-name descname"><span class="pre">epsilon</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#hopes.policy.Policy.epsilon" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="hopes.policy.Policy.log_likelihoods">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">log_likelihoods</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.policy.Policy.log_likelihoods" title="Link to this definition">#</a></dt>
@@ -628,6 +639,11 @@ observations.</p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="hopes.policy.Policy.name">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#hopes.policy.Policy.name" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hopes.policy.Policy.select_action">
@@ -651,6 +667,22 @@ obs_dim).</p></li>
 <dt class="sig sig-object py" id="hopes.policy.Policy.with_epsilon">
 <span class="sig-name descname"><span class="pre">with_epsilon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hopes.policy.Policy" title="hopes.policy.policies.Policy"><span class="pre">Policy</span></a></span></span><a class="headerlink" href="#hopes.policy.Policy.with_epsilon" title="Link to this definition">#</a></dt>
 <dd><p>Set the epsilon value for epsilon-greedy action selection.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>epsilon</strong> – the epsilon value for epsilon-greedy action selection.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.policy.Policy.with_name">
+<span class="sig-name descname"><span class="pre">with_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#hopes.policy.Policy" title="hopes.policy.policies.Policy"><span class="pre">Policy</span></a></span></span><a class="headerlink" href="#hopes.policy.Policy.with_name" title="Link to this definition">#</a></dt>
+<dd><p>Set the name of the policy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> – the name of the policy.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -676,6 +708,15 @@ obs_dim).</p></li>
         <p class="prev-next-subtitle">previous</p>
         <p class="prev-next-title">Hopes: Estimators</p>
       </div>
+    </a>
+    <a class="right-next"
+       href="../ops/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Hopes: Selection</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -728,10 +769,11 @@ obs_dim).</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementing-a-new-policy">Implementing a new policy</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy"><code class="docutils literal notranslate"><span class="pre">Policy</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.compute_action_probs"><code class="docutils literal notranslate"><span class="pre">Policy.compute_action_probs()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.epsilon"><code class="docutils literal notranslate"><span class="pre">Policy.epsilon</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.log_likelihoods"><code class="docutils literal notranslate"><span class="pre">Policy.log_likelihoods()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.name"><code class="docutils literal notranslate"><span class="pre">Policy.name</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.select_action"><code class="docutils literal notranslate"><span class="pre">Policy.select_action()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.with_epsilon"><code class="docutils literal notranslate"><span class="pre">Policy.with_epsilon()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.policy.Policy.with_name"><code class="docutils literal notranslate"><span class="pre">Policy.with_name()</span></code></a></li>
 </ul>
 </li>
 </ul>

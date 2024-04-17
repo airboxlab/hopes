@@ -1,0 +1,628 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Hopes: Selection &#8212; Hopes v0.0.1</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'ops/index';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Hopes: Policies" href="../policy/index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/logo.svg" class="logo__image only-light" alt="Hopes v0.0.1"/>
+    <script>document.write(`<img src="../_static/logo.svg" class="logo__image only-dark" alt="Hopes v0.0.1"/>`);</script>
+  
+  
+    <p class="title logo__title">Hopes v0.0.1</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../ope/index.html">
+                        Estimators
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../policy/index.html">
+                        Policies
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        Selection
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item">
+<nav class="navbar-nav">
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../overview/index.html">
+                        Overview
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../ope/index.html">
+                        Estimators
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../policy/index.html">
+                        Policies
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        Selection
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item"><nav id="main-sidebar" class="bd-docs-nav bd-links" aria-label="Section Navigation">
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../overview/index.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ope/index.html">Estimators</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../policy/index.html">Policies</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Selection</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Hopes: Selection</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="hopes-selection">
+<h1>Hopes: Selection<a class="headerlink" href="#hopes-selection" title="Link to this heading">#</a></h1>
+<p>Running an Off-Policy Evaluation (OPE) experiment and then a selection of the best policies with Hopes is simple.</p>
+<p>Example with a synthetic, random, dataset.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create the behavior policy</span>
+<span class="n">behavior_policy</span> <span class="o">=</span> <span class="n">ClassificationBasedPolicy</span><span class="p">(</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">&quot;logistic&quot;</span>
+<span class="p">)</span>
+<span class="n">behavior_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+<span class="c1"># create the target policies</span>
+<span class="n">target_policy_1</span> <span class="o">=</span> <span class="n">RandomPolicy</span><span class="p">(</span><span class="n">num_actions</span><span class="o">=</span><span class="n">num_actions</span><span class="p">)</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">&quot;p1&quot;</span><span class="p">)</span>
+<span class="n">target_policy_2</span> <span class="o">=</span> <span class="n">RandomPolicy</span><span class="p">(</span><span class="n">num_actions</span><span class="o">=</span><span class="n">num_actions</span><span class="p">)</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">&quot;p2&quot;</span><span class="p">)</span>
+<span class="n">target_policy_3</span> <span class="o">=</span> <span class="n">ClassificationBasedPolicy</span><span class="p">(</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span>
+<span class="p">)</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">&quot;p3&quot;</span><span class="p">)</span>
+<span class="n">target_policy_3</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+<span class="c1"># initialize the estimators</span>
+<span class="n">estimators</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">InverseProbabilityWeighting</span><span class="p">(),</span>
+    <span class="n">SelfNormalizedInverseProbabilityWeighting</span><span class="p">(),</span>
+<span class="p">]</span>
+
+<span class="c1"># run the off-policy evaluation</span>
+<span class="n">ope</span> <span class="o">=</span> <span class="n">OffPolicyEvaluation</span><span class="p">(</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+    <span class="n">rewards</span><span class="o">=</span><span class="n">rew</span><span class="p">,</span>
+    <span class="n">behavior_policy</span><span class="o">=</span><span class="n">behavior_policy</span><span class="p">,</span>
+    <span class="n">estimators</span><span class="o">=</span><span class="n">estimators</span><span class="p">,</span>
+    <span class="n">fail_fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">significance_level</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">results</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">ope</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">target_policy</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">target_policy</span> <span class="ow">in</span> <span class="p">[</span><span class="n">target_policy_1</span><span class="p">,</span> <span class="n">target_policy_2</span><span class="p">,</span> <span class="n">target_policy_3</span><span class="p">]</span>
+<span class="p">]</span>
+
+<span class="c1"># select the top k policies based on lower bound (confidence interval +-90%)</span>
+<span class="n">top_k_results</span> <span class="o">=</span> <span class="n">OffPolicySelection</span><span class="o">.</span><span class="n">select_top_k</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;lower_bound&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">top_k_results</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This should produce an output similar to:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Policy</span><span class="p">:</span> <span class="n">p2</span>
+<span class="n">Confidence</span> <span class="n">interval</span><span class="p">:</span> <span class="o">+-</span> <span class="mf">90.0</span><span class="o">%</span>
+<span class="o">=====</span>  <span class="o">========</span>  <span class="o">==========</span>  <span class="o">=============</span>  <span class="o">=============</span>
+<span class="o">..</span>         <span class="n">mean</span>         <span class="n">std</span>    <span class="n">lower_bound</span>    <span class="n">upper_bound</span>
+<span class="o">=====</span>  <span class="o">========</span>  <span class="o">==========</span>  <span class="o">=============</span>  <span class="o">=============</span>
+<span class="n">IPW</span>    <span class="mf">0.510251</span>  <span class="mf">0.00788465</span>       <span class="mf">0.497324</span>       <span class="mf">0.522907</span>
+<span class="n">SNIPW</span>  <span class="mf">0.499158</span>  <span class="mf">0.00523288</span>       <span class="mf">0.490235</span>       <span class="mf">0.507513</span>
+<span class="o">=====</span>  <span class="o">========</span>  <span class="o">==========</span>  <span class="o">=============</span>  <span class="o">=============</span>
+</pre></div>
+</div>
+<section id="classes-documentation">
+<h2>Classes documentation<a class="headerlink" href="#classes-documentation" title="Link to this heading">#</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.ope.evaluation.OffPolicyEvaluation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.evaluation.</span></span><span class="sig-name descname"><span class="pre">OffPolicyEvaluation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewards</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../policy/index.html#hopes.policy.Policy" title="hopes.policy.policies.Policy"><span class="pre">Policy</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">estimators</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="../ope/index.html#hopes.ope.estimators.BaseEstimator" title="hopes.ope.estimators.BaseEstimator"><span class="pre">BaseEstimator</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fail_fast</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">significance_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.ope.evaluation.OffPolicyEvaluation" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Off-Policy evaluation of a target policy using a behavior policy and a set of estimators.</p>
+<p>Example usage:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create the behavior policy</span>
+<span class="n">behavior_policy</span> <span class="o">=</span> <span class="n">ClassificationBasedPolicy</span><span class="p">(</span><span class="n">obs</span><span class="o">=</span><span class="n">collected_obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">collected_act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">&quot;logistic&quot;</span><span class="p">)</span>
+<span class="n">behavior_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
+
+<span class="c1"># create the target policy</span>
+<span class="n">target_policy</span> <span class="o">=</span> <span class="n">RandomPolicy</span><span class="p">(</span><span class="n">num_actions</span><span class="o">=</span><span class="n">num_actions</span><span class="p">)</span>
+
+<span class="c1"># initialize the estimators</span>
+<span class="n">estimators</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">InverseProbabilityWeighting</span><span class="p">(),</span>
+    <span class="n">SelfNormalizedInverseProbabilityWeighting</span><span class="p">(),</span>
+<span class="p">]</span>
+
+<span class="c1"># run the off-policy evaluation</span>
+<span class="n">ope</span> <span class="o">=</span> <span class="n">OffPolicyEvaluation</span><span class="p">(</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span>
+    <span class="n">rewards</span><span class="o">=</span><span class="n">rew</span><span class="p">,</span>
+    <span class="n">target_policy</span><span class="o">=</span><span class="n">target_policy</span><span class="p">,</span>
+    <span class="n">behavior_policy</span><span class="o">=</span><span class="n">behavior_policy</span><span class="p">,</span>
+    <span class="n">estimators</span><span class="o">=</span><span class="n">estimators</span><span class="p">,</span>
+    <span class="n">fail_fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">significance_level</span><span class="o">=</span><span class="mf">0.1</span>
+<span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">ope</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+
+<span class="n">results</span><span class="o">.</span><span class="n">as_dataframe</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Expected output:</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>mean</p></th>
+<th class="head"><p>std</p></th>
+<th class="head"><p>lower_bound</p></th>
+<th class="head"><p>upper_bound</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>IPW</p></td>
+<td><p>0.509084</p></td>
+<td><p>0.00802636</p></td>
+<td><p>0.496008</p></td>
+<td><p>0.522423</p></td>
+</tr>
+<tr class="row-odd"><td><p>SNIPW</p></td>
+<td><p>0.499934</p></td>
+<td><p>0.00515545</p></td>
+<td><p>0.491553</p></td>
+<td><p>0.508592</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.evaluation.OffPolicyEvaluation.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_policy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="../policy/index.html#hopes.policy.Policy" title="hopes.policy.policies.Policy"><span class="pre">Policy</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OffPolicyEvaluationResults</span></span></span><a class="headerlink" href="#hopes.ope.evaluation.OffPolicyEvaluation.evaluate" title="Link to this definition">#</a></dt>
+<dd><p>Run the off-policy evaluation and return the estimated value of the target policy.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>a dict of OffPolicyEvaluationResult instances, one for each estimator</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.ope.selection.OffPolicySelection">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.selection.</span></span><span class="sig-name descname"><span class="pre">OffPolicySelection</span></span><a class="headerlink" href="#hopes.ope.selection.OffPolicySelection" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.selection.OffPolicySelection.select_top_k">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">select_top_k</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evaluation_results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">OffPolicyEvaluationResults</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">OffPolicyEvaluationResults</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hopes.ope.selection.OffPolicySelection.select_top_k" title="Link to this definition">#</a></dt>
+<dd><p>Select the top-k policies based on the given metric.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>evaluation_results</strong> – The results of the off-policy evaluation for multiple
+policies.</p></li>
+<li><p><strong>metric</strong> – The metric to use for the selection. Can be “mean”, “lower_bound”,
+“upper_bound”.</p></li>
+<li><p><strong>top_k</strong> – The number of policies to select.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The top-k policies based on the given metric.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../policy/index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Hopes: Policies</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes-documentation">Classes documentation</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.evaluation.OffPolicyEvaluation"><code class="docutils literal notranslate"><span class="pre">OffPolicyEvaluation</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.evaluation.OffPolicyEvaluation.evaluate"><code class="docutils literal notranslate"><span class="pre">OffPolicyEvaluation.evaluate()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.selection.OffPolicySelection"><code class="docutils literal notranslate"><span class="pre">OffPolicySelection</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.selection.OffPolicySelection.select_top_k"><code class="docutils literal notranslate"><span class="pre">OffPolicySelection.select_top_k()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="../_sources/ops/index.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2024, EnergyWise.
+      <br/>
+    
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><div>
+    <img src="../_static/logo.svg" style="width: 1.5rem; height: 1.5rem"/>&nbsp;<a href="https://foobot.io">The Foobot Team</a>
+</div></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
