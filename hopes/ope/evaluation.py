@@ -9,23 +9,6 @@ from tabulate import tabulate
 from hopes.ope.estimators import BaseEstimator
 from hopes.policy import Policy
 
-"""
-TODO:
-- workflow to run several estimators
-- option to fail fast if one estimator fails, or keep going
-- option to run estimators in parallel or sequentially
-- compute several metrics for each estimator
-    - policy value
-    - lower bound
-    - upper bound
-    - mean and variance
-
-- return policies compared by:
-    - mean value
-    - lower bound
-    - upper bound
-"""
-
 
 @dataclass_json
 @dataclass
