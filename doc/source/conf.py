@@ -34,6 +34,7 @@ autodoc_mock_imports = [
     "sklearn",
     "torch",
     "pwlf",
+    "onnxruntime",
 ]
 
 templates_path = ["_templates"]
