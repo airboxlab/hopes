@@ -10,7 +10,45 @@ from hopes.policy.policies import Policy
 
 class OnnxModelBasedPolicy(Policy):
     """A policy that uses an existing ONNX model to predict the log-likelihoods of actions given
-    observations."""
+    observations.
+
+    This class makes some opinionated assumptions about the structure of the ONNX model. You may need to override some
+    methods if your model does not fit this structure.
+
+    It supports models with attention mechanisms, where the state of the model is updated at each step.
+    The action log likelihoods are computed from the output of the model, with 3 options depending on the output layer
+    of the underlying model:
+
+    - from the action probabilities output.
+    - from the action log probabilities output.
+    - from the action distribution inputs output.
+
+    Example of usage, based on a pre-trained model in Ray RLlib, saved using :meth:`ray.rllib.algorithms.algorithm.Algorithm.export_policy_model`.
+    This model uses an Attention-based Transformer model and passes 10 previous actions as inputs to the model. The action
+    log likelihoods are computed from the action distribution inputs output.
+
+    .. code-block:: python
+
+            onnx_file_path = "model.onnx"
+            policy = OnnxModelBasedPolicy(
+                onnx_model_path=onnx_file_path,
+                obs_input=("default_policy/obs:0", np.float32),
+                state_dim=(1, 10, 32),  # (num_transformers, memory, attention_dim)
+                seq_len=10,
+                prev_n_actions=10,
+                prev_n_rewards=0,
+                state_input=("default_policy/state_in_0:0", np.float32),
+                seq_len_input=("default_policy/seq_lens:0", np.int32),
+                prev_actions_input=("default_policy/prev_actions:0", np.int64),
+                state_output_name="default_policy/Reshape_5:0",
+                action_output_name="default_policy/cond_1/Merge:0",
+                action_probs_output_name=None,
+                action_log_probs_output_name=None,
+                action_dist_inputs_output_name="default_policy/model_2/dense_6/BiasAdd:0",
+            )
+
+            policy.log_likelihoods(obs=np.random.rand(1, 15))
+    """
 
     def __init__(
         self,

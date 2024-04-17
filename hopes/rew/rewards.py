@@ -118,8 +118,11 @@ class RegressionBasedRewardModel(RewardModel):
                 n_estimators=self.model_params.get("n_estimators", 100),
             )
 
-    def fit(self) -> dict[str, float] | None:
-        """Fit the reward model to the training data."""
+    def fit(self) -> dict[str, float]:
+        """Fit the reward model to the training data.
+
+        :return: a dictionary containing the RMSE of the fitted model.
+        """
         model_in = np.concatenate((self.obs, self.act), axis=1)
 
         if self.regression_model == "mlp":

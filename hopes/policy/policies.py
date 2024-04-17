@@ -77,7 +77,10 @@ class Policy(ABC):
 
 
 class RandomPolicy(Policy):
-    """A random policy that selects actions uniformly at random."""
+    """A random policy that selects actions uniformly at random.
+
+    It can serve as a baseline policy for comparison with other policies.
+    """
 
     def __init__(self, num_actions: int):
         assert num_actions > 0, "Number of actions must be positive."
@@ -85,6 +88,8 @@ class RandomPolicy(Policy):
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-likelihoods of the actions under the random policy for a given set of
+        observations."""
         action_probs = np.random.rand(obs.shape[0], self.num_actions)
         action_probs /= action_probs.sum(axis=1, keepdims=True)
         return np.log(action_probs)
@@ -96,6 +101,19 @@ class ClassificationBasedPolicy(Policy):
 
     In absence of an actual control policy, this can be used to train a policy on a dataset
     of (obs, act) pairs that would have been collected offline.
+
+    It currently supports logistic regression, random forest and MLP models.
+
+    Example usage:
+
+    .. code-block:: python
+
+        # train a classification-based policy
+        reg_policy = ClassificationBasedPolicy(obs=train_obs, act=train_act, classification_model="random_forest")
+        fit_stats = reg_policy.fit()
+
+        # compute action probabilities for new observations
+        act_probs = reg_policy.compute_action_probs(obs=new_obs)
     """
 
     def __init__(
@@ -181,6 +199,8 @@ class ClassificationBasedPolicy(Policy):
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-likelihoods of the actions under the classification-based policy for a
+        given set of observations."""
         if self.classification_model == "mlp":
             with torch.no_grad():
                 output = self.model(torch.Tensor(obs))
@@ -197,6 +217,14 @@ class PiecewiseLinearPolicy(Policy):
     reset rule, for instance an outdoor air reset that is a function of outdoor air
     temperature and is bounded by a minimum and maximum on both axis. This can also be
     helpful to model a simple schedule, where action is a function of time.
+
+    Since the output of a piecewise linear model is deterministic, the log-likelihoods are
+    computed by assuming the function is deterministic and assigning a probability of 1 to
+    the action returned by the function and an almost zero probability to all other actions.
+
+    Also, the piecewise linear policy output being continuous, we need to discretize the
+    action space to compute the log-likelihoods. This is done by binning the actions to the
+    nearest action in the discretized action space.
     """
 
     def __init__(
@@ -256,6 +284,8 @@ class PiecewiseLinearPolicy(Policy):
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-likelihoods of the actions under the piecewise linear policy for a given
+        set of observations."""
         if obs.ndim == 1:
             raw_actions = self.model.predict(obs)
         else:
@@ -286,6 +316,8 @@ class FunctionBasedPolicy(Policy):
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-likelihoods of the actions under the function-based policy for a given
+        set of observations."""
         raw_actions = np.vectorize(self.policy_function)(obs)
         # bin the action to the nearest action using the discretized action space
         actions = bin_actions(raw_actions, self.actions_bins)
@@ -295,7 +327,11 @@ class FunctionBasedPolicy(Policy):
 
 class HttpPolicy(Policy):
     """A policy that uses a remote HTTP server that returns log likelihoods for actions given
-    observations."""
+    observations.
+
+    The request and response payloads processing is customizable by providing the
+    request_payload_fun and response_payload_fun functions.
+    """
 
     def __init__(
         self,
@@ -342,6 +378,8 @@ class HttpPolicy(Policy):
 
     @override(Policy)
     def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-likelihoods of the actions under the HTTP policy for a given set of
+        observations."""
         all_log_likelihoods = []
         for chunk in np.array_split(obs, len(obs) // self.batch_size):
             # Send HTTP request to server
