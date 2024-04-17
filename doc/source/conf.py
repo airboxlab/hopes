@@ -78,7 +78,7 @@ html_theme_options = {
     #     "navbar-anyscale",
     # ],
     # "navbar_center": ["navbar-links"],
-    "navbar_align": "left",
+    "navbar_align": "center",
     # "navbar_persistent": [
     #     "search-button-field",
     #     "theme-switcher",
