@@ -14,6 +14,19 @@ Roadmap
 Implemented estimators
 -----------------------
 
+Currently, the following estimators are implemented:
+
+.. autosummary::
+   :nosignatures:
+
+   hopes.ope.estimators.BaseEstimator
+   hopes.ope.estimators.InverseProbabilityWeighting
+   hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting
+   hopes.ope.estimators.DirectMethod
+
+Estimators documentation
+------------------------
+
 .. autoclass:: hopes.ope.estimators.InverseProbabilityWeighting
     :members:
     :undoc-members:

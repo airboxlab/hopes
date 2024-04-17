@@ -24,6 +24,9 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.coverage",
     "sphinx.ext.autosummary",
+    # responsive design
+    "sphinx_design",
+    "sphinx_last_updated_by_git",
 ]
 
 autodoc_mock_imports = [
@@ -72,25 +75,10 @@ html_theme_options = {
         "image_light": "_static/img/logo.svg",
         "image_dark": "_static/img/logo.svg",
     },
-    # "navbar_start": ["navbar-ray-logo"],
-    # "navbar_end": [
-    #     "navbar-icon-links",
-    #     "navbar-anyscale",
-    # ],
-    # "navbar_center": ["navbar-links"],
     "navbar_align": "content",
-    # "navbar_persistent": [
-    #     "search-button-field",
-    #     "theme-switcher",
-    # ],
-    # "secondary_sidebar_items": [
-    #     "page-toc",
-    #     "edit-this-page",
-    # ],
-    # "content_footer_items": [
-    #     "csat",
-    # ],
     "navigation_depth": 2,
+    "footer_start": ["copyright"],
+    "footer_end": ["footer-end"],
     "pygment_light_style": "stata-dark",
     "pygment_dark_style": "stata-dark",
 }
