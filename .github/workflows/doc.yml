@@ -1,0 +1,36 @@
+name: docs
+concurrency: docs
+
+on: [push]
+
+jobs:
+  docs:
+    name: HOPES documentation
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: "pip"
+
+      - name: Install docs requirements
+        run: |
+          pip install -r doc/requirements.txt
+
+      - name: Build docs
+        run: |
+          cd doc
+          make html
+
+      - name: Deploy docs
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: doc/_build/html
+          cname: hopes.foobot.io

@@ -43,6 +43,7 @@ class BaseEstimator(ABC):
         overridden by subclasses to add additional checks.
 
         Importance sampling estimators have several assumptions that must be met:
+
         - coverage: the target and behavior policies must have non-zero probability of taking the actions.
             This is not 100% necessary, i.e. if both policies have zero probability of taking an action under some
             state, but we enforce this assumption here to avoid numerical issues.
@@ -124,20 +125,26 @@ class BaseEstimator(ABC):
 
     @abstractmethod
     def estimate_policy_value(self) -> float:
+        """Estimate the value of the target policy.
+
+        This method should be overridden by subclasses to implement the specific estimator.
+
+        :return: the estimated value of the target policy.
+        """
         pass
 
 
 class InverseProbabilityWeighting(BaseEstimator):
     r"""Inverse Probability Weighting (IPW) estimator.
 
-    V_{IPW}(\pi_e, D)=\frac {1}{n} \sum_{t=1}^n p(s_t,a_t) r_t
+    :math:`V_{IPW}(\pi_e, D)=\frac {1}{n} \sum_{t=1}^n p(s_t,a_t) r_t`
 
     Where:
-        - D is the offline collected dataset.
-        - p(s_t,a_t) is the importance weight defined as p(s_t,a_t)=\frac{\pi_e(a_t|s_t)}{\pi_b(a_t|s_t)}.
-        - pi_e is the target policy and pi_b is the behavior policy.
-        - r_t is the reward at time t.
-        - n is the number of samples.
+        - :math:`D` is the offline collected dataset.
+        - :math:`p(s_t,a_t)` is the importance weight defined as :math:`p(s_t,a_t)=\frac{\pi_e(a_t|s_t)}{\pi_b(a_t|s_t)}`.
+        - :math:`\pi_e` is the target policy and :math:`\pi_b` is the behavior policy.
+        - :math:`r_t` is the reward observed at time :math:`t` for the behavior policy.
+        - :math:`n` is the number of samples.
 
     This estimator has generally high variance, especially on small datasets, and can be improved by using
     self-normalized importance weights.
@@ -155,6 +162,7 @@ class InverseProbabilityWeighting(BaseEstimator):
 
     @override(BaseEstimator)
     def estimate_policy_value(self) -> float:
+        """Estimate the value of the target policy using the IPW estimator."""
         self.importance_weights = None
         self.check_parameters()
 
@@ -167,14 +175,14 @@ class InverseProbabilityWeighting(BaseEstimator):
 class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
     r"""Self-Normalized Inverse Probability Weighting (SNIPW) estimator.
 
-    V_{SNIPW}(\pi_e, D)= \frac {\sum_{t=1}^n p(s_t,a_t) r_t}{\sum_{t=1}^n p(s_t,a_t)}
+    :math:`V_{SNIPW}(\pi_e, D)= \frac {\sum_{t=1}^n p(s_t,a_t) r_t}{\sum_{t=1}^n p(s_t,a_t)}`
 
     Where:
-        - D is the offline collected dataset.
-        - p(s_t,a_t) is the importance weight defined as p(s_t,a_t)=\frac{\pi_e(a_t|s_t)}{\pi_b(a_t|s_t)}.
-        - pi_e is the target policy and pi_b is the behavior policy.
-        - r_t is the reward at time t.
-        - n is the number of samples.
+        - :math:`D` is the offline collected dataset.
+        - :math:`p(s_t,a_t)` is the importance weight defined as :math:`p(s_t,a_t)=\frac{\pi_e(a_t|s_t)}{\pi_b(a_t|s_t)}`.
+        - :math:`\pi_e` is the target policy and :math:`\pi_b` is the behavior policy.
+        - :math:`r_t` is the reward at time :math:`t`.
+        - :math:`n` is the number of samples.
 
     References:
         https://papers.nips.cc/paper_files/paper/2015/hash/39027dfad5138c9ca0c474d71db915c3-Abstract.html
@@ -185,6 +193,10 @@ class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
 
     @override(BaseEstimator)
     def estimate_policy_value(self) -> float:
+        """Estimate the value of the target policy using the SNIPW estimator.
+
+        This essentially normalizes the importance weights to avoid high variance.
+        """
         super().estimate_policy_value()
 
         return np.sum(self.importance_weights * self.rewards.reshape(-1, 1)) / np.sum(
@@ -195,14 +207,15 @@ class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
 class DirectMethod(BaseEstimator):
     r"""Direct Method (DM) estimator.
 
-    V_{DM}(\pi_e, D, Q)=\frac {1}{n} \sum_{t=1}^n \sum_{a \in A} \pi_e(a|s_0) Q(s_0, a)
+    :math:`V_{DM}(\pi_e, D, Q)=\frac {1}{n} \sum_{t=1}^n \sum_{a \in A} \pi_e(a|s_0) Q(s_0, a)`
 
     Where:
-        - D is the offline collected dataset.
-        - pi_e is the target policy.
-        - Q is the Q model trained to estimate the expected reward of the initial state under the behavior policy.
-        - n is the number of samples.
-        - a is the action taken.
+        - :math:`D` is the offline collected dataset.
+        - :math:`\pi_e` is the target policy.
+        - :math:`Q` is the Q model trained to estimate the expected reward of the initial state under the behavior policy.
+        - :math:`n` is the number of samples.
+        - :math:`a` is the action taken in the set of actions :math:`A`.
+        - :math:`s_0` is the initial state.
 
     This estimator trains a Q model using supervised learning, then uses it to estimate the expected reward of the
     initial state under the target policy. The performance of this estimator depends on the quality of the Q model.
@@ -262,6 +275,11 @@ class DirectMethod(BaseEstimator):
         self.steps_per_episode = steps_per_episode
 
     def fit(self) -> dict[str, float] | None:
+        """Fit the Q model to estimate the expected reward of the initial state under the behavior
+        policy.
+
+        :return: the fit statistics of the Q model.
+        """
         self.q_model = self.q_model_cls(
             obs=self.behavior_policy_obs,
             act=self.behavior_policy_act,
@@ -272,6 +290,10 @@ class DirectMethod(BaseEstimator):
         return self.q_model.fit()
 
     def check_parameters(self) -> None:
+        """Check if the estimator parameters are valid.
+
+        Base estimator checks plus additional checks for the Q model.
+        """
         super().check_parameters()
 
         assert (
@@ -280,6 +302,7 @@ class DirectMethod(BaseEstimator):
 
     @override(BaseEstimator)
     def estimate_policy_value(self) -> float:
+        """Estimate the value of the target policy using the Direct Method estimator."""
         self.check_parameters()
 
         # use the Q model to predict the expected rewards

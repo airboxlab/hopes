@@ -16,3 +16,6 @@ _versions/**/version.toml
 htmlcov/
 .coverage
 coverage.xml
+
+# doc
+**/_build/
