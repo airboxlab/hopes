@@ -34,7 +34,7 @@ class OffPolicyEvaluationResults:
         table = tabulate(self.as_dataframe(), headers="keys", tablefmt="rounded_grid")
         return (
             f"Policy: {self.policy_name}"
-            f"\nConfidence interval: ± {100 * (1 - self.significance_level)}%"
+            f"\nConfidence interval: ±{100 * (1 - self.significance_level)}%"
             f"\n{table}"
         )
 
@@ -70,17 +70,6 @@ class OffPolicyEvaluation:
             significance_level=0.1
         )
         results = ope.evaluate()
-
-        results.as_dataframe()
-
-    Expected output:
-
-    =====  ========  ==========  =============  =============
-    ..         mean         std    lower_bound    upper_bound
-    =====  ========  ==========  =============  =============
-    IPW    0.509084  0.00802636       0.496008       0.522423
-    SNIPW  0.499934  0.00515545       0.491553       0.508592
-    =====  ========  ==========  =============  =============
     """
 
     def __init__(
