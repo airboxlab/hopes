@@ -32,7 +32,10 @@ Implemented estimators
 Implementing a new estimator
 ----------------------------
 
-To implement a new estimator, you need to subclass :class:`hopes.ope.estimators.BaseEstimator` and implement the :meth:`hopes.ope.estimators.BaseEstimator.estimate_policy_value`. It should return the estimated value of the target policy value function.
+To implement a new estimator, you need to subclass :class:`hopes.ope.estimators.BaseEstimator` and implement:
+
+- :meth:`hopes.ope.estimators.BaseEstimator.estimate_weighted_rewards`. It should return the estimated weighted rewards.
+- :meth:`hopes.ope.estimators.BaseEstimator.estimate_policy_value`. It should return the estimated value of the target policy. It typically uses the estimated weighted rewards.
 
 Below is the `BaseEstimator` class documentation.
 
