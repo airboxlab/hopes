@@ -23,6 +23,7 @@ class OffPolicyEvaluationResult:
 
 @dataclass
 class OffPolicyEvaluationResults:
+    policy_name: str
     results: dict[str, OffPolicyEvaluationResult]
     significance_level: float
 
@@ -31,7 +32,11 @@ class OffPolicyEvaluationResults:
 
     def __str__(self):
         table = tabulate(self.as_dataframe(), headers="keys", tablefmt="rounded_grid")
-        return f"{table}\nSignificance level: {self.significance_level}"
+        return (
+            f"Policy: {self.policy_name}"
+            f"\nConfidence interval: ± {100 * (1 - self.significance_level)}%"
+            f"\n{table}"
+        )
 
 
 class OffPolicyEvaluation:
@@ -82,7 +87,6 @@ class OffPolicyEvaluation:
         self,
         obs: np.ndarray,
         rewards: np.ndarray,
-        target_policy: Policy,
         behavior_policy: Policy,
         estimators: list[BaseEstimator],
         fail_fast: bool = True,
@@ -93,7 +97,6 @@ class OffPolicyEvaluation:
         :param obs: the observations for which to evaluate the target policy
         :param rewards: the rewards associated with the observations, collected using the
             behavior policy
-        :param target_policy: the target policy to evaluate
         :param behavior_policy: the behavior policy used to generate the data
         :param estimators: a list of estimators to use to evaluate the target policy
         :param fail_fast: whether to stop the evaluation if one estimator fails
@@ -103,7 +106,6 @@ class OffPolicyEvaluation:
         assert len(obs.shape) == 2, "obs must be a 2D array"
         assert isinstance(rewards, np.ndarray), "rewards must be a numpy array"
         assert len(rewards.shape) == 1, "rewards must be a 1D array"
-        assert isinstance(target_policy, Policy), "target_policy must be an instance of Policy"
         assert isinstance(behavior_policy, Policy), "behavior_policy must be an instance of Policy"
         assert len(estimators) > 0, "estimators must be a non-empty list"
         assert all(
@@ -115,19 +117,19 @@ class OffPolicyEvaluation:
 
         self.obs = obs
         self.rewards = rewards
-        self.target_policy = target_policy
         self.behavior_policy = behavior_policy
         self.estimators = estimators
         self.fail_fast = fail_fast
         self.significance_level = significance_level
 
-    def evaluate(self) -> OffPolicyEvaluationResults:
+    def evaluate(self, target_policy: Policy) -> OffPolicyEvaluationResults:
         """Run the off-policy evaluation and return the estimated value of the target policy.
 
         :return: a dict of OffPolicyEvaluationResult instances, one for each estimator
         """
+        assert isinstance(target_policy, Policy), "target_policy must be an instance of Policy"
 
-        target_policy_action_probabilities = self.target_policy.compute_action_probs(self.obs)
+        target_policy_action_probabilities = target_policy.compute_action_probs(self.obs)
         behavior_policy_action_probabilities = self.behavior_policy.compute_action_probs(self.obs)
 
         results = {}
@@ -154,6 +156,7 @@ class OffPolicyEvaluation:
                     logging.warning(msg)
 
         return OffPolicyEvaluationResults(
-            {e: OffPolicyEvaluationResult.from_dict(r) for e, r in results.items()},
+            policy_name=target_policy.name,
+            results={e: OffPolicyEvaluationResult.from_dict(r) for e, r in results.items()},
             significance_level=self.significance_level,
         )

@@ -87,7 +87,9 @@ class BaseEstimator(ABC):
             ],
             [2, 2, 1],
         ):
-            check_array(array=array, name=name, expected_ndim=ndims, expected_dtype=float)
+            check_array(
+                array=array, name=name, expected_ndim=ndims, expected_dtype=(float, np.float32)
+            )
 
         if not (
             self.target_policy_action_probabilities.shape[0]
