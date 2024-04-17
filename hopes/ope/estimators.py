@@ -1,3 +1,4 @@
+import re
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -189,6 +190,16 @@ class BaseEstimator(ABC):
             "mean": np.mean(boot_samples),
             "std": np.std(boot_samples),
         }
+
+    def short_name(self) -> str:
+        """Return the short name of the estimator.
+
+        This method can be overridden by subclasses to customize the short name.
+
+        :return: the short name of the estimator. By default, it returns the abbreviation of
+            the class name, ie "IPW".
+        """
+        return re.sub("[^A-Z]", "", self.__class__.__name__)
 
     @abstractmethod
     def estimate_weighted_rewards(self) -> np.ndarray:
