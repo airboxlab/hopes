@@ -33,6 +33,7 @@ extensions = [
 autodoc_mock_imports = [
     "sklearn",
     "torch",
+    "pwlf",
 ]
 
 templates_path = ["_templates"]
