@@ -1,7 +1,10 @@
 name: docs
 concurrency: docs
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   docs:
