@@ -35,6 +35,9 @@ autodoc_mock_imports = [
     "torch",
     "pwlf",
     "onnxruntime",
+    "pandas",
+    "dataclasses_json",
+    "tabulate",
 ]
 
 templates_path = ["_templates"]

@@ -1,3 +1,4 @@
+import re
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -86,7 +87,9 @@ class BaseEstimator(ABC):
             ],
             [2, 2, 1],
         ):
-            check_array(array=array, name=name, expected_ndim=ndims, expected_dtype=float)
+            check_array(
+                array=array, name=name, expected_ndim=ndims, expected_dtype=(float, np.float32)
+            )
 
         if not (
             self.target_policy_action_probabilities.shape[0]
@@ -174,11 +177,10 @@ class BaseEstimator(ABC):
         ), "The weighted rewards must not be empty."
 
         weighted_rewards = weighted_rewards.reshape(-1)
-        boot_samples = []
-        for _ in np.arange(num_samples):
-            boot_samples.append(
-                np.mean(np.random.choice(num_samples, size=weighted_rewards.shape[0]))
-            )
+        boot_samples = [
+            np.mean(np.random.choice(weighted_rewards, size=weighted_rewards.shape[0]))
+            for _ in np.arange(num_samples)
+        ]
 
         lower_bound = np.quantile(boot_samples, significance_level / 2)
         upper_bound = np.quantile(boot_samples, 1 - significance_level / 2)
@@ -189,6 +191,16 @@ class BaseEstimator(ABC):
             "mean": np.mean(boot_samples),
             "std": np.std(boot_samples),
         }
+
+    def short_name(self) -> str:
+        """Return the short name of the estimator.
+
+        This method can be overridden by subclasses to customize the short name.
+
+        :return: the short name of the estimator. By default, it returns the abbreviation of
+            the class name, ie "IPW".
+        """
+        return re.sub("[^A-Z]", "", self.__class__.__name__)
 
     @abstractmethod
     def estimate_weighted_rewards(self) -> np.ndarray:

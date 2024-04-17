@@ -19,12 +19,28 @@ class Policy(ABC):
     The policy must be subclassed and the log_likelihoods method must be implemented.
     """
 
-    epsilon: float | None = None
+    _name: str | None = None
+    _epsilon: float | None = None
+
+    @property
+    def name(self):
+        return self._name or self.__class__.__name__
+
+    def with_name(self, name: str) -> "Policy":
+        """Set the name of the policy.
+
+        :param name: the name of the policy.
+        """
+        self._name = name
+        return self
 
     def with_epsilon(self, epsilon: float | None = None) -> "Policy":
-        """Set the epsilon value for epsilon-greedy action selection."""
+        """Set the epsilon value for epsilon-greedy action selection.
+
+        :param epsilon: the epsilon value for epsilon-greedy action selection.
+        """
         assert epsilon is None or 0 <= epsilon <= 1, "Epsilon must be in [0, 1]."
-        self.epsilon = epsilon
+        self._epsilon = epsilon
         return self
 
     @abstractmethod
@@ -49,7 +65,7 @@ class Policy(ABC):
         log_likelihoods = self.log_likelihoods(obs)
         action_probs = np.exp(log_likelihoods)
         # epsilon-greedy action selection
-        if self.epsilon is not None and (np.random.rand() < self.epsilon):
+        if self._epsilon is not None and (np.random.rand() < self._epsilon):
             action_probs = np.ones_like(action_probs) / action_probs.shape[1]
         return action_probs
 
@@ -62,7 +78,7 @@ class Policy(ABC):
         :return: the selected action(s).
         """
         assert not (
-            deterministic and self.epsilon is not None
+            deterministic and self._epsilon is not None
         ), "Cannot be deterministic and epsilon-greedy at the same time."
 
         action_probs = self.compute_action_probs(obs)
