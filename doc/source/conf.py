@@ -30,7 +30,15 @@ extensions = [
     # "sphinx_last_updated_by_git",
 ]
 
-autodoc_mock_imports = ["sklearn", "torch", "pwlf", "onnxruntime", "pandas"]
+autodoc_mock_imports = [
+    "sklearn",
+    "torch",
+    "pwlf",
+    "onnxruntime",
+    "pandas",
+    "dataclasses_json",
+    "tabulate",
+]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
