@@ -4,6 +4,7 @@ import numpy as np
 from action_probs_utils import generate_action_probs
 
 from hopes.ope.estimators import (
+    BaseEstimator,
     DirectMethod,
     InverseProbabilityWeighting,
     SelfNormalizedInverseProbabilityWeighting,
@@ -44,9 +45,15 @@ class TestEstimators(unittest.TestCase):
             rewards=rewards,
         )
 
+        wrew = ipw.estimate_weighted_rewards()
+        self.assertIsInstance(wrew, np.ndarray)
+        self.assertEqual(wrew.shape, (10, 3))
         policy_value = ipw.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
+
+        # test CI
+        self._test_ci(ipw)
 
         # test with zero rewards
         rewards = np.zeros(10)
@@ -74,14 +81,21 @@ class TestEstimators(unittest.TestCase):
             rewards=rewards,
         )
 
+        wrew = snipw.estimate_weighted_rewards()
+        self.assertIsInstance(wrew, np.ndarray)
+        self.assertEqual(wrew.shape, (10, 3))
         policy_value = snipw.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
+
+        # test CI
+        self._test_ci(snipw)
 
     def test_dm(self):
         num_actions = 3
         num_obs = 10
         num_samples = 100
+        num_steps_per_episode = 2
         obs = np.random.rand(num_samples, num_obs)
         act = np.random.randint(num_actions, size=num_samples)
         rew = np.random.rand(num_samples)
@@ -96,7 +110,7 @@ class TestEstimators(unittest.TestCase):
             behavior_policy_obs=obs,
             behavior_policy_act=act,
             behavior_policy_rewards=rew,
-            steps_per_episode=2,
+            steps_per_episode=num_steps_per_episode,
         )
         fit_stats = dm.fit()
         self.assertIsInstance(fit_stats, dict)
@@ -107,9 +121,15 @@ class TestEstimators(unittest.TestCase):
             behavior_policy_action_probabilities=None,
             rewards=None,
         )
+
+        wrew = dm.estimate_weighted_rewards()
+        self.assertIsInstance(wrew, np.ndarray)
+        self.assertEqual(wrew.shape, (num_samples // num_steps_per_episode,))
         policy_value = dm.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
+
+        self._test_ci(dm)
 
     def test_neg_rewards(self):
         ipw = InverseProbabilityWeighting()
@@ -125,3 +145,14 @@ class TestEstimators(unittest.TestCase):
                 rewards=rewards,
             )
             self.assertTrue("The rewards must be non-negative" in str(e.exception))
+
+    def _test_ci(self, estimator: BaseEstimator):
+        # test CI
+        metrics = estimator.estimate_policy_value_with_confidence_interval(
+            num_samples=1000, significance_level=0.05
+        )
+        self.assertIsInstance(metrics, dict)
+        for m in ["mean", "lower_bound", "upper_bound", "std"]:
+            self.assertIn(m, metrics)
+            self.assertIsInstance(metrics[m], float)
+        self.assertTrue(metrics["lower_bound"] <= metrics["mean"] <= metrics["upper_bound"])
