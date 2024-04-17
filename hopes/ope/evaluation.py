@@ -70,12 +70,12 @@ class OffPolicyEvaluation:
 
     Expected output:
 
-    =====  =======  =======  =============  =============
-    ..        mean      std    lower_bound    upper_bound
-    =====  =======  =======  =============  =============
-    IPW    499.368  5.28645        491.011        507.669
-    SNIPW  499.538  5.21046        490.714        507.695
-    =====  =======  =======  =============  =============
+    =====  ========  ==========  =============  =============
+    ..         mean         std    lower_bound    upper_bound
+    =====  ========  ==========  =============  =============
+    IPW    0.509084  0.00802636       0.496008       0.522423
+    SNIPW  0.499934  0.00515545       0.491553       0.508592
+    =====  ========  ==========  =============  =============
     """
 
     def __init__(
@@ -143,7 +143,7 @@ class OffPolicyEvaluation:
                 eval_results = estimator.estimate_policy_value_with_confidence_interval(
                     significance_level=self.significance_level
                 )
-                results[estimator.short_name()] = OffPolicyEvaluationResult.from_dict(eval_results)
+                results[estimator.short_name()] = eval_results
 
             except Exception as e:
                 msg = f"Estimator {estimator} failed with exception: {e}"
@@ -153,4 +153,7 @@ class OffPolicyEvaluation:
                 else:
                     logging.warning(msg)
 
-        return OffPolicyEvaluationResults(results, significance_level=self.significance_level)
+        return OffPolicyEvaluationResults(
+            {e: OffPolicyEvaluationResult.from_dict(r) for e, r in results.items()},
+            significance_level=self.significance_level,
+        )

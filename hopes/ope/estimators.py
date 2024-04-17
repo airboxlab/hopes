@@ -175,11 +175,10 @@ class BaseEstimator(ABC):
         ), "The weighted rewards must not be empty."
 
         weighted_rewards = weighted_rewards.reshape(-1)
-        boot_samples = []
-        for _ in np.arange(num_samples):
-            boot_samples.append(
-                np.mean(np.random.choice(num_samples, size=weighted_rewards.shape[0]))
-            )
+        boot_samples = [
+            np.mean(np.random.choice(weighted_rewards, size=weighted_rewards.shape[0]))
+            for _ in np.arange(num_samples)
+        ]
 
         lower_bound = np.quantile(boot_samples, significance_level / 2)
         upper_bound = np.quantile(boot_samples, 1 - significance_level / 2)
