@@ -26,7 +26,8 @@ extensions = [
     "sphinx.ext.autosummary",
     # responsive design
     "sphinx_design",
-    "sphinx_last_updated_by_git",
+    # requires non-shallow clone, breaks CI
+    # "sphinx_last_updated_by_git",
 ]
 
 autodoc_mock_imports = [
