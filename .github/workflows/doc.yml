@@ -1,10 +1,7 @@
 name: docs
 concurrency: docs
 
-on:
-  push:
-    branches:
-      - main
+on: [push]
 
 jobs:
   docs:
@@ -32,6 +29,7 @@ jobs:
           make html
 
       - name: Deploy docs
+        if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
