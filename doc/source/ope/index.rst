@@ -1,6 +1,15 @@
 Off-Policy Evaluation: Estimators
 =================================
 
+Roadmap
+-------
+
+- [x] Implement Inverse Probability Weighting (IPW) estimator
+- [x] Implement Self-Normalized Inverse Probability Weighting (SNIPW) estimator
+- [x] Implement Direct Method (DM) estimator
+- [ ] Implement Doubly Robust (DR) estimator
+- [ ] Implement Trajectory-Wise Importance Sampling (TWIS) estimator
+- [ ] Implement Per-Decision Importance Sampling (PDIS) estimator
 
 Implemented estimators
 -----------------------
