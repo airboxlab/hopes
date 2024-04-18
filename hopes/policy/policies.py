@@ -27,19 +27,21 @@ class Policy(ABC):
         return self._name or self.__class__.__name__
 
     def with_name(self, name: str) -> "Policy":
-        """Set the name of the policy.
+        """Set the name of the policy. This is optional but can be useful for logging,
+        visualization and comparison with other policies.
 
         :param name: the name of the policy.
         """
         self._name = name
         return self
 
-    def with_epsilon(self, epsilon: float | None = None) -> "Policy":
-        """Set the epsilon value for epsilon-greedy action selection.
+    def with_epsilon(self, epsilon: float) -> "Policy":
+        """Set the epsilon value for epsilon-greedy action selection. This is only needed if the
+        policy is used for action selection and epsilon-greedy action selection is desired.
 
         :param epsilon: the epsilon value for epsilon-greedy action selection.
         """
-        assert epsilon is None or 0 <= epsilon <= 1, "Epsilon must be in [0, 1]."
+        assert epsilon is not None and 0 <= epsilon <= 1, "Epsilon must be in [0, 1]."
         self._epsilon = epsilon
         return self
 
