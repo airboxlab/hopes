@@ -78,11 +78,9 @@ class RegressionBasedRewardModel(RewardModel):
             and mlp are supported.
         :param model_params: optional parameters for the reward model.
         """
-        supported_reward_models = ["linear", "polynomial", "mlp", "random_forest"]
+        supported_models = ["linear", "polynomial", "mlp", "random_forest"]
 
-        assert (
-            regression_model in supported_reward_models
-        ), f"Only {supported_reward_models} supported for now."
+        assert regression_model in supported_models, f"Only {supported_models} supported for now."
         assert obs.ndim == 2, "Observations must have shape (batch_size, obs_dim)."
         assert (
             obs.shape[0] == act.shape[0] == rew.shape[0]
@@ -91,13 +89,15 @@ class RegressionBasedRewardModel(RewardModel):
         self.obs = obs
         self.act = act.reshape(-1, 1) if act.ndim == 1 else act
         self.rew = rew.reshape(-1, 1) if rew.ndim == 1 else rew
+
+        # model configuration
         self.model_params = model_params or {}
         self.regression_model = regression_model
         self.poly_features = None
 
         # both linear and polynomial models are implemented using sklearn LinearRegression
         # for polynomial model, we use PolynomialFeatures to generate polynomial features then fit the linear model
-        if self.regression_model == "linear" or self.regression_model == "polynomial":
+        if self.regression_model in ["linear", "polynomial"]:
             self.model = LinearRegression()
 
         # mlp model is implemented using torch. We use a simple feedforward neural network and MSE loss.

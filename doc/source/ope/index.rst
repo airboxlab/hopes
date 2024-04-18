@@ -8,7 +8,7 @@ Roadmap
 - [x] Implement Self-Normalized Inverse Probability Weighting (SNIPW) estimator
 - [x] Implement Direct Method (DM) estimator
 - [ ] Implement Doubly Robust (DR) estimator
-- [ ] Implement Trajectory-Wise Importance Sampling (TWIS) estimator
+- [X] Implement Trajectory-wise Importance Sampling (TIS) estimator
 - [ ] Implement Per-Decision Importance Sampling (PDIS) estimator
 
 Implemented estimators
@@ -23,6 +23,7 @@ Currently, the following estimators are implemented:
    hopes.ope.estimators.InverseProbabilityWeighting
    hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting
    hopes.ope.estimators.DirectMethod
+   hopes.ope.estimators.TrajectoryWiseImportanceSampling
 
 Estimators documentation
 ------------------------
@@ -38,6 +39,11 @@ Estimators documentation
     :show-inheritance:
 
 .. autoclass:: hopes.ope.estimators.DirectMethod
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. autoclass:: hopes.ope.estimators.TrajectoryWiseImportanceSampling
     :members:
     :undoc-members:
     :show-inheritance:
