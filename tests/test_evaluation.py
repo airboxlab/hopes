@@ -5,6 +5,7 @@ import numpy as np
 from hopes.ope.estimators import (
     InverseProbabilityWeighting,
     SelfNormalizedInverseProbabilityWeighting,
+    TrajectoryWiseImportanceSampling,
 )
 from hopes.ope.evaluation import OffPolicyEvaluation
 from hopes.ope.selection import OffPolicySelection
@@ -57,8 +58,9 @@ class TestEvaluation(unittest.TestCase):
 
     def test_ops(self):
         num_actions = 3
-        num_obs = 5
+        num_obs = 50
         num_samples = 1000
+        steps_per_episode = 10
         obs = np.random.rand(num_samples, num_obs)
         act = np.random.randint(num_actions, size=num_samples)
         rew = np.random.rand(num_samples)
@@ -81,6 +83,9 @@ class TestEvaluation(unittest.TestCase):
         estimators = [
             InverseProbabilityWeighting(),
             SelfNormalizedInverseProbabilityWeighting(),
+            TrajectoryWiseImportanceSampling(
+                steps_per_episode=steps_per_episode, discount_factor=0.99
+            ),
         ]
 
         # run the off-policy evaluation

@@ -424,3 +424,91 @@ class DirectMethod(BaseEstimator):
     def estimate_policy_value(self) -> float:
         """Estimate the value of the target policy using the Direct Method estimator."""
         return np.mean(self.estimate_weighted_rewards())
+
+
+class TrajectoryWiseImportanceSampling(BaseEstimator):
+    r"""Trajectory-wise Importance Sampling (TIS) estimator.
+
+    :math:`V_{TIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^n\sum_{t=0}^{T-1}\gamma^t w^{(i)}_{0:T-1} r_t^{(i)}`
+
+    Where:
+
+    - :math:`D` is the offline collected dataset.
+    - :math:`w^{(i)}_{0:T-1}` is the importance weight of the trajectory :math:`i` defined as :math:`w_{0:T-1} = \prod_{t=0}^{T-1} \frac {\pi_e(a_t|s_t)} {\pi_b(a_t|s_t)}`
+    - :math:`\pi_e` is the target policy and :math:`\pi_b` is the behavior policy.
+    - :math:`n` is the number of trajectories.
+    - :math:`T` is the length of the trajectory.
+    - :math:`\gamma_t` is the discount factor at time :math:`t`.
+    - :math:`r_t^{(i)}` is the reward at time :math:`t` of trajectory :math:`i`.
+
+    TIS can suffer from high variance due to the product operation of the importance weights.
+
+    References:
+        https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&context=cs_faculty_pubs
+    """
+
+    def __init__(self, steps_per_episode: int, discount_factor: float = 1.0) -> None:
+        super().__init__()
+
+        assert steps_per_episode > 0, "The number of steps per episode must be positive."
+        assert 0 <= discount_factor <= 1, "The discount factor must be in [0, 1]."
+
+        self.steps_per_episode = steps_per_episode
+        self.discount_factor = discount_factor
+
+    @override(BaseEstimator)
+    def short_name(self) -> str:
+        return "TIS"
+
+    @override(BaseEstimator)
+    def check_parameters(self) -> None:
+        """Check if the estimator parameters are valid."""
+        super().check_parameters()
+
+        assert (
+            self.target_policy_action_probabilities.shape[0] % self.steps_per_episode == 0
+        ), "The number of samples must be divisible by the number of steps per episode."
+
+    @override(BaseEstimator)
+    def estimate_weighted_rewards(self) -> np.ndarray:
+        """Estimate the weighted rewards using the Trajectory-wise Importance Sampling estimator.
+
+        :return: the weighted rewards, or here the policy value per trajectory.
+        """
+        self.check_parameters()
+
+        num_actions = self.target_policy_action_probabilities.shape[1]
+
+        # compute product of importance weights per trajectory
+        importance_weights = (
+            self.target_policy_action_probabilities / self.behavior_policy_action_probabilities
+        )
+        # shape: (n, T * num_actions)
+        importance_weights = importance_weights.reshape(-1, self.steps_per_episode * num_actions)
+        # shape: (n, 1)
+        importance_weights = np.prod(importance_weights, axis=1).reshape(-1, 1)
+
+        # rewards, shape: (n, T)
+        rewards = self.rewards.reshape(-1, self.steps_per_episode)
+
+        # discount factors
+        # make a matrix of discount factors, shape: (n, T)
+        num_trajectories = rewards.shape[0]
+        discount_factors = np.full((num_trajectories, self.steps_per_episode), self.discount_factor)
+        # compute the discount factor at each step as
+        # [gamma^0, gamma^1, ..., gamma^(T-1)] = [gamma^1, gamma^2, ..., gamma^T] / gamma
+        discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
+
+        # compute the weighted rewards per trajectory, shape: (n, 1)
+        weighted_rewards = np.sum(
+            importance_weights * rewards * discount_factors,  # (n, 1) * (n, T) * (n, T)
+            axis=1,  # sum weights over the trajectory length
+        ).reshape(-1, 1)
+
+        return weighted_rewards
+
+    @override(BaseEstimator)
+    def estimate_policy_value(self) -> float:
+        """Estimate the value of the target policy using the Trajectory-wise Importance Sampling
+        estimator."""
+        return np.mean(self.estimate_weighted_rewards())
