@@ -499,11 +499,11 @@ class TrajectoryWiseImportanceSampling(BaseEstimator):
         # [gamma^0, gamma^1, ..., gamma^(T-1)] = [gamma^1, gamma^2, ..., gamma^T] / gamma
         discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
 
-        # compute the weighted rewards per trajectory, shape: (n,)
+        # compute the weighted rewards per trajectory, shape: (n, 1)
         weighted_rewards = np.sum(
             importance_weights * rewards * discount_factors,  # (n, 1) * (n, T) * (n, T)
             axis=1,  # sum weights over the trajectory length
-        )
+        ).reshape(-1, 1)
 
         return weighted_rewards
 

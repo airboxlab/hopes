@@ -164,7 +164,7 @@ class TestEstimators(unittest.TestCase):
 
         wrew = tis.estimate_weighted_rewards()
         self.assertIsInstance(wrew, np.ndarray)
-        self.assertEqual(wrew.shape, (5,))
+        self.assertEqual(wrew.shape, (5, 1))
 
         policy_value = tis.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
