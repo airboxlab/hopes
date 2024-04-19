@@ -1,6 +1,15 @@
 Hopes: Selection
 ================
 
+Roadmap
+-------
+
+- [x] Confidence Interval estimation using Bootstrap
+- [x] Confidence Interval estimation using t-test
+
+Introduction
+------------
+
 Running an Off-Policy Evaluation (OPE) experiment and then a selection of the best policies with Hopes is simple.
 
 Example with a synthetic, random, dataset.
@@ -58,6 +67,16 @@ This should produce an output similar to:
     IPW    0.510251  0.00788465       0.497324       0.522907
     SNIPW  0.499158  0.00523288       0.490235       0.507513
     =====  ========  ==========  =============  =============
+
+Note that confidence interval (CI) calculation can be based on several methods:
+
+- `bootstrap` (default)
+- `t-test`
+
+The documentation of the CI calculation can be found in
+:meth:`hopes.ope.estimators.BaseEstimator.estimate_policy_value_with_confidence_interval`.
+
+
 
 Classes documentation
 ---------------------
