@@ -38,6 +38,7 @@ autodoc_mock_imports = [
     "pandas",
     "dataclasses_json",
     "tabulate",
+    "scipy",
 ]
 
 templates_path = ["_templates"]
