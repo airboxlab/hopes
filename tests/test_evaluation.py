@@ -5,6 +5,7 @@ import numpy as np
 from hopes.ope.estimators import (
     InverseProbabilityWeighting,
     SelfNormalizedInverseProbabilityWeighting,
+    SelfNormalizedTrajectoryWiseImportanceSampling,
     TrajectoryWiseImportanceSampling,
 )
 from hopes.ope.evaluation import OffPolicyEvaluation
@@ -85,6 +86,9 @@ class TestEvaluation(unittest.TestCase):
             InverseProbabilityWeighting(),
             SelfNormalizedInverseProbabilityWeighting(),
             TrajectoryWiseImportanceSampling(
+                steps_per_episode=steps_per_episode, discount_factor=0.99
+            ),
+            SelfNormalizedTrajectoryWiseImportanceSampling(
                 steps_per_episode=steps_per_episode, discount_factor=0.99
             ),
         ]

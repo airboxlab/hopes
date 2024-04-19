@@ -83,7 +83,7 @@ html_theme_options = {
         "image_dark": "_static/img/logo.svg",
     },
     "navbar_align": "content",
-    "navigation_depth": 2,
+    "navigation_depth": 3,
     "footer_start": ["copyright"],
     "footer_end": ["footer-end"],
     "pygment_light_style": "stata-dark",

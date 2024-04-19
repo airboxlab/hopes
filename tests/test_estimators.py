@@ -8,6 +8,7 @@ from hopes.ope.estimators import (
     DirectMethod,
     InverseProbabilityWeighting,
     SelfNormalizedInverseProbabilityWeighting,
+    SelfNormalizedTrajectoryWiseImportanceSampling,
     TrajectoryWiseImportanceSampling,
 )
 from hopes.rew.rewards import RegressionBasedRewardModel
@@ -132,11 +133,12 @@ class TestEstimators(unittest.TestCase):
 
         self._test_ci(dm)
 
-    def test_tis(self):
+    def test_tis_sntis(self):
         traj_length = 10
         num_episodes = 5
         num_actions = 3
 
+        # TIS
         tis = TrajectoryWiseImportanceSampling(
             steps_per_episode=traj_length,
             discount_factor=0.99,
@@ -170,8 +172,28 @@ class TestEstimators(unittest.TestCase):
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
 
-        # test CI
         self._test_ci(tis)
+
+        # SN-TIS
+        sntis = SelfNormalizedTrajectoryWiseImportanceSampling(
+            steps_per_episode=traj_length,
+            discount_factor=0.99,
+        )
+        sntis.set_parameters(
+            target_policy_action_probabilities=target_policy_action_probabilities,
+            behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+            rewards=rewards,
+        )
+
+        wrew = sntis.estimate_weighted_rewards()
+        self.assertIsInstance(wrew, np.ndarray)
+        self.assertEqual(wrew.shape, (5, 1))
+
+        policy_value = sntis.estimate_policy_value()
+        self.assertIsInstance(policy_value, float)
+        self.assertGreaterEqual(policy_value, 0.0)
+
+        self._test_ci(sntis)
 
     def test_neg_rewards(self):
         ipw = InverseProbabilityWeighting()
