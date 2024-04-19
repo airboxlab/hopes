@@ -43,7 +43,8 @@ class TestEvaluation(unittest.TestCase):
             behavior_policy=behavior_policy,
             estimators=estimators,
             fail_fast=True,
-            significance_level=0.1,
+            ci_method="bootstrap",
+            ci_significance_level=0.1,
         )
         results = ope.evaluate(target_policy)
         self.assertEqual(0.1, results.significance_level)
@@ -95,7 +96,8 @@ class TestEvaluation(unittest.TestCase):
             behavior_policy=behavior_policy,
             estimators=estimators,
             fail_fast=True,
-            significance_level=0.1,
+            ci_method="t-test",
+            ci_significance_level=0.1,
         )
 
         results = []
@@ -104,8 +106,8 @@ class TestEvaluation(unittest.TestCase):
 
         top_k_results = OffPolicySelection.select_top_k(results)
         self.assertEqual(len(top_k_results), 1)
-        print(top_k_results[0])
+        print("Policy selected by mean", top_k_results[0], sep="\n")
 
         top_k_results = OffPolicySelection.select_top_k(results, metric="lower_bound")
         self.assertEqual(len(top_k_results), 1)
-        print(top_k_results[0])
+        print("Policy selected by lower bound", top_k_results[0], sep="\n")
