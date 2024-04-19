@@ -2,6 +2,7 @@ import re
 from abc import ABC, abstractmethod
 
 import numpy as np
+import scipy
 
 from hopes.assert_utils import check_array
 from hopes.dev_utils import override
@@ -128,13 +129,27 @@ class BaseEstimator(ABC):
 
     def estimate_policy_value_with_confidence_interval(
         self,
-        num_samples: int = 1000,
+        method: str = "bootstrap",
         significance_level: float = 0.05,
+        num_samples: int = 1000,
     ) -> dict[str, float]:
-        """Estimate the confidence interval of the policy value.
+        r"""Estimate the confidence interval of the policy value.
 
-        This method uses bootstrapping to estimate the confidence interval of the policy value. The input data is
-        sampled from the estimated weighted rewards, using :meth:`estimate_weighted_rewards`.
+        The `bootstrap` method uses bootstrapping to estimate the confidence interval of the policy value. Bootstrapping
+        consists in resampling the data with replacement to infer the distribution of the estimated weighted rewards.
+
+        The `t-test` method (or `Student's t-test`) uses the t-distribution of the estimated weighted rewards - assuming
+        that the weighted rewards are normally distributed - to estimate the confidence interval of the policy value.
+        It follows the t-distribution formula :math:`t = \frac{\hat{\mu} - \mu}{\hat{\sigma} / \sqrt{n}}`, where
+        :math:`\hat{\mu}` is the mean of the weighted rewards, :math:`\mu` is the true mean of the weighted rewards,
+        :math:`\hat{\sigma}` is the standard deviation of the weighted rewards, and :math:`n` is the number of samples.
+        The confidence interval is then computed as:
+
+        .. math::
+            [\hat{\mu} - t_{\mathrm{test}}(1 - \alpha, n-1) \frac{\hat{\sigma}}{\sqrt{n}},
+            \hat{\mu} + t_{\mathrm{test}}(1 - \alpha, n-1) \frac{\hat{\sigma}}{\sqrt{n}}]
+
+        The input data is sampled from the estimated weighted rewards, using :meth:`estimate_weighted_rewards`.
 
         Example:
 
@@ -147,7 +162,7 @@ class BaseEstimator(ABC):
                 rewards=rewards,
             )
             metrics = ipw.estimate_policy_value_with_confidence_interval(
-                num_samples=1000, significance_level=0.05
+                method="bootstrap", significance_level=0.05
             )
             print(metrics)
 
@@ -162,8 +177,10 @@ class BaseEstimator(ABC):
                 "std": 0.4,
             }
 
-        :param num_samples: the number of bootstrap samples to use.
+        :param method: the method to use for estimating the confidence interval. Currently, only "bootstrap" and
+            "t-test" are supported.
         :param significance_level: the significance level of the confidence interval.
+        :param num_samples: the number of bootstrap samples to use. Only used when `method` is "bootstrap".
         :return: a dictionary containing the confidence interval of the policy value. The keys are:
 
             - "lower_bound": the lower bound of the policy value, given the significance level.
@@ -171,26 +188,50 @@ class BaseEstimator(ABC):
             - "mean": the mean of the policy value.
             - "std": the standard deviation of the policy value.
         """
+        assert method in ["bootstrap", "t-test"], "The method must be 'bootstrap' or 't-test'."
+        assert 0 < significance_level < 1, "The significance level must be in (0, 1)."
+
         weighted_rewards = self.estimate_weighted_rewards()
         assert (
             weighted_rewards is not None and len(weighted_rewards) > 0
         ), "The weighted rewards must not be empty."
 
         weighted_rewards = weighted_rewards.reshape(-1)
-        boot_samples = [
-            np.mean(np.random.choice(weighted_rewards, size=weighted_rewards.shape[0]))
-            for _ in np.arange(num_samples)
-        ]
 
-        lower_bound = np.quantile(boot_samples, significance_level / 2)
-        upper_bound = np.quantile(boot_samples, 1 - significance_level / 2)
+        if method == "bootstrap":
+            boot_samples = [
+                np.mean(
+                    np.random.choice(weighted_rewards, size=weighted_rewards.shape[0], replace=True)
+                )
+                for _ in np.arange(num_samples)
+            ]
 
-        return {
-            "lower_bound": lower_bound,
-            "upper_bound": upper_bound,
-            "mean": np.mean(boot_samples),
-            "std": np.std(boot_samples),
-        }
+            lower_bound = np.quantile(boot_samples, significance_level / 2)
+            upper_bound = np.quantile(boot_samples, 1 - significance_level / 2)
+
+            return {
+                "lower_bound": lower_bound,
+                "upper_bound": upper_bound,
+                "mean": np.mean(boot_samples),
+                "std": np.std(boot_samples),
+            }
+
+        elif method == "t-test":
+            num_samples = weighted_rewards.shape[0]
+            mean = np.mean(weighted_rewards)
+            # compute the standard deviation of the weighted rewards, using degrees of freedom = num_samples - 1
+            std = np.std(weighted_rewards, ddof=1)
+            # compute t, with alpha = significance_level / 2 and degrees of freedom = num_samples - 1
+            t = scipy.stats.t.ppf(1 - significance_level / 2, num_samples - 1)
+            # compute the confidence interval
+            ci = t * std / np.sqrt(num_samples)
+
+            return {
+                "lower_bound": mean - ci,
+                "upper_bound": mean + ci,
+                "mean": mean,
+                "std": std,
+            }
 
     def short_name(self) -> str:
         """Return the short name of the estimator.

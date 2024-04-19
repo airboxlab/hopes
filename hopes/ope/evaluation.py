@@ -79,7 +79,8 @@ class OffPolicyEvaluation:
         behavior_policy: Policy,
         estimators: list[BaseEstimator],
         fail_fast: bool = True,
-        significance_level: float = 0.05,
+        ci_method: str = "bootstrap",
+        ci_significance_level: float = 0.05,
     ):
         """Initialize the off-policy evaluation.
 
@@ -89,7 +90,9 @@ class OffPolicyEvaluation:
         :param behavior_policy: the behavior policy used to generate the data
         :param estimators: a list of estimators to use to evaluate the target policy
         :param fail_fast: whether to stop the evaluation if one estimator fails
-        :param significance_level: the significance level for the confidence intervals
+        :param ci_method: the method to use to compute the confidence intervals. Can be
+            "bootstrap" or "t-test"
+        :param ci_significance_level: the significance level for the confidence intervals
         """
         assert isinstance(obs, np.ndarray), "obs must be a numpy array"
         assert len(obs.shape) == 2, "obs must be a 2D array"
@@ -101,15 +104,17 @@ class OffPolicyEvaluation:
             [isinstance(estimator, BaseEstimator) for estimator in estimators]
         ), "estimators must be a list of BaseEstimator instances"
         assert isinstance(fail_fast, bool), "fail_fast must be a boolean"
-        assert isinstance(significance_level, float), "significance_level must be a float"
-        assert 0 < significance_level < 1, "significance_level must be in (0, 1)"
+        assert ci_method in ["bootstrap", "t-test"], "ci_method must be 'bootstrap' or 't-test'"
+        assert isinstance(ci_significance_level, float), "significance_level must be a float"
+        assert 0 < ci_significance_level < 1, "significance_level must be in (0, 1)"
 
         self.obs = obs
         self.rewards = rewards
         self.behavior_policy = behavior_policy
         self.estimators = estimators
         self.fail_fast = fail_fast
-        self.significance_level = significance_level
+        self.ci_method = ci_method
+        self.significance_level = ci_significance_level
 
     def evaluate(self, target_policy: Policy) -> OffPolicyEvaluationResults:
         """Run the off-policy evaluation and return the estimated value of the target policy.
@@ -132,7 +137,7 @@ class OffPolicyEvaluation:
                 )
 
                 eval_results = estimator.estimate_policy_value_with_confidence_interval(
-                    significance_level=self.significance_level
+                    method=self.ci_method, significance_level=self.significance_level
                 )
                 results[estimator.short_name()] = eval_results
 

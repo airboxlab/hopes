@@ -7,8 +7,10 @@ Roadmap
 - [x] Implement Inverse Probability Weighting (IPW) estimator
 - [x] Implement Self-Normalized Inverse Probability Weighting (SNIPW) estimator
 - [x] Implement Direct Method (DM) estimator
-- [X] Implement Trajectory-wise Importance Sampling (TIS) estimator
+- [x] Implement Trajectory-wise Importance Sampling (TIS) estimator
+- [ ] Implement Self-Normalized Trajectory-wise Importance Sampling (SNTIS) estimator
 - [ ] Implement Per-Decision Importance Sampling (PDIS) estimator
+- [ ] Implement Self-Normalized Per-Decision Importance Sampling (SNPDIS) estimator
 - [ ] Implement Doubly Robust (DR) estimator
 
 Implemented estimators
