@@ -137,6 +137,7 @@ class BaseEstimator(ABC):
 
         The `bootstrap` method uses bootstrapping to estimate the confidence interval of the policy value. Bootstrapping
         consists in resampling the data with replacement to infer the distribution of the estimated weighted rewards.
+        The confidence interval is then computed as the quantiles of the bootstrapped samples.
 
         The `t-test` method (or `Student's t-test`) uses the t-distribution of the estimated weighted rewards - assuming
         that the weighted rewards are normally distributed - to estimate the confidence interval of the policy value.
