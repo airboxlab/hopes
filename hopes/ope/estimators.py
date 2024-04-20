@@ -557,8 +557,10 @@ class TrajectoryWiseImportanceSampling(BaseEstimator):
 
         # compute the weighted rewards per trajectory, shape: (n, 1)
         weighted_rewards = np.sum(
-            importance_weights * rewards * discount_factors,  # (n, 1) * (n, T) * (n, T)
-            axis=1,  # sum weights over the trajectory length
+            # element-wise product, (n, 1) * (n, T) * (n, T) -> (n, T)
+            importance_weights * discount_factors * rewards,
+            # sum weights over the trajectory length
+            axis=1,
         ).reshape(-1, 1)
 
         return weighted_rewards
@@ -602,7 +604,10 @@ class SelfNormalizedTrajectoryWiseImportanceSampling(TrajectoryWiseImportanceSam
     def normalize(self, weights: np.ndarray) -> np.ndarray:
         """Normalize the importance weights using the self-normalization strategy.
 
+        It uses self-normalization to reduce the variance of the estimator, using the mean
+        of the importance weights over the trajectories.
+
         :param weights: the importance weights to normalize.
         :return: the normalized importance weights.
         """
-        return weights / np.mean(weights)
+        return weights / (np.mean(weights, axis=0) + 1e-10)

@@ -135,14 +135,8 @@ class TestEstimators(unittest.TestCase):
 
     def test_tis_sntis(self):
         traj_length = 10
-        num_episodes = 5
+        num_episodes = 500
         num_actions = 3
-
-        # TIS
-        tis = TrajectoryWiseImportanceSampling(
-            steps_per_episode=traj_length,
-            discount_factor=0.99,
-        )
 
         target_policy_action_probabilities = np.concatenate(
             [
@@ -150,13 +144,21 @@ class TestEstimators(unittest.TestCase):
                 for _ in range(num_episodes)
             ]
         )
+
         behavior_policy_action_probabilities = np.concatenate(
             [
                 generate_action_probs(traj_length=traj_length, num_actions=num_actions)
                 for _ in range(num_episodes)
             ]
         )
+
         rewards = np.random.rand(traj_length * num_episodes)
+
+        # TIS
+        tis = TrajectoryWiseImportanceSampling(
+            steps_per_episode=traj_length,
+            discount_factor=0.99,
+        )
 
         tis.set_parameters(
             target_policy_action_probabilities=target_policy_action_probabilities,
@@ -166,11 +168,12 @@ class TestEstimators(unittest.TestCase):
 
         wrew = tis.estimate_weighted_rewards()
         self.assertIsInstance(wrew, np.ndarray)
-        self.assertEqual(wrew.shape, (5, 1))
+        self.assertEqual(wrew.shape, (num_episodes, 1))
 
         policy_value = tis.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
+        print("tis", policy_value)
 
         self._test_ci(tis)
 
@@ -187,11 +190,12 @@ class TestEstimators(unittest.TestCase):
 
         wrew = sntis.estimate_weighted_rewards()
         self.assertIsInstance(wrew, np.ndarray)
-        self.assertEqual(wrew.shape, (5, 1))
+        self.assertEqual(wrew.shape, (num_episodes, 1))
 
         policy_value = sntis.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
+        print("sntis", policy_value)
 
         self._test_ci(sntis)
 

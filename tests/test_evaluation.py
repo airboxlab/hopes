@@ -65,7 +65,7 @@ class TestEvaluation(unittest.TestCase):
         steps_per_episode = 10
         obs = np.random.rand(num_samples, num_obs)
         act = np.random.randint(num_actions, size=num_samples)
-        rew = np.random.rand(num_samples)
+        rew = np.random.normal(10, 2.0, num_samples)
 
         # create the behavior policy
         behavior_policy = ClassificationBasedPolicy(
