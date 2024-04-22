@@ -167,15 +167,15 @@ class BaseEstimator(ABC):
             )
             print(metrics)
 
-        Should output:
+        Should output something like:
 
         .. code-block:: python
 
             {
-                "lower_bound": 0.2,
-                "upper_bound": 4.0,
-                "mean": 3.2,
-                "std": 0.4,
+                "lower_bound": 10.2128,
+                "upper_bound": 10.6167,
+                "mean": 10.4148,
+                "std": 6.72408,
             }
 
         :param method: the method to use for estimating the confidence interval. Currently, only "bootstrap" and
@@ -470,7 +470,92 @@ class DirectMethod(BaseEstimator):
         return np.mean(self.estimate_weighted_rewards())
 
 
-class TrajectoryWiseImportanceSampling(BaseEstimator):
+class TrajectoryPerDecisionMixin(ABC):
+    def compute_weighted_rewards(
+        self,
+        target_policy_action_probabilities: np.ndarray,
+        behavior_policy_action_probabilities: np.ndarray,
+        rewards: np.ndarray,
+        steps_per_episode: int,
+        discount_factor: float,
+        is_per_decision: bool,
+    ) -> np.ndarray:
+        """Compute the weighted rewards for given type of estimator. See the specific estimator for
+        more details.
+
+        :param target_policy_action_probabilities: the probabilities of taking actions under
+            the target policy.
+        :param behavior_policy_action_probabilities: the probabilities of taking actions
+            under the behavior policy.
+        :param rewards: the rewards received under the behavior policy.
+        :param steps_per_episode: the number of steps per episode.
+        :param discount_factor: the discount factor.
+        :param is_per_decision: whether the estimator is per decision or per trajectory.
+        """
+
+        # compute importance ratios
+        importance_weights = (
+            target_policy_action_probabilities / behavior_policy_action_probabilities
+        )
+        # shape: (n, T * num_actions)
+        num_actions = target_policy_action_probabilities.shape[1]
+        importance_weights = importance_weights.reshape(-1, steps_per_episode * num_actions)
+
+        # compute the importance weights per decision, which is the cumulative product of the
+        # importance weights over the trajectory; at each step t, we'll have the product from 0 to t-1.
+        # shape: (n, T * num_actions)
+        importance_weights = np.cumprod(importance_weights, axis=1)
+
+        if not is_per_decision:
+            # in trajectory-wise estimators, we only need the last importance weight, which is the product
+            # over the whole trajectory.
+            # shape: (n, 1)
+            importance_weights = importance_weights[:, -1].reshape(-1, 1)
+
+        # normalize the importance weights. Normalization technique depends on the estimator (see implementations).
+        importance_weights = self.normalize(importance_weights)
+
+        # rewards, shape: (n, T)
+        rewards = rewards.reshape(-1, steps_per_episode)
+
+        # discount factors
+        # compute a matrix of discount factors, shape: (n, T)
+        num_trajectories = rewards.shape[0]
+        discount_factors = np.full((num_trajectories, steps_per_episode), discount_factor)
+        # compute the discount factor at each step as
+        # [gamma^0, gamma^1, ..., gamma^(T-1)] = [gamma^1, gamma^2, ..., gamma^T] / gamma
+        discount_factors = np.cumprod(discount_factors, axis=1) / discount_factor
+
+        # if the estimator is per decision, we need to repeat the discount factors and rewards for each action.
+        # shape: (n, T * num_actions)
+        if is_per_decision:
+            discount_factors = np.tile(discount_factors, (1, num_actions))
+            rewards = np.tile(rewards, (1, num_actions))
+
+        # compute the weighted rewards per trajectory.
+        # shape: (n, 1)
+        weighted_rewards = np.sum(
+            # element-wise product
+            # trajectory wise: (n, 1) * (n, T) * (n, T) -> (n, T)
+            # per decision: (n, T * num_actions) * (n, T * num_actions) * (n, T * num_actions) -> (n, T * num_actions)
+            importance_weights * discount_factors * rewards,
+            # sum weights over the trajectory length
+            axis=1,
+        ).reshape(-1, 1)
+
+        return weighted_rewards
+
+    def normalize(self, weights: np.ndarray) -> np.ndarray:
+        """Normalize the importance weights. This method can be overridden by subclasses to
+        implement a specific normalization strategy.
+
+        :param weights: the importance weights to normalize.
+        :return: the normalized importance weights.
+        """
+        return weights
+
+
+class TrajectoryWiseImportanceSampling(BaseEstimator, TrajectoryPerDecisionMixin):
     r"""Trajectory-wise Importance Sampling (TIS) estimator.
 
     :math:`V_{TIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^ n\sum_{t=0}^{T-1} \gamma^t w^{(i)}_{0:T-1} r_t^{(i)}`
@@ -516,15 +601,6 @@ class TrajectoryWiseImportanceSampling(BaseEstimator):
             self.target_policy_action_probabilities.shape[0] % self.steps_per_episode == 0
         ), "The number of samples must be divisible by the number of steps per episode."
 
-    def normalize(self, weights: np.ndarray) -> np.ndarray:
-        """Normalize the importance weights. This method can be overridden by subclasses to
-        implement a specific normalization strategy.
-
-        :param weights: the importance weights to normalize.
-        :return: the normalized importance weights.
-        """
-        return weights
-
     @override(BaseEstimator)
     def estimate_weighted_rewards(self) -> np.ndarray:
         """Estimate the weighted rewards using the Trajectory-wise Importance Sampling estimator.
@@ -533,39 +609,14 @@ class TrajectoryWiseImportanceSampling(BaseEstimator):
         """
         self.check_parameters()
 
-        num_actions = self.target_policy_action_probabilities.shape[1]
-
-        # compute product of importance weights per trajectory
-        importance_weights = (
-            self.target_policy_action_probabilities / self.behavior_policy_action_probabilities
+        return self.compute_weighted_rewards(
+            target_policy_action_probabilities=self.target_policy_action_probabilities,
+            behavior_policy_action_probabilities=self.behavior_policy_action_probabilities,
+            rewards=self.rewards,
+            steps_per_episode=self.steps_per_episode,
+            discount_factor=self.discount_factor,
+            is_per_decision=False,
         )
-        # shape: (n, T * num_actions)
-        importance_weights = importance_weights.reshape(-1, self.steps_per_episode * num_actions)
-        # shape: (n, 1)
-        importance_weights = np.prod(importance_weights, axis=1).reshape(-1, 1)
-        # normalize the importance weights. Here this is a no-op.
-        importance_weights = self.normalize(importance_weights)
-
-        # rewards, shape: (n, T)
-        rewards = self.rewards.reshape(-1, self.steps_per_episode)
-
-        # discount factors
-        # make a matrix of discount factors, shape: (n, T)
-        num_trajectories = rewards.shape[0]
-        discount_factors = np.full((num_trajectories, self.steps_per_episode), self.discount_factor)
-        # compute the discount factor at each step as
-        # [gamma^0, gamma^1, ..., gamma^(T-1)] = [gamma^1, gamma^2, ..., gamma^T] / gamma
-        discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
-
-        # compute the weighted rewards per trajectory, shape: (n, 1)
-        weighted_rewards = np.sum(
-            # element-wise product, (n, 1) * (n, T) * (n, T) -> (n, T)
-            importance_weights * discount_factors * rewards,
-            # sum weights over the trajectory length
-            axis=1,
-        ).reshape(-1, 1)
-
-        return weighted_rewards
 
     @override(BaseEstimator)
     def estimate_policy_value(self) -> float:
@@ -602,7 +653,106 @@ class SelfNormalizedTrajectoryWiseImportanceSampling(TrajectoryWiseImportanceSam
     def short_name(self) -> str:
         return "SNTIS"
 
-    @override(TrajectoryWiseImportanceSampling)
+    @override(TrajectoryPerDecisionMixin)
+    def normalize(self, weights: np.ndarray) -> np.ndarray:
+        """Normalize the importance weights using the self-normalization strategy.
+
+        It uses self-normalization to reduce the variance of the estimator, using the mean
+        of the importance weights over the trajectories.
+
+        :param weights: the importance weights to normalize.
+        :return: the normalized importance weights.
+        """
+        return weights / (np.mean(weights) + 1e-10)
+
+
+class PerDecisionImportanceSampling(BaseEstimator, TrajectoryPerDecisionMixin):
+    r"""Per-Decision Importance Sampling (PDIS) estimator.
+
+    :math:`V_{PDIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^n \sum_{t=0}^{T-1} \gamma^t w^{(i)}_{t} r_t^{(i)}`
+
+    Where:
+
+    - :math:`D` is the offline collected dataset.
+    - :math:`w^{(i)}_{t}` is the importance weight of the decision :math:`t` of trajectory :math:`i` defined as :math:`w_{t} = \frac {\pi_e(a_t|s_t)} {\pi_b(a_t|s_t)}`
+    - :math:`\pi_e` is the target policy and :math:`\pi_b` is the behavior policy.
+    - :math:`n` is the number of trajectories.
+    - :math:`T` is the length of the trajectory.
+    - :math:`\gamma_t` is the discount factor at time :math:`t`.
+    - :math:`r_t^{(i)}` is the reward at time :math:`t` of trajectory :math:`i`.
+
+    .. rubric:: References
+        https://arxiv.org/abs/1906.03735
+    """
+
+    def __init__(self, steps_per_episode: int, discount_factor: float = 1.0) -> None:
+        super().__init__()
+
+        assert steps_per_episode > 0, "The number of steps per episode must be positive."
+        assert 0 <= discount_factor <= 1, "The discount factor must be in [0, 1]."
+
+        self.steps_per_episode = steps_per_episode
+        self.discount_factor = discount_factor
+
+        self.importance_weights: np.ndarray | None = None
+
+    @override(BaseEstimator)
+    def check_parameters(self) -> None:
+        """Check if the estimator parameters are valid."""
+        super().check_parameters()
+
+        assert (
+            self.target_policy_action_probabilities.shape[0] % self.steps_per_episode == 0
+        ), "The number of samples must be divisible by the number of steps per episode."
+
+    @override(BaseEstimator)
+    def estimate_weighted_rewards(self) -> np.ndarray:
+        """Estimate the weighted rewards using the Trajectory-wise Importance Sampling estimator.
+
+        :return: the weighted rewards, or here the policy value per trajectory.
+        """
+        self.check_parameters()
+
+        return self.compute_weighted_rewards(
+            target_policy_action_probabilities=self.target_policy_action_probabilities,
+            behavior_policy_action_probabilities=self.behavior_policy_action_probabilities,
+            rewards=self.rewards,
+            steps_per_episode=self.steps_per_episode,
+            discount_factor=self.discount_factor,
+            is_per_decision=True,
+        )
+
+    @override(BaseEstimator)
+    def estimate_policy_value(self) -> float:
+        """Estimate the value of the target policy using the Trajectory-wise Importance Sampling
+        estimator."""
+        return np.mean(self.estimate_weighted_rewards())
+
+
+class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling):
+    r"""Self-Normalized Per-Decision Importance Sampling (PDIS) estimator.
+
+    .. math::
+        V_{PDIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^n \sum_{t=0}^{T-1}
+            \gamma^t \frac {w^{(i)}_{t}} {\frac {1}{n} \sum_{j=1}^n w^{(j)}_{t}} r_t^{(i)}
+
+    Where:
+
+    - :math:`D` is the offline collected dataset.
+    - :math:`w^{(i)}_{t}` is the importance weight of the decision :math:`t` of trajectory :math:`i` defined as :math:`w_{t} = \frac {\pi_e(a_t|s_t)} {\pi_b(a_t|s_t)}`
+    - :math:`\pi_e` is the target policy and :math:`\pi_b` is the behavior policy.
+    - :math:`n` is the number of trajectories.
+    - :math:`T` is the length of the trajectory.
+    - :math:`\gamma_t` is the discount factor at time :math:`t`.
+    - :math:`r_t^{(i)}` is the reward at time :math:`t` of trajectory :math:`i`.
+
+    SNPDIS is a variance reduction technique for PDIS.
+
+    .. rubric:: References
+        https://arxiv.org/abs/1906.03735
+    """
+
+    @override(TrajectoryPerDecisionMixin)
     def normalize(self, weights: np.ndarray) -> np.ndarray:
         """Normalize the importance weights using the self-normalization strategy.
 
