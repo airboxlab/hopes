@@ -1,13 +1,6 @@
 import unittest
 
-import numpy as np
-
-from hopes.ope.estimators import (
-    InverseProbabilityWeighting,
-    SelfNormalizedInverseProbabilityWeighting,
-    SelfNormalizedTrajectoryWiseImportanceSampling,
-    TrajectoryWiseImportanceSampling,
-)
+from hopes.ope.estimators import *
 from hopes.ope.evaluation import OffPolicyEvaluation
 from hopes.ope.selection import OffPolicySelection
 from hopes.policy import ClassificationBasedPolicy, RandomPolicy
@@ -66,6 +59,7 @@ class TestEvaluation(unittest.TestCase):
         obs = np.random.rand(num_samples, num_obs)
         act = np.random.randint(num_actions, size=num_samples)
         rew = np.random.normal(10, 2.0, num_samples)
+        gamma = 0.99
 
         # create the behavior policy
         behavior_policy = ClassificationBasedPolicy(
@@ -86,10 +80,16 @@ class TestEvaluation(unittest.TestCase):
             InverseProbabilityWeighting(),
             SelfNormalizedInverseProbabilityWeighting(),
             TrajectoryWiseImportanceSampling(
-                steps_per_episode=steps_per_episode, discount_factor=0.99
+                steps_per_episode=steps_per_episode, discount_factor=gamma
             ),
             SelfNormalizedTrajectoryWiseImportanceSampling(
-                steps_per_episode=steps_per_episode, discount_factor=0.99
+                steps_per_episode=steps_per_episode, discount_factor=gamma
+            ),
+            PerDecisionImportanceSampling(
+                steps_per_episode=steps_per_episode, discount_factor=gamma
+            ),
+            SelfNormalizedPerDecisionImportanceSampling(
+                steps_per_episode=steps_per_episode, discount_factor=gamma
             ),
         ]
 
