@@ -83,7 +83,7 @@ class TestRewards(unittest.TestCase):
         act = np.random.randint(num_actions, size=num_samples)
         rew = np.array([neg_reward_fun(o, a) for o, a in zip(obs, act) if o.ndim == 1])
 
-        rew_scaled = MinMaxScaler()
+        rew_scaled = MinMaxScaler(clip=True)
         rew_scaled.fit(rew.reshape(-1, 1))
 
         reward_model = RewardFunctionModel(reward_function=neg_reward_fun).with_scaler(
