@@ -281,7 +281,7 @@ class InverseProbabilityWeighting(BaseEstimator):
     This estimator has generally high variance, especially on small datasets, and can be improved by using
     self-normalized importance weights.
 
-    References:
+    .. rubric:: References
         https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&context=cs_faculty_pubs
     """
 
@@ -321,7 +321,7 @@ class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
         - :math:`r_t` is the reward at time :math:`t`.
         - :math:`n` is the number of samples.
 
-    References:
+    .. rubric:: References
         https://papers.nips.cc/paper_files/paper/2015/hash/39027dfad5138c9ca0c474d71db915c3-Abstract.html
     """
 
@@ -471,7 +471,7 @@ class DirectMethod(BaseEstimator):
 class TrajectoryWiseImportanceSampling(BaseEstimator):
     r"""Trajectory-wise Importance Sampling (TIS) estimator.
 
-    :math:`V_{TIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^n\sum_{t=0}^{T-1}\gamma^t w^{(i)}_{0:T-1} r_t^{(i)}`
+    :math:`V_{TIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^ n\sum_{t=0}^{T-1} \gamma^t w^{(i)}_{0:T-1} r_t^{(i)}`
 
     Where:
 
@@ -483,9 +483,10 @@ class TrajectoryWiseImportanceSampling(BaseEstimator):
     - :math:`\gamma_t` is the discount factor at time :math:`t`.
     - :math:`r_t^{(i)}` is the reward at time :math:`t` of trajectory :math:`i`.
 
-    TIS can suffer from high variance due to the product operation of the importance weights.
+    TIS can suffer from high variance due to the product operation of the importance weights, also when action space is
+    large.
 
-    References:
+    .. rubric:: References
         https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&context=cs_faculty_pubs
     """
 
@@ -497,6 +498,8 @@ class TrajectoryWiseImportanceSampling(BaseEstimator):
 
         self.steps_per_episode = steps_per_episode
         self.discount_factor = discount_factor
+
+        self.importance_weights: np.ndarray | None = None
 
     @override(BaseEstimator)
     def short_name(self) -> str:
@@ -510,6 +513,15 @@ class TrajectoryWiseImportanceSampling(BaseEstimator):
         assert (
             self.target_policy_action_probabilities.shape[0] % self.steps_per_episode == 0
         ), "The number of samples must be divisible by the number of steps per episode."
+
+    def normalize(self, weights: np.ndarray) -> np.ndarray:
+        """Normalize the importance weights. This method can be overridden by subclasses to
+        implement a specific normalization strategy.
+
+        :param weights: the importance weights to normalize.
+        :return: the normalized importance weights.
+        """
+        return weights
 
     @override(BaseEstimator)
     def estimate_weighted_rewards(self) -> np.ndarray:
@@ -529,6 +541,8 @@ class TrajectoryWiseImportanceSampling(BaseEstimator):
         importance_weights = importance_weights.reshape(-1, self.steps_per_episode * num_actions)
         # shape: (n, 1)
         importance_weights = np.prod(importance_weights, axis=1).reshape(-1, 1)
+        # normalize the importance weights. Here this is a no-op.
+        importance_weights = self.normalize(importance_weights)
 
         # rewards, shape: (n, T)
         rewards = self.rewards.reshape(-1, self.steps_per_episode)
@@ -543,8 +557,10 @@ class TrajectoryWiseImportanceSampling(BaseEstimator):
 
         # compute the weighted rewards per trajectory, shape: (n, 1)
         weighted_rewards = np.sum(
-            importance_weights * rewards * discount_factors,  # (n, 1) * (n, T) * (n, T)
-            axis=1,  # sum weights over the trajectory length
+            # element-wise product, (n, 1) * (n, T) * (n, T) -> (n, T)
+            importance_weights * discount_factors * rewards,
+            # sum weights over the trajectory length
+            axis=1,
         ).reshape(-1, 1)
 
         return weighted_rewards
@@ -554,3 +570,44 @@ class TrajectoryWiseImportanceSampling(BaseEstimator):
         """Estimate the value of the target policy using the Trajectory-wise Importance Sampling
         estimator."""
         return np.mean(self.estimate_weighted_rewards())
+
+
+class SelfNormalizedTrajectoryWiseImportanceSampling(TrajectoryWiseImportanceSampling):
+    r"""Self-Normalized Trajectory-wise Importance Sampling (TIS) estimator.
+
+    .. math::
+        V_{TIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^n \sum_{t=0}^{T-1}
+            \gamma^t \frac {w^{(i)}_{0:T-1}} {\frac {1}{n} \sum_{j=1}^n w^{(j)}_{0:T-1}} r_t^{(i)}
+
+    Where:
+
+    - :math:`D` is the offline collected dataset.
+    - :math:`w^{(i)}_{0:T-1}` is the importance weight of the trajectory :math:`i` defined as :math:`w_{0:T-1} = \prod_{t=0}^{T-1} \frac {\pi_e(a_t|s_t)} {\pi_b(a_t|s_t)}`
+    - :math:`\pi_e` is the target policy and :math:`\pi_b` is the behavior policy.
+    - :math:`n` is the number of trajectories.
+    - :math:`T` is the length of the trajectory.
+    - :math:`\gamma_t` is the discount factor at time :math:`t`.
+    - :math:`r_t^{(i)}` is the reward at time :math:`t` of trajectory :math:`i`.
+
+    SNTIS is a variance reduction technique for TIS. It divides the weighted rewards by the mean of the importance
+    weights of the trajectories.
+
+    .. rubric:: References
+        https://arxiv.org/abs/1906.03735
+    """
+
+    @override(TrajectoryWiseImportanceSampling)
+    def short_name(self) -> str:
+        return "SNTIS"
+
+    @override(TrajectoryWiseImportanceSampling)
+    def normalize(self, weights: np.ndarray) -> np.ndarray:
+        """Normalize the importance weights using the self-normalization strategy.
+
+        It uses self-normalization to reduce the variance of the estimator, using the mean
+        of the importance weights over the trajectories.
+
+        :param weights: the importance weights to normalize.
+        :return: the normalized importance weights.
+        """
+        return weights / (np.mean(weights, axis=0) + 1e-10)
