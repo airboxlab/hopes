@@ -94,6 +94,10 @@ html_sidebars = {
     "**": ["main-sidebar"],
 }
 
+html_css_files = [
+    "css/custom.css",
+]
+
 html_context = {
     "github_user": "airboxlab",
     "github_repo": "hopes",
