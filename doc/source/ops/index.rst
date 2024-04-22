@@ -73,13 +73,11 @@ Note that confidence interval (CI) calculation can be based on several methods:
 - `bootstrap` (default)
 - `t-test`
 
-The documentation of the CI calculation can be found in
-:meth:`hopes.ope.estimators.BaseEstimator.estimate_policy_value_with_confidence_interval`.
+The documentation of the CI calculation can be found in `BaseEstimator.estimate_policy_value_with_confidence_interval`. See
+implementation details for more information.
 
-
-
-Classes documentation
----------------------
+Implementation details
+----------------------
 
 .. autoclass:: hopes.ope.evaluation.OffPolicyEvaluation
     :members:
@@ -90,3 +88,7 @@ Classes documentation
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. autoclass:: hopes.ope.estimators.BaseEstimator
+    :no-index:
+    :members: estimate_policy_value_with_confidence_interval

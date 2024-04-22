@@ -16,6 +16,7 @@ class OffPolicyEvaluationResult:
     """A result of the off-policy evaluation of a target policy.
 
     It includes:
+
     - the mean estimate of the policy value
     - the standard deviation of the estimate
     - the lower bound of the confidence interval
@@ -34,8 +35,13 @@ class OffPolicyEvaluationResult:
 
 @dataclass
 class OffPolicyEvaluationResults:
+    """The results of the off-policy evaluation of a target policy using multiple estimators."""
+
+    # the name of the target policy that was evaluated
     policy_name: str
+    # the results of the evaluation for each estimator
     results: dict[str, OffPolicyEvaluationResult]
+    # the significance level used to compute the confidence intervals
     significance_level: float
 
     def as_dataframe(self) -> pd.DataFrame:
@@ -164,6 +170,6 @@ class OffPolicyEvaluation:
 
         return OffPolicyEvaluationResults(
             policy_name=target_policy.name,
-            results={e: OffPolicyEvaluationResult.from_dict(r) for e, r in results.items()},
+            results={e: OffPolicyEvaluationResult.from_dict(r) for e, r in results.items()},  # type: ignore
             significance_level=self.significance_level,
         )

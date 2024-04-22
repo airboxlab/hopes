@@ -1,4 +1,3 @@
-.idea/
 **/__pycache__
 **/.mypy_cache
 
@@ -7,6 +6,9 @@ dist/
 
 # Poe
 _versions/**/version.toml
+
+# IntelliJ
+.idea
 
 # VS Code
 .vscode
