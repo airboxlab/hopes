@@ -319,7 +319,7 @@ class FunctionBasedPolicy(Policy):
 
     Log-likelihoods are computed by assuming the function is deterministic and assigning a
     probability of 1 to the action returned by the function and an almost zero probability
-    to all other actions.
+    to all other actions. The action space is discretized to compute the log-likelihoods.
     """
 
     def __init__(self, policy_function: callable, actions_bins: list[float | int]) -> None:

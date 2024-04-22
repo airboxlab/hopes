@@ -453,11 +453,13 @@ class DirectMethod(BaseEstimator):
         ).reshape(-1, 1)
 
         # compute the expected reward of the initial state under the target policy
+        # shape: (n, steps_per_episode)
         state_value = (
             (state_action_value_prediction * self.target_policy_action_probabilities)
-            .sum(axis=1)
-            .reshape(-1, self.steps_per_episode)
+            # sum over the actions
+            .sum(axis=1).reshape(-1, self.steps_per_episode)
         )
+        # take the value of the initial state
         initial_state_value = state_value[:, 0]
 
         return initial_state_value
@@ -610,4 +612,4 @@ class SelfNormalizedTrajectoryWiseImportanceSampling(TrajectoryWiseImportanceSam
         :param weights: the importance weights to normalize.
         :return: the normalized importance weights.
         """
-        return weights / (np.mean(weights, axis=0) + 1e-10)
+        return weights / (np.mean(weights) + 1e-10)

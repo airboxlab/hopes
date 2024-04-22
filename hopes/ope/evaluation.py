@@ -13,11 +13,22 @@ from hopes.policy import Policy
 @dataclass_json
 @dataclass
 class OffPolicyEvaluationResult:
-    """A result of the off-policy evaluation of a target policy."""
+    """A result of the off-policy evaluation of a target policy.
 
+    It includes:
+    - the mean estimate of the policy value
+    - the standard deviation of the estimate
+    - the lower bound of the confidence interval
+    - the upper bound of the confidence interval
+    """
+
+    # mean estimate of the policy value
     mean: float
+    # standard deviation of the estimate
     std: float
+    # lower bound of the confidence interval
     lower_bound: float
+    # upper bound of the confidence interval
     upper_bound: float
 
 
@@ -28,6 +39,7 @@ class OffPolicyEvaluationResults:
     significance_level: float
 
     def as_dataframe(self) -> pd.DataFrame:
+        """Return the results as a pandas DataFrame."""
         return pd.DataFrame.from_dict(self.results, orient="index")
 
     def __str__(self):
@@ -128,6 +140,7 @@ class OffPolicyEvaluation:
 
         results = {}
 
+        # run the evaluation for each estimator
         for estimator in self.estimators:
             try:
                 estimator.set_parameters(
