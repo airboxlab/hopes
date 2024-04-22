@@ -167,15 +167,15 @@ class BaseEstimator(ABC):
             )
             print(metrics)
 
-        Should output:
+        Should output something like:
 
         .. code-block:: python
 
             {
-                "lower_bound": 0.2,
-                "upper_bound": 4.0,
-                "mean": 3.2,
-                "std": 0.4,
+                "lower_bound": 10.2128,
+                "upper_bound": 10.6167,
+                "mean": 10.4148,
+                "std": 6.72408,
             }
 
         :param method: the method to use for estimating the confidence interval. Currently, only "bootstrap" and
