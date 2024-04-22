@@ -281,7 +281,7 @@ class InverseProbabilityWeighting(BaseEstimator):
     This estimator has generally high variance, especially on small datasets, and can be improved by using
     self-normalized importance weights.
 
-    References:
+    .. rubric:: References
         https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&context=cs_faculty_pubs
     """
 
@@ -321,7 +321,7 @@ class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
         - :math:`r_t` is the reward at time :math:`t`.
         - :math:`n` is the number of samples.
 
-    References:
+    .. rubric:: References
         https://papers.nips.cc/paper_files/paper/2015/hash/39027dfad5138c9ca0c474d71db915c3-Abstract.html
     """
 
@@ -486,7 +486,7 @@ class TrajectoryWiseImportanceSampling(BaseEstimator):
     TIS can suffer from high variance due to the product operation of the importance weights, also when action space is
     large.
 
-    References:
+    .. rubric:: References
         https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&context=cs_faculty_pubs
     """
 
@@ -592,8 +592,8 @@ class SelfNormalizedTrajectoryWiseImportanceSampling(TrajectoryWiseImportanceSam
     SNTIS is a variance reduction technique for TIS. It divides the weighted rewards by the mean of the importance
     weights of the trajectories.
 
-    References:
-        https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&context=cs_faculty_pubs
+    .. rubric:: References
+        https://arxiv.org/abs/1906.03735
     """
 
     @override(TrajectoryWiseImportanceSampling)
