@@ -471,6 +471,12 @@ class DirectMethod(BaseEstimator):
 
 
 class TrajectoryPerDecisionMixin(ABC):
+    """Mixin for trajectory-wise and per-decision estimators.
+
+    It provides a method to compute the weighted rewards for both trajectory-wise and per-
+    decision estimators.
+    """
+
     def compute_weighted_rewards(
         self,
         target_policy_action_probabilities: np.ndarray,
@@ -497,8 +503,8 @@ class TrajectoryPerDecisionMixin(ABC):
         importance_weights = (
             target_policy_action_probabilities / behavior_policy_action_probabilities
         )
-        # shape: (n, T * num_actions)
         num_actions = target_policy_action_probabilities.shape[1]
+        # shape: (n, T * num_actions)
         importance_weights = importance_weights.reshape(-1, steps_per_episode * num_actions)
 
         # compute the importance weights per decision, which is the cumulative product of the
