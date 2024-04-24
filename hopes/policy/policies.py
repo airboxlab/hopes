@@ -16,7 +16,7 @@ from hopes.policy.utils import bin_actions, deterministic_log_probs
 class Policy(ABC):
     """An abstract class for policies.
 
-    The policy must be subclassed and the log_likelihoods method must be implemented.
+    The policy must be subclassed and the log_probabilities method must be implemented.
     """
 
     _name: str | None = None
@@ -46,11 +46,11 @@ class Policy(ABC):
         return self
 
     @abstractmethod
-    def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
-        """Compute the log-likelihoods of the actions under the policy for a given set of
+    def log_probabilities(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-probabilities of the actions under the policy for a given set of
         observations.
 
-        :param obs: the observation for which to compute the log-likelihoods, shape:
+        :param obs: the observation for which to compute the log-probabilities, shape:
             (batch_size, obs_dim).
         """
         raise NotImplementedError
@@ -64,8 +64,8 @@ class Policy(ABC):
         assert obs.ndim == 2, "Observations must have shape (batch_size, obs_dim)."
         assert obs.shape[1] > 0, "Observations must have at least one feature."
 
-        log_likelihoods = self.log_likelihoods(obs)
-        action_probs = np.exp(log_likelihoods)
+        log_probs = self.log_probabilities(obs)
+        action_probs = np.exp(log_probs)
         # epsilon-greedy action selection
         if self._epsilon is not None and (np.random.rand() < self._epsilon):
             action_probs = np.ones_like(action_probs) / action_probs.shape[1]
@@ -105,8 +105,8 @@ class RandomPolicy(Policy):
         self.num_actions = num_actions
 
     @override(Policy)
-    def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
-        """Compute the log-likelihoods of the actions under the random policy for a given set of
+    def log_probabilities(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-probabilities of the actions under the random policy for a given set of
         observations."""
         action_probs = np.random.rand(obs.shape[0], self.num_actions)
         action_probs /= action_probs.sum(axis=1, keepdims=True)
@@ -114,7 +114,7 @@ class RandomPolicy(Policy):
 
 
 class ClassificationBasedPolicy(Policy):
-    """A policy that uses a classification model to predict the log-likelihoods of actions given
+    """A policy that uses a classification model to predict the log-probabilities of actions given
     observations.
 
     In absence of an actual control policy, this can be used to train a policy on a dataset
@@ -216,8 +216,8 @@ class ClassificationBasedPolicy(Policy):
         return {"accuracy": accuracy, "f1": f1}
 
     @override(Policy)
-    def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
-        """Compute the log-likelihoods of the actions under the classification-based policy for a
+    def log_probabilities(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-probabilities of the actions under the classification-based policy for a
         given set of observations."""
         if self.classification_model == "mlp":
             with torch.no_grad():
@@ -236,13 +236,13 @@ class PiecewiseLinearPolicy(Policy):
     temperature and is bounded by a minimum and maximum on both axis. This can also be
     helpful to model a simple schedule, where action is a function of time.
 
-    Since the output of a piecewise linear model is deterministic, the log-likelihoods are
+    Since the output of a piecewise linear model is deterministic, the log-probabilities are
     computed by assuming the function is deterministic and assigning a probability of 1 to
     the action returned by the function and an almost zero probability to all other actions.
 
     Also, the piecewise linear policy output being continuous, we need to discretize the
-    action space to compute the log-likelihoods. This is done by binning the actions to the
-    nearest action in the discretized action space.
+    action space to compute the log-probabilities. This is done by binning the actions to
+    the nearest action in the discretized action space.
     """
 
     def __init__(
@@ -301,25 +301,25 @@ class PiecewiseLinearPolicy(Policy):
         return {"rmse": rmse, "r2": r_squared}
 
     @override(Policy)
-    def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
-        """Compute the log-likelihoods of the actions under the piecewise linear policy for a given
-        set of observations."""
+    def log_probabilities(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-probabilities of the actions under the piecewise linear policy for a
+        given set of observations."""
         if obs.ndim == 1:
             raw_actions = self.model.predict(obs)
         else:
             raw_actions = np.array([self.model.predict(o) for o in obs])
         # bin the action to the nearest action using the discretized action space
         actions = bin_actions(raw_actions, self.actions_bins)
-        # return the log-likelihoods
+        # return the log-probabilities
         return deterministic_log_probs(actions, self.actions_bins)
 
 
 class FunctionBasedPolicy(Policy):
     """A policy based on a deterministic function that maps observations to actions.
 
-    Log-likelihoods are computed by assuming the function is deterministic and assigning a
+    log-probabilities are computed by assuming the function is deterministic and assigning a
     probability of 1 to the action returned by the function and an almost zero probability
-    to all other actions. The action space is discretized to compute the log-likelihoods.
+    to all other actions. The action space is discretized to compute the log-probabilities.
     """
 
     def __init__(self, policy_function: callable, actions_bins: list[float | int]) -> None:
@@ -333,18 +333,18 @@ class FunctionBasedPolicy(Policy):
         self.actions_bins = np.array(actions_bins)
 
     @override(Policy)
-    def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
-        """Compute the log-likelihoods of the actions under the function-based policy for a given
+    def log_probabilities(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-probabilities of the actions under the function-based policy for a given
         set of observations."""
         raw_actions = np.vectorize(self.policy_function)(obs)
         # bin the action to the nearest action using the discretized action space
         actions = bin_actions(raw_actions, self.actions_bins)
-        # return the log-likelihoods
+        # return the log-probabilities
         return deterministic_log_probs(actions, self.actions_bins)
 
 
 class HttpPolicy(Policy):
-    """A policy that uses a remote HTTP server that returns log likelihoods for actions given
+    """A policy that uses a remote HTTP server that returns log-probabilities for actions given
     observations.
 
     The request and response payloads processing is customizable by providing the
@@ -356,9 +356,7 @@ class HttpPolicy(Policy):
         host: str,
         path: str,
         request_payload_fun: callable = lambda obs: {"obs": obs.tolist()},
-        response_payload_fun: callable = lambda response: np.array(
-            response.json()["log_likelihoods"]
-        ),
+        response_payload_fun: callable = lambda response: np.array(response.json()["log_probs"]),
         request_method: str = "POST",
         headers: dict = {"content-type": "application/json"},  # noqa
         ssl: bool = False,
@@ -395,10 +393,10 @@ class HttpPolicy(Policy):
         assert self.batch_size > 0, "Batch size must be positive."
 
     @override(Policy)
-    def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
-        """Compute the log-likelihoods of the actions under the HTTP policy for a given set of
+    def log_probabilities(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-probabilities of the actions under the HTTP policy for a given set of
         observations."""
-        all_log_likelihoods = []
+        all_log_probs = []
         for chunk in np.array_split(obs, len(obs) // self.batch_size):
             # Send HTTP request to server
             response = requests.post(
@@ -407,8 +405,8 @@ class HttpPolicy(Policy):
                 verify=self.verify_ssl,
                 headers=self.headers,
             )
-            # Extract log likelihoods from response
-            log_likelihoods = self.response_payload_fun(response)
-            all_log_likelihoods.append(log_likelihoods)
+            # Extract log probs from response
+            log_probs = self.response_payload_fun(response)
+            all_log_probs.append(log_probs)
 
-        return np.concatenate(all_log_likelihoods, axis=0)
+        return np.concatenate(all_log_probs, axis=0)

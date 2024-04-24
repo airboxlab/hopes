@@ -21,7 +21,7 @@ from tests.utils import assert_act_probs, assert_log_probs
 class TestPolicies(unittest.TestCase):
     def test_rnd_policy(self):
         rnd_policy = RandomPolicy(num_actions=3)
-        log_probs = rnd_policy.log_likelihoods(obs=np.random.rand(10, 5))
+        log_probs = rnd_policy.log_probabilities(obs=np.random.rand(10, 5))
         assert_log_probs(log_probs, expected_shape=(10, 3))
 
     def test_logistic_based_policy(self):
@@ -48,7 +48,7 @@ class TestPolicies(unittest.TestCase):
         self.assertIn("accuracy", fit_stats)
         self.assertIn("f1", fit_stats)
 
-        # check if the policy returns valid log-likelihoods
+        # check if the policy returns valid log-probs
         new_obs = np.random.rand(10, num_obs)
         act_probs = reg_policy.compute_action_probs(obs=new_obs)
         assert_act_probs(act_probs, expected_shape=(10, num_actions))
@@ -74,7 +74,7 @@ class TestPolicies(unittest.TestCase):
         self.assertIn("rmse", fit_stats)
         self.assertIn("r2", fit_stats)
 
-        # check if the policy returns valid log-likelihoods
+        # check if the policy returns valid log-probs
         new_obs = np.random.randint(-10, 30, 10).reshape(-1, 1)
         act_probs = reg_policy.compute_action_probs(obs=new_obs)
         assert_act_probs(act_probs, expected_shape=(10, 16))
@@ -94,7 +94,7 @@ class TestPolicies(unittest.TestCase):
         # create and fit a piecewise linear policy
         reg_policy = FunctionBasedPolicy(policy_function=pi, actions_bins=[15, 20, 25, 30])
 
-        # check if the policy returns valid log-likelihoods
+        # check if the policy returns valid log-probs
         obs = np.random.randint(-10, 30, 100).reshape(-1, 1)
         act_probs = reg_policy.compute_action_probs(obs=obs)
         assert_act_probs(act_probs, expected_shape=(100, 4))
@@ -139,8 +139,8 @@ class TestPolicies(unittest.TestCase):
                 batch_size=1,
             )
 
-            # check if the policy returns valid log-likelihoods
-            remote_log_probs = http_policy.log_likelihoods(obs=np.random.rand(10, 5))
+            # check if the policy returns valid log-probs
+            remote_log_probs = http_policy.log_probabilities(obs=np.random.rand(10, 5))
             http_server.shutdown()
 
         assert_log_probs(remote_log_probs, expected_shape=(10, 3))

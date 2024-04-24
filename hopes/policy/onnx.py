@@ -9,14 +9,14 @@ from hopes.policy.policies import Policy
 
 
 class OnnxModelBasedPolicy(Policy):
-    """A policy that uses an existing ONNX model to predict the log-likelihoods of actions given
+    """A policy that uses an existing ONNX model to predict the log-probabilities of actions given
     observations.
 
     This class makes some opinionated assumptions about the structure of the ONNX model. You may need to override some
     methods if your model does not fit this structure.
 
     It supports models with attention mechanisms, where the state of the model is updated at each step.
-    The action log likelihoods are computed from the output of the model, with 3 options depending on the output layer
+    The action log probabilities are computed from the output of the model, with 3 options depending on the output layer
     of the underlying model:
 
     - from the action probabilities output.
@@ -25,7 +25,7 @@ class OnnxModelBasedPolicy(Policy):
 
     Example of usage, based on a pre-trained model in Ray RLlib, saved using :meth:`ray.rllib.algorithms.algorithm.Algorithm.export_policy_model`.
     This model uses an Attention-based Transformer model and passes 10 previous actions as inputs to the model. The action
-    log likelihoods are computed from the action distribution inputs output.
+    log probabilities are computed from the action distribution inputs output.
 
     .. code-block:: python
 
@@ -47,7 +47,7 @@ class OnnxModelBasedPolicy(Policy):
                 action_dist_inputs_output_name="default_policy/model_2/dense_6/BiasAdd:0",
             )
 
-            policy.log_likelihoods(obs=np.random.rand(1, 15))
+            policy.log_probabilities(obs=np.random.rand(1, 15))
     """
 
     def __init__(
@@ -233,7 +233,7 @@ class OnnxModelBasedPolicy(Policy):
             self.prev_rewards = np.array([np.array([0] * self.prev_n_rewards)])
 
     @override(Policy)
-    def log_likelihoods(self, obs: np.ndarray) -> np.ndarray:
+    def log_probabilities(self, obs: np.ndarray) -> np.ndarray:
         # get the output of the ONNX model
         output = self.session.run(input_feed=self.map_inputs(obs), output_names=self.output_names)
 
@@ -262,7 +262,7 @@ class OnnxModelBasedPolicy(Policy):
                 np.concatenate([self.prev_rewards[0], self.compute_reward(obs, action)], axis=0)[1:]
             ]
 
-        # get the action log-likelihoods from the output, from action probs, action log probs or action dist inputs
+        # get the action log-probabilities from the output, from action probs, action log probs or action dist inputs
         if self.action_log_probs_output_name is not None:
             logp_index = self.output_names.index(self.action_log_probs_output_name)
             return output[logp_index]

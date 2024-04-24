@@ -28,5 +28,5 @@ class TestOnnxPolicy(unittest.TestCase):
         )
 
         obs = np.random.rand(1, 15)
-        log_probs = policy.log_likelihoods(obs=obs)
+        log_probs = policy.log_probabilities(obs=obs)
         assert_log_probs(log_probs, expected_shape=(1, 2))
