@@ -282,7 +282,8 @@ class InverseProbabilityWeighting(BaseEstimator):
     self-normalized importance weights.
 
     .. rubric:: References
-        https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&context=cs_faculty_pubs
+
+    https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&context=cs_faculty_pubs
     """
 
     def __init__(self) -> None:
@@ -322,7 +323,8 @@ class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
         - :math:`n` is the number of samples.
 
     .. rubric:: References
-        https://papers.nips.cc/paper_files/paper/2015/hash/39027dfad5138c9ca0c474d71db915c3-Abstract.html
+
+    https://papers.nips.cc/paper_files/paper/2015/hash/39027dfad5138c9ca0c474d71db915c3-Abstract.html
     """
 
     def __init__(self) -> None:
@@ -580,7 +582,8 @@ class TrajectoryWiseImportanceSampling(BaseEstimator, TrajectoryPerDecisionMixin
     large.
 
     .. rubric:: References
-        https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&context=cs_faculty_pubs
+
+    https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&context=cs_faculty_pubs
     """
 
     def __init__(self, steps_per_episode: int, discount_factor: float = 1.0) -> None:
@@ -652,7 +655,8 @@ class SelfNormalizedTrajectoryWiseImportanceSampling(TrajectoryWiseImportanceSam
     weights of the trajectories.
 
     .. rubric:: References
-        https://arxiv.org/abs/1906.03735
+
+    https://arxiv.org/abs/1906.03735
     """
 
     @override(TrajectoryWiseImportanceSampling)
@@ -688,7 +692,8 @@ class PerDecisionImportanceSampling(BaseEstimator, TrajectoryPerDecisionMixin):
     - :math:`r_t^{(i)}` is the reward at time :math:`t` of trajectory :math:`i`.
 
     .. rubric:: References
-        https://arxiv.org/abs/1906.03735
+
+    https://arxiv.org/abs/1906.03735
     """
 
     def __init__(self, steps_per_episode: int, discount_factor: float = 1.0) -> None:
@@ -755,7 +760,8 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
     SNPDIS is a variance reduction technique for PDIS.
 
     .. rubric:: References
-        https://arxiv.org/abs/1906.03735
+
+    https://arxiv.org/abs/1906.03735
     """
 
     @override(TrajectoryPerDecisionMixin)
