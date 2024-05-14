@@ -23,7 +23,7 @@ In the continuous case, the expected value of :math:`f(x)` under :math:`p(x)` is
 
 .. math::
 
-    E_{x \sim p}[f(x)] = \int p(x) f(x) dx
+    E_{x \sim p(x)}[f(x)] = \int p(x) f(x) dx
 
 Now, let's say we don't have access to samples from :math:`p(x)`, but we have samples from another distribution :math:`q(x)`.
 
@@ -31,12 +31,12 @@ We can still compute the expected value of :math:`f(x)` by using the samples fro
 
 .. math::
 
-    E_{x \sim p}[f(x)] = \int p(x) f(x) dx
+    E_{x \sim p(x)}[f(x)] = \int p(x) f(x) dx
                        = \int p(x) \frac{q(x)}{q(x)} f(x) dx
                        = \int q(x) \frac{p(x)}{q(x)} f(x) dx
-                       = E_{x \sim q}[\frac{p(x)}{q(x)} f(x)]
+                       = E_{x \sim q(x)}[\frac{p(x)}{q(x)} f(x)]
 
-Wrapping that up, :math:`E_{x \sim p}[f(x)] = E_{x \sim q}[\frac{p(x)}{q(x)} f(x)]`, which means
+Wrapping that up, :math:`E_{x \sim p(x)}[f(x)] = E_{x \sim q(x)}[\frac{p(x)}{q(x)} f(x)]`, which means
 the expected value of :math:`f(x)` under :math:`p(x)` is equal to the expected value of :math:`\frac{p(x)}{q(x)} f(x)`
 under :math:`q(x)`.
 
@@ -83,6 +83,7 @@ Among other generic considerations, there are two assumptions that must be satis
 - *coverage*: the behavior policy must have a non-zero probability of taking all the actions that the evaluation policy
   could take. In Hopes, we deal with this as much as possible by ensuring a small probability of taking all the actions
   in the behavior policy, especially in the deterministic case.
-- *positivity*: the rewards must be non-negative to be able to get a lower bound estimate of the target policy.
+- *positivity*: the rewards must be non-negative to be able to get a lower bound estimate of the target policy. In Hopes,
+  you'll find a way to rescale the rewards to make them positive (using MinMaxScaler).
 
 .. [#] in the context of off-policy policy gradient methods, but that's out of the scope of this project.
