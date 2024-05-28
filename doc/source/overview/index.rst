@@ -78,12 +78,25 @@ which is the definition of the Inverse Probability Weighting (IPW) estimator.
 When can't we use importance sampling?
 --------------------------------------
 
-Among other generic considerations, there are two assumptions that must be satisfied to use importance sampling:
+Among other general considerations, there are two assumptions that must be satisfied to use importance sampling:
 
 - *coverage*: the behavior policy must have a non-zero probability of taking all the actions that the evaluation policy
-  could take. In Hopes, we deal with this as much as possible by ensuring a small probability of taking all the actions
-  in the behavior policy, especially in the deterministic case.
-- *positivity*: the rewards must be non-negative to be able to get a lower bound estimate of the target policy. In Hopes,
+  could take. In Hopes, deterministic policies are made slightly stochastic by ensuring a small probability of taking all the actions.
+  This regularization avoids numerical issues when computing the importance weights (division by zero), but has impact on variance (may increase)
+  and bias (estimator is no longer unbiased).
+  Note also that not all estimators require the behavior policy to cover all the actions of the evaluation policy, for instance
+  Direct Method (DM) fits a model of the Q function and uses it to estimate the value of the policy.
+- *positivity*: the rewards must be non-negative to be able to compute a lower bound estimate of the target policy. In Hopes,
   you'll find a way to rescale the rewards to make them positive (using MinMaxScaler).
+
+References
+----------
+
+- Sutton, R. S., & Barto, A. G. (2018). Reinforcement learning: An introduction.
+- Precup, D., Sutton, R. S., & Singh, S. (2000). Eligibility traces for off-policy policy evaluation.
+- Kallus, N., Uehara, M. (2019). Intrinsically Efficient, Stable, and Bounded Off-Policy Evaluation for Reinforcement Learning.
+- Chen, B., Jin M., Wang Z., Hong T., & Berges M. (2020). Towards Off-policy Evaluation as a Prerequisite for Real-world Reinforcement Learning in Building Control.
+- Uehara, M., Shi, C., & Kallus, N. (2022). A Review of Off-Policy Evaluation in Reinforcement Learning.
+- Voloshin, C., Le, J., Jiang, N., & Yue, Y. (2021). Empirical Study of Off-Policy Policy Evaluation for Reinforcement Learning.
 
 .. [#] in the context of off-policy policy gradient methods, but that's out of the scope of this project.
