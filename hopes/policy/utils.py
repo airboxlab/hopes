@@ -1,17 +1,29 @@
 import numpy as np
 
 
-def deterministic_log_probs(
-    actions: np.ndarray, actions_bins: np.ndarray, lamb: float = 1e-6
+def log_probs_for_deterministic_policy(
+    actions: np.ndarray, actions_bins: np.ndarray, epsilon: float = 1e-6
 ) -> np.ndarray:
-    """Compute the log probabilities of a given set of actions, assuming a deterministic policy.
+    """Compute the log probabilities of a given set of actions, assuming a given deterministic
+    policy.
 
     We assign a probability of ~1 to the action returned by the function and an almost zero
     probability to all other actions (note: sum of log probs must be 1)
+
+    :param actions: the actions for which to compute the log probabilities.
+    :param actions_bins: the set of possible actions.
+    :param epsilon: the small value to use for the probabilities of the other actions.
     """
-    top = np.log(1.0 - (lamb * (len(actions_bins) - 1)))
-    others = np.log(lamb)
-    return np.array([[top if a == action else others for a in actions_bins] for action in actions])
+    assert np.all(np.isin(actions, actions_bins)), "Some actions are not in the action bins."
+    unlikely_p = epsilon / len(actions_bins)
+    return np.log(
+        np.array(
+            [
+                [(1.0 - epsilon) + unlikely_p if a == action else unlikely_p for a in actions_bins]
+                for action in actions
+            ]
+        )
+    )
 
 
 def bin_actions(actions: np.ndarray, bins: np.ndarray) -> np.ndarray:

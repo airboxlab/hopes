@@ -10,7 +10,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score
 
 from hopes.dev_utils import override
-from hopes.policy.utils import bin_actions, deterministic_log_probs
+from hopes.policy.utils import bin_actions, log_probs_for_deterministic_policy
 
 
 class Policy(ABC):
@@ -25,6 +25,10 @@ class Policy(ABC):
     @property
     def name(self):
         return self._name or self.__class__.__name__
+
+    @property
+    def epsilon(self):
+        return self._epsilon
 
     def with_name(self, name: str) -> "Policy":
         """Set the name of the policy. This is optional but can be useful for logging,
@@ -236,9 +240,10 @@ class PiecewiseLinearPolicy(Policy):
     temperature and is bounded by a minimum and maximum on both axis. This can also be
     helpful to model a simple schedule, where action is a function of time.
 
-    Since the output of a piecewise linear model is deterministic, the log-probabilities are
-    computed by assuming the function is deterministic and assigning a probability of 1 to
-    the action returned by the function and an almost zero probability to all other actions.
+    Since the output of the piecewise linear model is deterministic, the log-probabilities
+    are computed by assuming the function is deterministic and assigning a probability of ~1
+    to the action returned by the function and an almost zero probability to all other
+    actions.
 
     Also, the piecewise linear policy output being continuous, we need to discretize the
     action space to compute the log-probabilities. This is done by binning the actions to
@@ -250,12 +255,15 @@ class PiecewiseLinearPolicy(Policy):
         num_segments: int,
         obs: np.ndarray,
         act: np.ndarray,
+        epsilon: float,
         actions_bins: list[float | int] | None = None,
     ):
         """
         :param num_segments: the number of segments for the piecewise linear model.
         :param obs: the observations for training the piecewise linear model, shape: (batch_size, obs_dim).
         :param act: the actions for training the piecewise linear model, shape: (batch_size,).
+        :param epsilon: the epsilon value for epsilon-greedy action selection. This is mandatory for computing
+            log-probabilities since the policy is deterministic.
         :param actions_bins: the bins for discretizing the action space. If not provided, we assume the action space
             is already discretized.
         """
@@ -264,11 +272,14 @@ class PiecewiseLinearPolicy(Policy):
             len(obs.shape) == 1 or obs.shape[1] == 1
         ), "Piecewise linear policy only supports 1D observations."
         assert obs.shape[0] == act.shape[0], "Number of observations and actions must match."
+        assert epsilon is not None, "Epsilon must be set for piecewise linear policy."
 
         self.num_segments = num_segments
         self.model_obs = obs.squeeze() if obs.ndim == 2 else obs
         self.model_act = act.squeeze() if act.ndim == 2 else act
         self.model = None
+
+        self._epsilon = epsilon
 
         # bins used to discretize the action space
         self.actions_bins = actions_bins if actions_bins else np.unique(self.model_act)
@@ -304,6 +315,10 @@ class PiecewiseLinearPolicy(Policy):
     def log_probabilities(self, obs: np.ndarray) -> np.ndarray:
         """Compute the log-probabilities of the actions under the piecewise linear policy for a
         given set of observations."""
+        assert self.epsilon is not None, (
+            "Epsilon must be set for piecewise linear policy (using with_epsilon method)."
+            "This is used for log-probability computation."
+        )
         if obs.ndim == 1:
             raw_actions = self.model.predict(obs)
         else:
@@ -311,7 +326,7 @@ class PiecewiseLinearPolicy(Policy):
         # bin the action to the nearest action using the discretized action space
         actions = bin_actions(raw_actions, self.actions_bins)
         # return the log-probabilities
-        return deterministic_log_probs(actions, self.actions_bins)
+        return log_probs_for_deterministic_policy(actions, self.actions_bins, self.epsilon)
 
 
 class FunctionBasedPolicy(Policy):
@@ -322,25 +337,39 @@ class FunctionBasedPolicy(Policy):
     to all other actions. The action space is discretized to compute the log-probabilities.
     """
 
-    def __init__(self, policy_function: callable, actions_bins: list[float | int]) -> None:
+    def __init__(
+        self, policy_function: callable, epsilon: float, actions_bins: list[float | int]
+    ) -> None:
         """
         :param policy_function: a function that takes in observations and returns actions.
+        :param epsilon: the epsilon value for epsilon-greedy action selection.
+            This is mandatory for computing log-probabilities since the policy is deterministic.
         :param actions_bins: the bins for discretizing the action space.
         """
-        assert callable(policy_function), "Policy function must be callable."
         assert len(actions_bins) > 0, "Action bins must be non-empty."
+        assert np.all(np.diff(actions_bins) > 0), "Action bins must be in increasing order."
+        assert np.all(np.isin(actions_bins, np.unique(actions_bins))), "Action bins must be unique."
+
+        assert policy_function is not None, "Policy function must be set."
+        assert callable(policy_function), "Policy function must be callable."
+
         self.policy_function = policy_function
         self.actions_bins = np.array(actions_bins)
+        self._epsilon = epsilon
 
     @override(Policy)
     def log_probabilities(self, obs: np.ndarray) -> np.ndarray:
         """Compute the log-probabilities of the actions under the function-based policy for a given
         set of observations."""
+        assert self.epsilon is not None, (
+            "Epsilon must be set for function-based policy (using with_epsilon method)."
+            "This is used for log-probability computation."
+        )
         raw_actions = np.vectorize(self.policy_function)(obs)
         # bin the action to the nearest action using the discretized action space
         actions = bin_actions(raw_actions, self.actions_bins)
         # return the log-probabilities
-        return deterministic_log_probs(actions, self.actions_bins)
+        return log_probs_for_deterministic_policy(actions, self.actions_bins, self.epsilon)
 
 
 class HttpPolicy(Policy):

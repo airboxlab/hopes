@@ -13,7 +13,7 @@ from hopes.policy.policies import (
     PiecewiseLinearPolicy,
     RandomPolicy,
 )
-from hopes.policy.utils import piecewise_linear
+from hopes.policy.utils import log_probs_for_deterministic_policy, piecewise_linear
 from tests.action_probs_utils import generate_action_probs
 from tests.utils import assert_act_probs, assert_log_probs
 
@@ -68,7 +68,9 @@ class TestPolicies(unittest.TestCase):
         bins = list(range(15, 31))
 
         # create and fit a piecewise linear policy
-        reg_policy = PiecewiseLinearPolicy(num_segments=3, obs=obs, act=act, actions_bins=bins)
+        reg_policy = PiecewiseLinearPolicy(
+            num_segments=3, obs=obs, act=act, actions_bins=bins, epsilon=0.01
+        )
         fit_stats = reg_policy.fit()
         self.assertIsInstance(fit_stats, dict)
         self.assertIn("rmse", fit_stats)
@@ -92,7 +94,9 @@ class TestPolicies(unittest.TestCase):
             return piecewise_linear(_obs, y0=30, y1=15, left_cp=10, right_cp=20, slope=-0.5)
 
         # create and fit a piecewise linear policy
-        reg_policy = FunctionBasedPolicy(policy_function=pi, actions_bins=[15, 20, 25, 30])
+        reg_policy = FunctionBasedPolicy(
+            policy_function=pi, actions_bins=[15, 20, 25, 30], epsilon=0.01
+        )
 
         # check if the policy returns valid log-probs
         obs = np.random.randint(-10, 30, 100).reshape(-1, 1)
@@ -176,3 +180,9 @@ class TestPolicies(unittest.TestCase):
         class_pol.with_epsilon(0.5)
         actions = [class_pol.select_action(obs=obs, deterministic=False) for _ in range(100)]
         self.assertTrue(np.var(actions) > 0)
+
+    def test_log_probs_for_deterministic_policy(self):
+        actions = np.array([0, 1, 2, 0, 1])
+        actions_bins = np.array([0, 1, 2])
+        log_probs = log_probs_for_deterministic_policy(actions, actions_bins)
+        assert_log_probs(log_probs, expected_shape=(5, 3))

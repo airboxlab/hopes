@@ -3,7 +3,16 @@ import unittest
 import numpy as np
 from action_probs_utils import generate_action_probs
 
-from hopes.ope.estimators import *
+from hopes.ope.estimators import (
+    BaseEstimator,
+    DirectMethod,
+    InverseProbabilityWeighting,
+    PerDecisionImportanceSampling,
+    SelfNormalizedInverseProbabilityWeighting,
+    SelfNormalizedPerDecisionImportanceSampling,
+    SelfNormalizedTrajectoryWiseImportanceSampling,
+    TrajectoryWiseImportanceSampling,
+)
 from hopes.rew.rewards import RegressionBasedRewardModel
 
 
