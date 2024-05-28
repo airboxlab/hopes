@@ -4,7 +4,25 @@ Hopes: finding the best policy
 What's off-policy policy evaluation?
 ------------------------------------
 
-TODO
+In reinforcement learning, the goal is to find the best policy that maximizes the expected sum of rewards over time.
+However, in practice, it's often difficult to evaluate the value of a policy, especially when the policy is stochastic or
+when the target environment is unknown.
+
+In HVAC control, for instance, estimating how a policy would perform in a real-world building is crucial to ensure
+energy efficiency and occupant comfort. It's often not possible nor desirable to deploy a newly trained policy in the real-world
+without knowing how it would perform. Off-policy evaluation allows to estimate the value of a policy without deploying it,
+by using data collected by another policy. It relies on the mathematical principle of importance sampling, which allows to
+estimate the expected value of a function under a distribution by using samples from another distribution.
+
+As stated in "Empirical Study of Off-Policy Policy Evaluation for Reinforcement Learning", off-policy estimators can
+be classified in 3 categories:
+
+- **Inverse Propensity Scoring** (IPS), with several variants like Importance Sampling (IS), Per-Decision Importance Sampling (PDIS),
+  Trajectory-wise Importance Sampling (TWIS), and their self-normalized versions.
+- **Direct Methods** (DM), that use regression-based models to estimate the value function of the behavior policy or
+  to approximate the transition dynamics.
+- **Hybrid Methods** (HM), like Doubly Robust (DR), that combine the importance sampling and the approximate value function
+  of the policy.
 
 How does importance sampling work?
 ----------------------------------
@@ -75,8 +93,17 @@ Note that if trajectory length is equal to 1 (bandit setting), the value of the 
 
 which is the definition of the Inverse Probability Weighting (IPW) estimator.
 
-When can't we use importance sampling?
---------------------------------------
+Other methods
+-------------
+
+There are other methods to estimate the value of a policy, such as Direct Method (DM) and Doubly Robust (DR), which is an hybrid method based both
+on the importance sampling and the approximate value function of the policy.
+
+DM, which is available in Hopes, fits a model of the Q function and uses it to estimate the value of the policy. It no longer
+requires the behavior policy to cover all the actions of the evaluation policy, but it requires the model to be accurate.
+
+Assumptions of importance sampling and regularization
+-----------------------------------------------------
 
 Among other general considerations, there are two assumptions that must be satisfied to use importance sampling:
 
@@ -98,5 +125,6 @@ References
 - Chen, B., Jin M., Wang Z., Hong T., & Berges M. (2020). Towards Off-policy Evaluation as a Prerequisite for Real-world Reinforcement Learning in Building Control.
 - Uehara, M., Shi, C., & Kallus, N. (2022). A Review of Off-Policy Evaluation in Reinforcement Learning.
 - Voloshin, C., Le, J., Jiang, N., & Yue, Y. (2021). Empirical Study of Off-Policy Policy Evaluation for Reinforcement Learning.
+- Swaminathan, A., & Joachims, T. (2015). The Self-Normalized Estimator for Counterfactual Learning.
 
 .. [#] in the context of off-policy policy gradient methods, but that's out of the scope of this project.
