@@ -113,7 +113,7 @@ Among other general considerations, there are two assumptions that must be satis
   (estimator is no longer unbiased).
 
   Note also that not all estimators require the behavior policy to cover all the actions of the evaluation policy, for instance
-  Direct Method (DM) fits a model of the Q function and uses it to estimate the value of the policy.
+  Direct Method (DM) fit a model of the Q function and uses it to estimate the value of the policy.
 
 - **Positivity**: the rewards must be non-negative to be able to compute a lower bound estimate of the target policy. In Hopes,
   you'll find a way to rescale the rewards to make them positive (using `MinMaxScaler`).

@@ -15,15 +15,14 @@ def log_probs_for_deterministic_policy(
     :param epsilon: the small value to use for the probabilities of the other actions.
     """
     assert np.all(np.isin(actions, actions_bins)), "Some actions are not in the action bins."
+
+    # get index of each action in actions_bins
+    act_idx = np.searchsorted(actions_bins, actions)
+
+    # create the log probabilities
     unlikely_p = epsilon / len(actions_bins)
-    return np.log(
-        np.array(
-            [
-                [(1.0 - epsilon) + unlikely_p if a == action else unlikely_p for a in actions_bins]
-                for action in actions
-            ]
-        )
-    )
+    act_probs = np.where(np.eye(len(actions_bins)) == 0, unlikely_p, 1.0 - epsilon + unlikely_p)
+    return np.log([act_probs[a] for a in act_idx])
 
 
 def bin_actions(actions: np.ndarray, bins: np.ndarray) -> np.ndarray:
