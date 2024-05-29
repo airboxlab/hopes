@@ -2,7 +2,7 @@ Hopes: finding the best policy
 ==============================
 
 What's off-policy (policy) evaluation?
-------------------------------------
+--------------------------------------
 
 In reinforcement learning, the goal is to find the best policy that maximizes the expected sum of rewards over time.
 However, in practice, it's often difficult to evaluate the value of a policy, especially when the policy is stochastic or
