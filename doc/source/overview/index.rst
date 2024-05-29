@@ -1,7 +1,7 @@
 Hopes: finding the best policy
 ==============================
 
-What's off-policy policy evaluation?
+What's off-policy (policy) evaluation?
 ------------------------------------
 
 In reinforcement learning, the goal is to find the best policy that maximizes the expected sum of rewards over time.
@@ -21,8 +21,7 @@ be classified in 3 categories:
   Trajectory-wise Importance Sampling (TWIS), and their self-normalized versions.
 - **Direct Methods** (DM), that use regression-based models to estimate the value function of the behavior policy or
   to approximate the transition dynamics.
-- **Hybrid Methods** (HM), like Doubly Robust (DR), that combine the importance sampling and the approximate value function
-  of the policy.
+- **Hybrid Methods** (HM), like Doubly Robust (DR), that combine importance sampling and value function approximation.
 
 How does importance sampling work?
 ----------------------------------
@@ -107,14 +106,14 @@ Assumptions of importance sampling and regularization
 
 Among other general considerations, there are two assumptions that must be satisfied to use importance sampling:
 
-- *coverage*: the behavior policy must have a non-zero probability of taking all the actions that the evaluation policy
-  could take. In Hopes, deterministic policies are made slightly stochastic by ensuring a small probability of taking all the actions.
+- **Coverage**: the behavior policy must have a non-zero probability of taking all the actions that the evaluation policy
+  could take, in other words :math:`\pi_e(a, s) > 0 \implies \pi_b(a, s) > 0`. In Hopes, deterministic policies are made slightly stochastic by ensuring a small probability of taking all the actions.
   This regularization avoids numerical issues when computing the importance weights (division by zero), but has impact on variance (may increase)
   and bias (estimator is no longer unbiased).
   Note also that not all estimators require the behavior policy to cover all the actions of the evaluation policy, for instance
   Direct Method (DM) fits a model of the Q function and uses it to estimate the value of the policy.
-- *positivity*: the rewards must be non-negative to be able to compute a lower bound estimate of the target policy. In Hopes,
-  you'll find a way to rescale the rewards to make them positive (using MinMaxScaler).
+- **Positivity**: the rewards must be non-negative to be able to compute a lower bound estimate of the target policy. In Hopes,
+  you'll find a way to rescale the rewards to make them positive (using `MinMaxScaler`).
 
 References
 ----------
