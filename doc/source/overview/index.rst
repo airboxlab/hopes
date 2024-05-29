@@ -107,11 +107,14 @@ Assumptions of importance sampling and regularization
 Among other general considerations, there are two assumptions that must be satisfied to use importance sampling:
 
 - **Coverage**: the behavior policy must have a non-zero probability of taking all the actions that the evaluation policy
-  could take, in other words :math:`\pi_e(a, s) > 0 \implies \pi_b(a, s) > 0`. In Hopes, deterministic policies are made slightly stochastic by ensuring a small probability of taking all the actions.
-  This regularization avoids numerical issues when computing the importance weights (division by zero), but has impact on variance (may increase)
-  and bias (estimator is no longer unbiased).
+  could take, in other words :math:`\pi_e(a, s) > 0 \implies \pi_b(a, s) > 0`. In Hopes, deterministic policies are made
+  slightly stochastic by ensuring a small probability of taking all the actions. This regularization avoids numerical issues
+  when computing the importance weights (division by zero), but has impact on variance (may increase) and bias
+  (estimator is no longer unbiased).
+
   Note also that not all estimators require the behavior policy to cover all the actions of the evaluation policy, for instance
   Direct Method (DM) fits a model of the Q function and uses it to estimate the value of the policy.
+
 - **Positivity**: the rewards must be non-negative to be able to compute a lower bound estimate of the target policy. In Hopes,
   you'll find a way to rescale the rewards to make them positive (using `MinMaxScaler`).
 
