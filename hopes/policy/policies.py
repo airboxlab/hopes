@@ -426,7 +426,7 @@ class HttpPolicy(Policy):
         """Compute the log-probabilities of the actions under the HTTP policy for a given set of
         observations."""
         all_log_probs = []
-        for chunk in np.array_split(obs, len(obs) // self.batch_size):
+        for chunk in np.array_split(obs, self.batch_size):
             # Send HTTP request to server
             response = requests.post(
                 f"http{'s' if self.ssl else ''}://{self.host}:{self.port}/{self.path}",
