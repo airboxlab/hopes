@@ -1,5 +1,5 @@
 sphinx==7.3.7
-pydata-sphinx-theme==0.15.2
+pydata-sphinx-theme==0.15.3
 sphinx-design==0.6.0
 # this should be mocked in autodoc_mock_imports
 # however, it causes issues with union types PEP 604 support
