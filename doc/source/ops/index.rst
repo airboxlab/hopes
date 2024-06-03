@@ -43,7 +43,8 @@ Example with a synthetic, random, dataset.
         behavior_policy=behavior_policy,
         estimators=estimators,
         fail_fast=True,
-        significance_level=0.1,
+        ci_method="t-test",
+        ci_significance_level=0.1,
     )
 
     results = [
@@ -52,7 +53,7 @@ Example with a synthetic, random, dataset.
     ]
 
     # select the top k policies based on lower bound (confidence interval +-90%)
-    top_k_results = OffPolicySelection.select_top_k(results, metric="lower_bound")
+    top_k_results = OffPolicySelection.select_top_k(results, metric="lower_bound", top_k=1)
     print(top_k_results[0])
 
 This should produce an output similar to:
