@@ -14,7 +14,7 @@ Hopes
 What's in the box?
 ------------------
 
-**HOPES** - HVAC Off-policy Policy Evaluation and Selection - is a Python package for evaluating and selecting RL-based
+**HOPES**, which stands for **H**\ VAC optimisation with **O**\ ff **P**\ olicy **E**\ valuation and **S**\ election, is a Python package for evaluating and selecting RL-based
 control policies. It offers a set of estimators and tools to evaluate the performance of a target policy,
 compared to a baseline policy (characterized by an offline logged dataset), using off-policy evaluation
 techniques. It's particularly suited for the context of HVAC control, where the target policy is an RL-based controller
