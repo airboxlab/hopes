@@ -14,38 +14,39 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=87e54e7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=87098ae6" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
-  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
     <script src="../_static/documentation_options.js?v=d45e8c67"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ope/index';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Hopes: Policies" href="../policy/index.html" />
-    <link rel="prev" title="Overview of Hopes package" href="../overview/index.html" />
+    <link rel="prev" title="Hopes: finding the best policy" href="../overview/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -55,27 +56,23 @@
 
   
   
-  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -97,12 +94,17 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <label class="sidebar-toggle primary-toggle" for="__primary">
+  <button class="sidebar-toggle primary-toggle" aria-label="Site navigation">
     <span class="fa-solid fa-bars"></span>
-  </label>
+  </button>
   
   
   <div class="col-lg-3 navbar-header-items__start">
@@ -140,33 +142,33 @@
 <nav class="navbar-nav">
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../overview/index.html">
-                        Overview
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../overview/index.html">
+    Overview
+  </a>
+</li>
 
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="#">
-                        Estimators
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../policy/index.html">
-                        Policies
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Estimators
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../ops/index.html">
-                        Selection
-                      </a>
-                    </li>
-                
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../policy/index.html">
+    Policies
+  </a>
+</li>
+
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../ops/index.html">
+    Selection
+  </a>
+</li>
+
   </ul>
 </nav></div>
       
@@ -222,9 +224,9 @@ document.write(`
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+    <button class="sidebar-toggle secondary-toggle" aria-label="On this page">
       <span class="fa-solid fa-outdent"></span>
-    </label>
+    </button>
   
 </div>
 
@@ -245,39 +247,42 @@ document.write(`
     
       <div class="sidebar-header-items__center">
         
-          <div class="navbar-item">
+          
+          
+            <div class="navbar-item">
 <nav class="navbar-nav">
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../overview/index.html">
-                        Overview
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../overview/index.html">
+    Overview
+  </a>
+</li>
 
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="#">
-                        Estimators
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../policy/index.html">
-                        Policies
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Estimators
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../ops/index.html">
-                        Selection
-                      </a>
-                    </li>
-                
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../policy/index.html">
+    Policies
+  </a>
+</li>
+
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../ops/index.html">
+    Selection
+  </a>
+</li>
+
   </ul>
 </nav></div>
+          
         
       </div>
     
@@ -322,13 +327,13 @@ document.write(`
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
@@ -337,7 +342,7 @@ document.write(`
 
 
 
-<nav aria-label="Breadcrumb">
+<nav aria-label="Breadcrumb" class="d-print-none">
   <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
@@ -370,15 +375,17 @@ document.write(`
 <li><p>[x] Implement Inverse Probability Weighting (IPW) estimator</p></li>
 <li><p>[x] Implement Self-Normalized Inverse Probability Weighting (SNIPW) estimator</p></li>
 <li><p>[x] Implement Direct Method (DM) estimator</p></li>
+<li><p>[x] Implement Trajectory-wise Importance Sampling (TIS) estimator</p></li>
+<li><p>[x] Implement Self-Normalized Trajectory-wise Importance Sampling (SNTIS) estimator</p></li>
+<li><p>[x] Implement Per-Decision Importance Sampling (PDIS) estimator</p></li>
+<li><p>[x] Implement Self-Normalized Per-Decision Importance Sampling (SNPDIS) estimator</p></li>
 <li><p>[ ] Implement Doubly Robust (DR) estimator</p></li>
-<li><p>[ ] Implement Trajectory-Wise Importance Sampling (TWIS) estimator</p></li>
-<li><p>[ ] Implement Per-Decision Importance Sampling (PDIS) estimator</p></li>
 </ul>
 </section>
 <section id="implemented-estimators">
 <h2>Implemented estimators<a class="headerlink" href="#implemented-estimators" title="Link to this heading">#</a></h2>
 <p>Currently, the following estimators are implemented:</p>
-<table class="autosummary longtable table autosummary">
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#hopes.ope.estimators.BaseEstimator" title="hopes.ope.estimators.BaseEstimator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.ope.estimators.BaseEstimator</span></code></a></p></td>
 <td><p>Base class for all estimators.</p></td>
@@ -392,8 +399,21 @@ document.write(`
 <tr class="row-even"><td><p><a class="reference internal" href="#hopes.ope.estimators.DirectMethod" title="hopes.ope.estimators.DirectMethod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.ope.estimators.DirectMethod</span></code></a></p></td>
 <td><p>Direct Method (DM) estimator.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling" title="hopes.ope.estimators.TrajectoryWiseImportanceSampling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.ope.estimators.TrajectoryWiseImportanceSampling</span></code></a></p></td>
+<td><p>Trajectory-wise Importance Sampling (TIS) estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling" title="hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling</span></code></a></p></td>
+<td><p>Self-Normalized Trajectory-wise Importance Sampling (TIS) estimator.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#hopes.ope.estimators.PerDecisionImportanceSampling" title="hopes.ope.estimators.PerDecisionImportanceSampling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.ope.estimators.PerDecisionImportanceSampling</span></code></a></p></td>
+<td><p>Per-Decision Importance Sampling (PDIS) estimator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#hopes.ope.estimators.SelfNormalizedPerDecisionImportanceSampling" title="hopes.ope.estimators.SelfNormalizedPerDecisionImportanceSampling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hopes.ope.estimators.SelfNormalizedPerDecisionImportanceSampling</span></code></a></p></td>
+<td><p>Self-Normalized Per-Decision Importance Sampling (PDIS) estimator.</p></td>
+</tr>
 </tbody>
 </table>
+</div>
 </section>
 <section id="estimators-documentation">
 <h2>Estimators documentation<a class="headerlink" href="#estimators-documentation" title="Link to this heading">#</a></h2>
@@ -415,10 +435,8 @@ document.write(`
 </dl>
 <p>This estimator has generally high variance, especially on small datasets, and can be improved by using
 self-normalized importance weights.</p>
-<dl class="simple">
-<dt>References:</dt><dd><p><a class="reference external" href="https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&amp;context=cs_faculty_pubs">https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&amp;context=cs_faculty_pubs</a></p>
-</dd>
-</dl>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&amp;context=cs_faculty_pubs">https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&amp;context=cs_faculty_pubs</a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hopes.ope.estimators.InverseProbabilityWeighting.estimate_policy_value">
 <span class="sig-name descname"><span class="pre">estimate_policy_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#hopes.ope.estimators.InverseProbabilityWeighting.estimate_policy_value" title="Link to this definition">#</a></dt>
@@ -448,9 +466,9 @@ self-normalized importance weights.</p>
 <li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of samples.</p></li>
 </ul>
 </dd>
-<dt>References:</dt><dd><p><a class="reference external" href="https://papers.nips.cc/paper_files/paper/2015/hash/39027dfad5138c9ca0c474d71db915c3-Abstract.html">https://papers.nips.cc/paper_files/paper/2015/hash/39027dfad5138c9ca0c474d71db915c3-Abstract.html</a></p>
-</dd>
 </dl>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://papers.nips.cc/paper_files/paper/2015/hash/39027dfad5138c9ca0c474d71db915c3-Abstract.html">https://papers.nips.cc/paper_files/paper/2015/hash/39027dfad5138c9ca0c474d71db915c3-Abstract.html</a></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting.estimate_policy_value">
 <span class="sig-name descname"><span class="pre">estimate_policy_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting.estimate_policy_value" title="Link to this definition">#</a></dt>
@@ -517,6 +535,201 @@ policy.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.ope.estimators.TrajectoryWiseImportanceSampling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.estimators.</span></span><span class="sig-name descname"><span class="pre">TrajectoryWiseImportanceSampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps_per_episode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discount_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.ope.estimators.BaseEstimator" title="hopes.ope.estimators.BaseEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TrajectoryPerDecisionMixin</span></code></p>
+<p>Trajectory-wise Importance Sampling (TIS) estimator.</p>
+<p><span class="math notranslate nohighlight">\(V_{TIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^ n\sum_{t=0}^{T-1} \gamma^t w^{(i)}_{0:T-1} r_t^{(i)}\)</span></p>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(D\)</span> is the offline collected dataset.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w^{(i)}_{0:T-1}\)</span> is the importance weight of the trajectory <span class="math notranslate nohighlight">\(i\)</span> defined as <span class="math notranslate nohighlight">\(w_{0:T-1} = \prod_{t=0}^{T-1} \frac {\pi_e(a_t|s_t)} {\pi_b(a_t|s_t)}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\pi_e\)</span> is the target policy and <span class="math notranslate nohighlight">\(\pi_b\)</span> is the behavior policy.</p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of trajectories.</p></li>
+<li><p><span class="math notranslate nohighlight">\(T\)</span> is the length of the trajectory.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\gamma_t\)</span> is the discount factor at time <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(r_t^{(i)}\)</span> is the reward at time <span class="math notranslate nohighlight">\(t\)</span> of trajectory <span class="math notranslate nohighlight">\(i\)</span>.</p></li>
+</ul>
+<p>TIS can suffer from high variance due to the product operation of the importance weights, also when action space is
+large.</p>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&amp;context=cs_faculty_pubs">https://scholarworks.umass.edu/cgi/viewcontent.cgi?article=1079&amp;context=cs_faculty_pubs</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.TrajectoryWiseImportanceSampling.check_parameters">
+<span class="sig-name descname"><span class="pre">check_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling.check_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Check if the estimator parameters are valid.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.TrajectoryWiseImportanceSampling.estimate_policy_value">
+<span class="sig-name descname"><span class="pre">estimate_policy_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling.estimate_policy_value" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the value of the target policy using the Trajectory-wise Importance Sampling
+estimator.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.TrajectoryWiseImportanceSampling.estimate_weighted_rewards">
+<span class="sig-name descname"><span class="pre">estimate_weighted_rewards</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling.estimate_weighted_rewards" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the weighted rewards using the Trajectory-wise Importance Sampling estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the weighted rewards, or here the policy value per trajectory.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.TrajectoryWiseImportanceSampling.short_name">
+<span class="sig-name descname"><span class="pre">short_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling.short_name" title="Link to this definition">#</a></dt>
+<dd><p>Return the short name of the estimator.</p>
+<p>This method can be overridden by subclasses to customize the short name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the short name of the estimator. By default, it returns the abbreviation of
+the class name, ie “IPW”.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.estimators.</span></span><span class="sig-name descname"><span class="pre">SelfNormalizedTrajectoryWiseImportanceSampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps_per_episode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discount_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling" title="hopes.ope.estimators.TrajectoryWiseImportanceSampling"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajectoryWiseImportanceSampling</span></code></a></p>
+<p>Self-Normalized Trajectory-wise Importance Sampling (TIS) estimator.</p>
+<div class="math notranslate nohighlight">
+\[V_{TIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^n \sum_{t=0}^{T-1}
+    \gamma^t \frac {w^{(i)}_{0:T-1}} {\frac {1}{n} \sum_{j=1}^n w^{(j)}_{0:T-1}} r_t^{(i)}\]</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(D\)</span> is the offline collected dataset.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w^{(i)}_{0:T-1}\)</span> is the importance weight of the trajectory <span class="math notranslate nohighlight">\(i\)</span> defined as <span class="math notranslate nohighlight">\(w_{0:T-1} = \prod_{t=0}^{T-1} \frac {\pi_e(a_t|s_t)} {\pi_b(a_t|s_t)}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\pi_e\)</span> is the target policy and <span class="math notranslate nohighlight">\(\pi_b\)</span> is the behavior policy.</p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of trajectories.</p></li>
+<li><p><span class="math notranslate nohighlight">\(T\)</span> is the length of the trajectory.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\gamma_t\)</span> is the discount factor at time <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(r_t^{(i)}\)</span> is the reward at time <span class="math notranslate nohighlight">\(t\)</span> of trajectory <span class="math notranslate nohighlight">\(i\)</span>.</p></li>
+</ul>
+<p>SNTIS is a variance reduction technique for TIS. It divides the weighted rewards by the mean of the importance
+weights of the trajectories.</p>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://arxiv.org/abs/1906.03735">https://arxiv.org/abs/1906.03735</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling.normalize" title="Link to this definition">#</a></dt>
+<dd><p>Normalize the importance weights using the self-normalization strategy.</p>
+<p>It uses self-normalization to reduce the variance of the estimator, using the mean
+of the importance weights over the trajectories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>weights</strong> – the importance weights to normalize.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the normalized importance weights.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling.short_name">
+<span class="sig-name descname"><span class="pre">short_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling.short_name" title="Link to this definition">#</a></dt>
+<dd><p>Return the short name of the estimator.</p>
+<p>This method can be overridden by subclasses to customize the short name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the short name of the estimator. By default, it returns the abbreviation of
+the class name, ie “IPW”.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.ope.estimators.PerDecisionImportanceSampling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.estimators.</span></span><span class="sig-name descname"><span class="pre">PerDecisionImportanceSampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps_per_episode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discount_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.ope.estimators.PerDecisionImportanceSampling" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.ope.estimators.BaseEstimator" title="hopes.ope.estimators.BaseEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">TrajectoryPerDecisionMixin</span></code></p>
+<p>Per-Decision Importance Sampling (PDIS) estimator.</p>
+<p><span class="math notranslate nohighlight">\(V_{PDIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^n \sum_{t=0}^{T-1} \gamma^t w^{(i)}_{t} r_t^{(i)}\)</span></p>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(D\)</span> is the offline collected dataset.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w^{(i)}_{t}\)</span> is the importance weight of the decision <span class="math notranslate nohighlight">\(t\)</span> of trajectory <span class="math notranslate nohighlight">\(i\)</span> defined as <span class="math notranslate nohighlight">\(w_{t} = \frac {\pi_e(a_t|s_t)} {\pi_b(a_t|s_t)}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\pi_e\)</span> is the target policy and <span class="math notranslate nohighlight">\(\pi_b\)</span> is the behavior policy.</p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of trajectories.</p></li>
+<li><p><span class="math notranslate nohighlight">\(T\)</span> is the length of the trajectory.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\gamma_t\)</span> is the discount factor at time <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(r_t^{(i)}\)</span> is the reward at time <span class="math notranslate nohighlight">\(t\)</span> of trajectory <span class="math notranslate nohighlight">\(i\)</span>.</p></li>
+</ul>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://arxiv.org/abs/1906.03735">https://arxiv.org/abs/1906.03735</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.PerDecisionImportanceSampling.check_parameters">
+<span class="sig-name descname"><span class="pre">check_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hopes.ope.estimators.PerDecisionImportanceSampling.check_parameters" title="Link to this definition">#</a></dt>
+<dd><p>Check if the estimator parameters are valid.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.PerDecisionImportanceSampling.estimate_policy_value">
+<span class="sig-name descname"><span class="pre">estimate_policy_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#hopes.ope.estimators.PerDecisionImportanceSampling.estimate_policy_value" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the value of the target policy using the Trajectory-wise Importance Sampling
+estimator.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.PerDecisionImportanceSampling.estimate_weighted_rewards">
+<span class="sig-name descname"><span class="pre">estimate_weighted_rewards</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.ope.estimators.PerDecisionImportanceSampling.estimate_weighted_rewards" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the weighted rewards using the Trajectory-wise Importance Sampling estimator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the weighted rewards, or here the policy value per trajectory.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hopes.ope.estimators.SelfNormalizedPerDecisionImportanceSampling">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.estimators.</span></span><span class="sig-name descname"><span class="pre">SelfNormalizedPerDecisionImportanceSampling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">steps_per_episode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discount_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.ope.estimators.SelfNormalizedPerDecisionImportanceSampling" title="Link to this definition">#</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hopes.ope.estimators.PerDecisionImportanceSampling" title="hopes.ope.estimators.PerDecisionImportanceSampling"><code class="xref py py-class docutils literal notranslate"><span class="pre">PerDecisionImportanceSampling</span></code></a></p>
+<p>Self-Normalized Per-Decision Importance Sampling (PDIS) estimator.</p>
+<div class="math notranslate nohighlight">
+\[V_{PDIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^n \sum_{t=0}^{T-1}
+    \gamma^t \frac {w^{(i)}_{t}} {\frac {1}{n} \sum_{j=1}^n w^{(j)}_{t}} r_t^{(i)}\]</div>
+<p>Where:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(D\)</span> is the offline collected dataset.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w^{(i)}_{t}\)</span> is the importance weight of the decision <span class="math notranslate nohighlight">\(t\)</span> of trajectory <span class="math notranslate nohighlight">\(i\)</span> defined as <span class="math notranslate nohighlight">\(w_{t} = \frac {\pi_e(a_t|s_t)} {\pi_b(a_t|s_t)}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\pi_e\)</span> is the target policy and <span class="math notranslate nohighlight">\(\pi_b\)</span> is the behavior policy.</p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of trajectories.</p></li>
+<li><p><span class="math notranslate nohighlight">\(T\)</span> is the length of the trajectory.</p></li>
+<li><p><span class="math notranslate nohighlight">\(\gamma_t\)</span> is the discount factor at time <span class="math notranslate nohighlight">\(t\)</span>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(r_t^{(i)}\)</span> is the reward at time <span class="math notranslate nohighlight">\(t\)</span> of trajectory <span class="math notranslate nohighlight">\(i\)</span>.</p></li>
+</ul>
+<p>SNPDIS is a variance reduction technique for PDIS.</p>
+<p class="rubric">References</p>
+<p><a class="reference external" href="https://arxiv.org/abs/1906.03735">https://arxiv.org/abs/1906.03735</a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hopes.ope.estimators.SelfNormalizedPerDecisionImportanceSampling.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.ope.estimators.SelfNormalizedPerDecisionImportanceSampling.normalize" title="Link to this definition">#</a></dt>
+<dd><p>Normalize the importance weights using the self-normalization strategy.</p>
+<p>It uses self-normalization to reduce the variance of the estimator, using the mean
+of the importance weights over the trajectories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>weights</strong> – the importance weights to normalize.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the normalized importance weights.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="implementing-a-new-estimator">
 <h2>Implementing a new estimator<a class="headerlink" href="#implementing-a-new-estimator" title="Link to this heading">#</a></h2>
@@ -525,34 +738,13 @@ policy.</p>
 <li><p><a class="reference internal" href="#hopes.ope.estimators.BaseEstimator.estimate_weighted_rewards" title="hopes.ope.estimators.BaseEstimator.estimate_weighted_rewards"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hopes.ope.estimators.BaseEstimator.estimate_weighted_rewards()</span></code></a>. It should return the estimated weighted rewards.</p></li>
 <li><p><a class="reference internal" href="#hopes.ope.estimators.BaseEstimator.estimate_policy_value" title="hopes.ope.estimators.BaseEstimator.estimate_policy_value"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hopes.ope.estimators.BaseEstimator.estimate_policy_value()</span></code></a>. It should return the estimated value of the target policy. It typically uses the estimated weighted rewards.</p></li>
 </ul>
+<p>Optionally, you can implement <a class="reference internal" href="#hopes.ope.estimators.BaseEstimator.short_name" title="hopes.ope.estimators.BaseEstimator.short_name"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hopes.ope.estimators.BaseEstimator.short_name()</span></code></a> to provide a short name for the estimator.
+When not implemented, the uppercase letters of the class name are used.</p>
 <p>Below is the <cite>BaseEstimator</cite> class documentation.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hopes.ope.estimators.BaseEstimator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.estimators.</span></span><span class="sig-name descname"><span class="pre">BaseEstimator</span></span><a class="headerlink" href="#hopes.ope.estimators.BaseEstimator" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Base class for all estimators.</p>
-<dl class="py method">
-<dt class="sig sig-object py" id="hopes.ope.estimators.BaseEstimator.check_parameters">
-<span class="sig-name descname"><span class="pre">check_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hopes.ope.estimators.BaseEstimator.check_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Check if the estimator parameters are valid.</p>
-<p>This method should be called before estimating the policy value. It can be
-overridden by subclasses to add additional checks.</p>
-<p>Importance sampling estimators have several assumptions that must be met:</p>
-<ul class="simple">
-<li><dl class="simple">
-<dt>coverage: the target and behavior policies must have non-zero probability of taking the actions.</dt><dd><p>This is not 100% necessary, i.e. if both policies have zero probability of taking an action under some
-state, but we enforce this assumption here to avoid numerical issues.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>positivity: the rewards must be non-negative to be able to get a lower bound estimate of the</dt><dd><p>target policy.</p>
-</dd>
-</dl>
-</li>
-</ul>
-</dd></dl>
-
+<dd><p>Base class for all estimators.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hopes.ope.estimators.BaseEstimator.estimate_policy_value">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">estimate_policy_value</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#hopes.ope.estimators.BaseEstimator.estimate_policy_value" title="Link to this definition">#</a></dt>
@@ -567,54 +759,6 @@ should call <a class="reference internal" href="#hopes.ope.estimators.BaseEstima
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="hopes.ope.estimators.BaseEstimator.estimate_policy_value_with_confidence_interval">
-<span class="sig-name descname"><span class="pre">estimate_policy_value_with_confidence_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">significance_level</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#hopes.ope.estimators.BaseEstimator.estimate_policy_value_with_confidence_interval" title="Link to this definition">#</a></dt>
-<dd><p>Estimate the confidence interval of the policy value.</p>
-<p>This method uses bootstrapping to estimate the confidence interval of the policy value. The input data is
-sampled from the estimated weighted rewards, using <a class="reference internal" href="#hopes.ope.estimators.BaseEstimator.estimate_weighted_rewards" title="hopes.ope.estimators.BaseEstimator.estimate_weighted_rewards"><code class="xref py py-meth docutils literal notranslate"><span class="pre">estimate_weighted_rewards()</span></code></a>.</p>
-<p>Example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ipw</span> <span class="o">=</span> <span class="n">InverseProbabilityWeighting</span><span class="p">()</span>
-<span class="n">ipw</span><span class="o">.</span><span class="n">set_parameters</span><span class="p">(</span>
-    <span class="n">target_policy_action_probabilities</span><span class="o">=</span><span class="n">target_policy_action_probabilities</span><span class="p">,</span>
-    <span class="n">behavior_policy_action_probabilities</span><span class="o">=</span><span class="n">behavior_policy_action_probabilities</span><span class="p">,</span>
-    <span class="n">rewards</span><span class="o">=</span><span class="n">rewards</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">metrics</span> <span class="o">=</span> <span class="n">ipw</span><span class="o">.</span><span class="n">estimate_policy_value_with_confidence_interval</span><span class="p">(</span>
-    <span class="n">num_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">significance_level</span><span class="o">=</span><span class="mf">0.05</span>
-<span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Should output:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
-    <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span>
-    <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="mf">3.2</span><span class="p">,</span>
-    <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_samples</strong> – the number of bootstrap samples to use.</p></li>
-<li><p><strong>significance_level</strong> – the significance level of the confidence interval.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><p>a dictionary containing the confidence interval of the policy value. The keys are:</p>
-<ul class="simple">
-<li><p>”lower_bound”: the lower bound of the policy value, given the significance level.</p></li>
-<li><p>”upper_bound”: the upper bound of the policy value, given the significance level.</p></li>
-<li><p>”mean”: the mean of the policy value.</p></li>
-<li><p>”std”: the standard deviation of the policy value.</p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="hopes.ope.estimators.BaseEstimator.estimate_weighted_rewards">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">estimate_weighted_rewards</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.ope.estimators.BaseEstimator.estimate_weighted_rewards" title="Link to this definition">#</a></dt>
 <dd><p>Estimate the weighted rewards.</p>
@@ -622,26 +766,6 @@ sampled from the estimated weighted rewards, using <a class="reference internal"
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the weighted rewards.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hopes.ope.estimators.BaseEstimator.set_parameters">
-<span class="sig-name descname"><span class="pre">set_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_policy_action_probabilities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy_action_probabilities</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rewards</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hopes.ope.estimators.BaseEstimator.set_parameters" title="Link to this definition">#</a></dt>
-<dd><p>Set the parameters for estimating the policy value.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>target_policy_action_probabilities</strong> – the probabilities of taking actions under
-the target policy.</p></li>
-<li><p><strong>behavior_policy_action_probabilities</strong> – the probabilities of taking actions
-under the behavior policy.</p></li>
-<li><p><strong>rewards</strong> – the rewards received under the behavior policy.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -671,7 +795,7 @@ the class name, ie “IPW”.</p>
               
               
               
-                <footer class="prev-next-footer">
+                <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
     <a class="left-prev"
@@ -680,7 +804,7 @@ the class name, ie “IPW”.</p>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Overview of Hopes package</p>
+        <p class="prev-next-title">Hopes: finding the best policy</p>
       </div>
     </a>
     <a class="right-next"
@@ -730,15 +854,34 @@ the class name, ie “IPW”.</p>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.DirectMethod.fit"><code class="docutils literal notranslate"><span class="pre">DirectMethod.fit()</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling"><code class="docutils literal notranslate"><span class="pre">TrajectoryWiseImportanceSampling</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling.check_parameters"><code class="docutils literal notranslate"><span class="pre">TrajectoryWiseImportanceSampling.check_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling.estimate_policy_value"><code class="docutils literal notranslate"><span class="pre">TrajectoryWiseImportanceSampling.estimate_policy_value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling.estimate_weighted_rewards"><code class="docutils literal notranslate"><span class="pre">TrajectoryWiseImportanceSampling.estimate_weighted_rewards()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.TrajectoryWiseImportanceSampling.short_name"><code class="docutils literal notranslate"><span class="pre">TrajectoryWiseImportanceSampling.short_name()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling"><code class="docutils literal notranslate"><span class="pre">SelfNormalizedTrajectoryWiseImportanceSampling</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling.normalize"><code class="docutils literal notranslate"><span class="pre">SelfNormalizedTrajectoryWiseImportanceSampling.normalize()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling.short_name"><code class="docutils literal notranslate"><span class="pre">SelfNormalizedTrajectoryWiseImportanceSampling.short_name()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.PerDecisionImportanceSampling"><code class="docutils literal notranslate"><span class="pre">PerDecisionImportanceSampling</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.PerDecisionImportanceSampling.check_parameters"><code class="docutils literal notranslate"><span class="pre">PerDecisionImportanceSampling.check_parameters()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.PerDecisionImportanceSampling.estimate_policy_value"><code class="docutils literal notranslate"><span class="pre">PerDecisionImportanceSampling.estimate_policy_value()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.PerDecisionImportanceSampling.estimate_weighted_rewards"><code class="docutils literal notranslate"><span class="pre">PerDecisionImportanceSampling.estimate_weighted_rewards()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.SelfNormalizedPerDecisionImportanceSampling"><code class="docutils literal notranslate"><span class="pre">SelfNormalizedPerDecisionImportanceSampling</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.SelfNormalizedPerDecisionImportanceSampling.normalize"><code class="docutils literal notranslate"><span class="pre">SelfNormalizedPerDecisionImportanceSampling.normalize()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#implementing-a-new-estimator">Implementing a new estimator</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.BaseEstimator"><code class="docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.BaseEstimator.check_parameters"><code class="docutils literal notranslate"><span class="pre">BaseEstimator.check_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.BaseEstimator.estimate_policy_value"><code class="docutils literal notranslate"><span class="pre">BaseEstimator.estimate_policy_value()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.BaseEstimator.estimate_policy_value_with_confidence_interval"><code class="docutils literal notranslate"><span class="pre">BaseEstimator.estimate_policy_value_with_confidence_interval()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.BaseEstimator.estimate_weighted_rewards"><code class="docutils literal notranslate"><span class="pre">BaseEstimator.estimate_weighted_rewards()</span></code></a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.BaseEstimator.set_parameters"><code class="docutils literal notranslate"><span class="pre">BaseEstimator.set_parameters()</span></code></a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#hopes.ope.estimators.BaseEstimator.short_name"><code class="docutils literal notranslate"><span class="pre">BaseEstimator.short_name()</span></code></a></li>
 </ul>
 </li>
@@ -769,8 +912,8 @@ the class name, ie “IPW”.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">

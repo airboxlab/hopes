@@ -8,43 +8,45 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Overview of Hopes package &#8212; Hopes v0.0.1</title>
+    <title>Hopes: finding the best policy &#8212; Hopes v0.0.1</title>
   
   
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=3ee479438cf8b5e0d341" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css?v=0a3b3ea7" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=87e54e7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=87098ae6" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
-  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=3ee479438cf8b5e0d341"></script>
 
     <script src="../_static/documentation_options.js?v=d45e8c67"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/design-tabs.js?v=36754332"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'overview/index';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Hopes: Estimators" href="../ope/index.html" />
-    <link rel="prev" title="Welcome to Hopes!" href="../index.html" />
+    <link rel="prev" title="Hopes" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -54,27 +56,23 @@
 
   
   
-  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -96,12 +94,17 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <label class="sidebar-toggle primary-toggle" for="__primary">
+  <button class="sidebar-toggle primary-toggle" aria-label="Site navigation">
     <span class="fa-solid fa-bars"></span>
-  </label>
+  </button>
   
   
   <div class="col-lg-3 navbar-header-items__start">
@@ -139,33 +142,33 @@
 <nav class="navbar-nav">
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="#">
-                        Overview
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Overview
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../ope/index.html">
-                        Estimators
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../policy/index.html">
-                        Policies
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../ope/index.html">
+    Estimators
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../ops/index.html">
-                        Selection
-                      </a>
-                    </li>
-                
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../policy/index.html">
+    Policies
+  </a>
+</li>
+
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../ops/index.html">
+    Selection
+  </a>
+</li>
+
   </ul>
 </nav></div>
       
@@ -221,9 +224,9 @@ document.write(`
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
+    <button class="sidebar-toggle secondary-toggle" aria-label="On this page">
       <span class="fa-solid fa-outdent"></span>
-    </label>
+    </button>
   
 </div>
 
@@ -244,39 +247,42 @@ document.write(`
     
       <div class="sidebar-header-items__center">
         
-          <div class="navbar-item">
+          
+          
+            <div class="navbar-item">
 <nav class="navbar-nav">
   <ul class="bd-navbar-elements navbar-nav">
     
-                    <li class="nav-item current active">
-                      <a class="nav-link nav-internal" href="#">
-                        Overview
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item current active">
+  <a class="nav-link nav-internal" href="#">
+    Overview
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../ope/index.html">
-                        Estimators
-                      </a>
-                    </li>
-                
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../policy/index.html">
-                        Policies
-                      </a>
-                    </li>
-                
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../ope/index.html">
+    Estimators
+  </a>
+</li>
 
-                    <li class="nav-item">
-                      <a class="nav-link nav-internal" href="../ops/index.html">
-                        Selection
-                      </a>
-                    </li>
-                
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../policy/index.html">
+    Policies
+  </a>
+</li>
+
+
+<li class="nav-item pst-header-nav-item">
+  <a class="nav-link nav-internal" href="../ops/index.html">
+    Selection
+  </a>
+</li>
+
   </ul>
 </nav></div>
+          
         
       </div>
     
@@ -321,13 +327,13 @@ document.write(`
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
@@ -336,7 +342,7 @@ document.write(`
 
 
 
-<nav aria-label="Breadcrumb">
+<nav aria-label="Breadcrumb" class="d-print-none">
   <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
@@ -344,7 +350,7 @@ document.write(`
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page">Overview of...</li>
+    <li class="breadcrumb-item active" aria-current="page">Hopes:...</li>
   </ul>
 </nav>
 </div>
@@ -361,32 +367,115 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="overview-of-hopes-package">
-<h1>Overview of Hopes package<a class="headerlink" href="#overview-of-hopes-package" title="Link to this heading">#</a></h1>
-<section id="what-s-in-the-box">
-<h2>What’s in the box?<a class="headerlink" href="#what-s-in-the-box" title="Link to this heading">#</a></h2>
-<p><strong>HOPES</strong> - HVAC Off-Policy Evaluation and Selection - is a Python package for evaluating and selecting RL-based
-control policies. It offers a set of estimators and tools to evaluate the performance of a target policy,
-compared to a baseline policy (characterized by an offline logged dataset), using off-policy evaluation
-techniques. It’s particularly suited for the context of HVAC control, where the target policy is an RL-based controller
-and the baseline policies are rule-based controllers.</p>
+  <section id="hopes-finding-the-best-policy">
+<h1>Hopes: finding the best policy<a class="headerlink" href="#hopes-finding-the-best-policy" title="Link to this heading">#</a></h1>
+<section id="what-s-off-policy-policy-evaluation">
+<h2>What’s off-policy (policy) evaluation?<a class="headerlink" href="#what-s-off-policy-policy-evaluation" title="Link to this heading">#</a></h2>
+<p>In reinforcement learning, the goal is to find the best policy that maximizes the expected sum of rewards over time.
+However, in practice, it’s often difficult to evaluate the value of a policy, especially when the policy is stochastic or
+when the target environment is unknown.</p>
+<p>In HVAC control, for instance, estimating how a policy would perform in a real-world building is crucial to ensure
+energy efficiency and occupant comfort. It’s often not possible nor desirable to deploy a newly trained policy in the real-world
+without knowing how it would perform. Off-policy evaluation allows to estimate the value of a policy without deploying it,
+by using data collected by another policy. It relies on the mathematical principle of importance sampling, which allows to
+estimate the expected value of a function under a distribution by using samples from another distribution.</p>
+<p>As stated in “Empirical Study of Off-Policy Policy Evaluation for Reinforcement Learning”, off-policy estimators can
+be classified in 3 categories:</p>
+<ul class="simple">
+<li><p><strong>Inverse Propensity Scoring</strong> (IPS), with several variants like Importance Sampling (IS), Per-Decision Importance Sampling (PDIS),
+Trajectory-wise Importance Sampling (TWIS), and their self-normalized versions.</p></li>
+<li><p><strong>Direct Methods</strong> (DM), that use regression-based models to estimate the value function of the behavior policy or
+to approximate the transition dynamics.</p></li>
+<li><p><strong>Hybrid Methods</strong> (HM), like Doubly Robust (DR), that combine importance sampling and value function approximation.</p></li>
+</ul>
 </section>
-<section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<p>Supported Python versions: 3.10+</p>
-<p><em>From PyPI</em></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>pip<span class="w"> </span>install<span class="w"> </span>hopes
-</pre></div>
-</div>
-<p><em>From source (development version)</em></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos">1</span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/airboxlab/hopes.git
-<span class="linenos">2</span><span class="nb">cd</span><span class="w"> </span>hopes
-<span class="linenos">3</span><span class="c1"># using poetry</span>
-<span class="linenos">4</span>poetry<span class="w"> </span>install
-<span class="linenos">5</span><span class="c1"># using pip</span>
-<span class="linenos">6</span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-</pre></div>
-</div>
+<section id="how-does-importance-sampling-work">
+<h2>How does importance sampling work?<a class="headerlink" href="#how-does-importance-sampling-work" title="Link to this heading">#</a></h2>
+<p>In the previous section, we have seen that off-policy policy evaluation is based on the principle that the value of a
+policy can be evaluated by using another policy, and the rewards obtained by the other policy. Doesn’t it sound strange?</p>
+<p>There’s actually a good reason for that. It stands in the <strong>importance sampling</strong> definition.</p>
+<p>Let’s say we have a probability distribution <span class="math notranslate nohighlight">\(p(x)\)</span> for the variable <span class="math notranslate nohighlight">\(x\)</span>, and we want to compute
+the expectation of a function <span class="math notranslate nohighlight">\(f(x)\)</span> under this distribution. To evaluate the expected value of <span class="math notranslate nohighlight">\(f(x)\)</span>
+under <span class="math notranslate nohighlight">\(p(x)\)</span>, we should sample from <span class="math notranslate nohighlight">\(p(x)\)</span> and compute the average of <span class="math notranslate nohighlight">\(f(x)\)</span> over the samples if x is
+discrete, or compute the integral of <span class="math notranslate nohighlight">\(f(x)\)</span> over <span class="math notranslate nohighlight">\(p(x)\)</span> if x is continuous.</p>
+<p>In the continuous case, the expected value of <span class="math notranslate nohighlight">\(f(x)\)</span> under <span class="math notranslate nohighlight">\(p(x)\)</span> is:</p>
+<div class="math notranslate nohighlight">
+\[E_{x \sim p(x)}[f(x)] = \int p(x) f(x) dx\]</div>
+<p>Now, let’s say we don’t have access to samples from <span class="math notranslate nohighlight">\(p(x)\)</span>, but we have samples from another distribution <span class="math notranslate nohighlight">\(q(x)\)</span>.</p>
+<p>We can still compute the expected value of <span class="math notranslate nohighlight">\(f(x)\)</span> by using the samples from <span class="math notranslate nohighlight">\(q(x)\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[E_{x \sim p(x)}[f(x)] = \int p(x) f(x) dx
+                   = \int p(x) \frac{q(x)}{q(x)} f(x) dx
+                   = \int q(x) \frac{p(x)}{q(x)} f(x) dx
+                   = E_{x \sim q(x)}[\frac{p(x)}{q(x)} f(x)]\]</div>
+<p>Wrapping that up, <span class="math notranslate nohighlight">\(E_{x \sim p(x)}[f(x)] = E_{x \sim q(x)}[\frac{p(x)}{q(x)} f(x)]\)</span>, which means
+the expected value of <span class="math notranslate nohighlight">\(f(x)\)</span> under <span class="math notranslate nohighlight">\(p(x)\)</span> is equal to the expected value of <span class="math notranslate nohighlight">\(\frac{p(x)}{q(x)} f(x)\)</span>
+under <span class="math notranslate nohighlight">\(q(x)\)</span>.</p>
+<p>This is very convenient in reinforcement learning, because we can evaluate the value of a policy by using the samples
+from another policy. Let’s see how this works in the context of reinforcement learning.</p>
+<p>Let’s say we have trained a policy <span class="math notranslate nohighlight">\(\pi_e\)</span> and we want to evaluate the value of this policy over trajectories
+<span class="math notranslate nohighlight">\(\tau\)</span> of length <span class="math notranslate nohighlight">\(T\)</span>, collected by another policy <span class="math notranslate nohighlight">\(\pi_b\)</span>, the behavior policy. This behavior policy
+can be any policy, a rule-based policy, a policy trained with a different algorithm, or a policy trained with the same
+algorithm but with different parameters <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>. It generated the trajectories <span class="math notranslate nohighlight">\(\tau\)</span> by interacting with the
+environment and collecting the rewards <span class="math notranslate nohighlight">\(r_t\)</span> at each time step <span class="math notranslate nohighlight">\(t\)</span>.</p>
+<p>The value of a policy here is the sum of rewards obtained by the policy over the trajectory <span class="math notranslate nohighlight">\(\tau\)</span>.</p>
+<p>We can use importance sampling to estimate the value of <span class="math notranslate nohighlight">\(\pi_e\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[V_{\pi_e} = E_{\tau \sim \pi_e}[\sum_{t=0}^T r_t]
+          = E_{\tau \sim \pi_b}[\sum_{t=0}^T \frac{\pi_e(a_t|s_t)}{\pi_b(a_t|s_t)} r_t]
+          \approx \frac{1}{N} \sum_{i=1}^N \sum_{t=0}^T \frac{\pi_e(a_t^i|s_t^i)}{\pi_b(a_t^i|s_t^i)} r_t^i\]</div>
+<p>Intuitively, we can see it as a way to weight the rewards obtained by the behavior policy by the ratio of the probabilities
+of taking the action under the evaluation policy and the behavior policy. This ratio is called the importance weight.
+The more likely the target policy <span class="math notranslate nohighlight">\(\pi_e\)</span> is to take an action, and the less likely the behavior policy <span class="math notranslate nohighlight">\(\pi_b\)</span>
+is to take the same action, the higher the importance weight will be, and the more influential the reward will be in the
+estimation of the value of the policy.</p>
+<p>This estimator is unbiased, since the obtained result is the true expectation of the sum of rewards over trajectories.
+However, it can have high variance, especially if trajectories are long, due to the sum of ratios.
+Note that if trajectory length is equal to 1 (bandit setting), the value of the policy can be expressed as:</p>
+<div class="math notranslate nohighlight">
+\[V_{\pi_e} \approx \frac{1}{N} \sum_{i=1}^N \frac{\pi_e(a^i|s^i)}{\pi_b(a^i|s^i)} r^i\]</div>
+<p>which is the definition of the Inverse Probability Weighting (IPW) estimator.</p>
+</section>
+<section id="other-methods">
+<h2>Other methods<a class="headerlink" href="#other-methods" title="Link to this heading">#</a></h2>
+<p>There are other methods to estimate the value of a policy, such as Direct Method (DM) and Doubly Robust (DR), which is an hybrid method based both
+on the importance sampling and the approximate value function of the policy.</p>
+<p>DM, which is available in Hopes, fits a model of the Q function and uses it to estimate the value of the policy. It no longer
+requires the behavior policy to cover all the actions of the evaluation policy, but it requires the model to be accurate.</p>
+</section>
+<section id="assumptions-of-importance-sampling-and-regularization">
+<h2>Assumptions of importance sampling and regularization<a class="headerlink" href="#assumptions-of-importance-sampling-and-regularization" title="Link to this heading">#</a></h2>
+<p>Among other general considerations, there are two assumptions that must be satisfied to use importance sampling:</p>
+<ul>
+<li><p><strong>Coverage</strong>: the behavior policy must have a non-zero probability of taking all the actions that the evaluation policy
+could take, in other words <span class="math notranslate nohighlight">\(\pi_e(a, s) &gt; 0 \implies \pi_b(a, s) &gt; 0\)</span>. In Hopes, deterministic policies are made
+slightly stochastic by ensuring a small probability of taking all the actions. This regularization avoids numerical issues
+when computing the importance weights (division by zero), but has impact on variance (may increase) and bias
+(estimator is no longer unbiased).</p>
+<p>Note also that not all estimators require the behavior policy to cover all the actions of the evaluation policy, for instance
+Direct Method (DM) fit a model of the Q function and uses it to estimate the value of the policy.</p>
+</li>
+<li><p><strong>Positivity</strong>: the rewards must be non-negative to be able to compute a lower bound estimate of the target policy. In Hopes,
+you’ll find a way to rescale the rewards to make them positive (using <cite>MinMaxScaler</cite>).</p></li>
+</ul>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Sutton, R. S., &amp; Barto, A. G. (2018). Reinforcement learning: An introduction.</p></li>
+<li><p>Precup, D., Sutton, R. S., &amp; Singh, S. (2000). Eligibility traces for off-policy policy evaluation.</p></li>
+<li><p>Kallus, N., Uehara, M. (2019). Intrinsically Efficient, Stable, and Bounded Off-Policy Evaluation for Reinforcement Learning.</p></li>
+<li><p>Chen, B., Jin M., Wang Z., Hong T., &amp; Berges M. (2020). Towards Off-policy Evaluation as a Prerequisite for Real-world Reinforcement Learning in Building Control.</p></li>
+<li><p>Uehara, M., Shi, C., &amp; Kallus, N. (2022). A Review of Off-Policy Evaluation in Reinforcement Learning.</p></li>
+<li><p>Voloshin, C., Le, J., Jiang, N., &amp; Yue, Y. (2021). Empirical Study of Off-Policy Policy Evaluation for Reinforcement Learning.</p></li>
+<li><p>Swaminathan, A., &amp; Joachims, T. (2015). The Self-Normalized Estimator for Counterfactual Learning.</p></li>
+</ul>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>in the context of off-policy policy gradient methods, but that’s out of the scope of this project.</p>
+</aside>
+</aside>
 </section>
 </section>
 
@@ -397,7 +486,7 @@ and the baseline policies are rule-based controllers.</p>
               
               
               
-                <footer class="prev-next-footer">
+                <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
     <a class="left-prev"
@@ -406,7 +495,7 @@ and the baseline policies are rule-based controllers.</p>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Welcome to Hopes!</p>
+        <p class="prev-next-title">Hopes</p>
       </div>
     </a>
     <a class="right-next"
@@ -436,8 +525,11 @@ and the baseline policies are rule-based controllers.</p>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-in-the-box">What’s in the box?</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#what-s-off-policy-policy-evaluation">What’s off-policy (policy) evaluation?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-does-importance-sampling-work">How does importance sampling work?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-methods">Other methods</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#assumptions-of-importance-sampling-and-regularization">Assumptions of importance sampling and regularization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
   </nav></div>
 
@@ -463,8 +555,8 @@ and the baseline policies are rule-based controllers.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=3ee479438cf8b5e0d341"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=3ee479438cf8b5e0d341"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
