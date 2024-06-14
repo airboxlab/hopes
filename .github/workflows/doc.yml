@@ -28,11 +28,10 @@ jobs:
           cd doc
           make html
 
-# wait for project to be ready
-#      - name: Deploy docs
-#        if: github.ref == 'refs/heads/main'
-#        uses: peaceiris/actions-gh-pages@v4
-#        with:
-#          github_token: ${{ secrets.GITHUB_TOKEN }}
-#          publish_dir: doc/_build/html
-#          cname: hopes.foobot.io
+      - name: Deploy docs
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: doc/_build/html
+          cname: hopes.foobot.io
