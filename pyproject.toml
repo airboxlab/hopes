@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "hopes"
-version = "0.0.1"
-description = "HVAC Off-policy evaluation and selection methods"
+version = "0.0.2"
+description = "HVAC optimisation with Off-Policy Evaluation and Selection methods"
 authors = ["Antoine Galataud <antoine@foobot.io>"]
 packages = [
     { include = "hopes/" },
