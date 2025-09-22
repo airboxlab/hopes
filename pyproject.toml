@@ -6,6 +6,8 @@ authors = ["Antoine Galataud <antoine@foobot.io>"]
 packages = [
     { include = "hopes/" },
 ]
+readme = "README.md"
+license = "MIT"
 
 [[tool.poetry.source]]
 name = "PyPI"
