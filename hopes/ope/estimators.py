@@ -431,7 +431,8 @@ class DirectMethod(BaseEstimator):
 
         The Q model is trained on (initial_state, initial_action) pairs with their corresponding
         discounted cumulative returns computed as:
-        G_0 = r_0 + γ*r_1 + γ²*r_2 + ... + γ^(T-1)*r_(T-1)
+
+        :math:`G_0 = r_0 + γ*r_1 + γ²*r_2 + ... + γ^(T-1)*r_(T-1)`
 
         :return: the fit statistics of the Q model.
         """
@@ -477,9 +478,9 @@ class DirectMethod(BaseEstimator):
     def estimate_weighted_rewards(self) -> np.ndarray:
         """Estimate the weighted rewards using the Direct Method estimator.
 
-        For each episode `i`, computes: `V(s^i_0) = Σ_{a∈A} π_e(a|s^i_0) * Q(s^i_0, a)`
+        For each episode `i`, computes: :math:`V(s^i_0) = Σ_{a∈A} π_e(a|s^i_0) * Q(s^i_0, a)`
 
-        Where `Q(s^i_0, a)` is the predicted discounted cumulative return from the initial state `s^i_0`.
+        Where :math:`Q(s^i_0, a)` is the predicted discounted cumulative return from the initial state :math:`s^i_0`.
 
         :return: the estimated values for each episode/trajectory.
         """
