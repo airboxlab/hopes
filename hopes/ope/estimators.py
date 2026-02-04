@@ -350,18 +350,21 @@ class SelfNormalizedInverseProbabilityWeighting(InverseProbabilityWeighting):
 class DirectMethod(BaseEstimator):
     r"""Direct Method (DM) estimator.
 
-    :math:`V_{DM}(\pi_e, D, Q)=\frac {1}{n} \sum_{t=1}^n \sum_{a \in A} \pi_e(a|s_0) Q(s_0, a)`
+    :math:`V_{DM}(\pi_e, D, Q)=\frac {1}{n} \sum_{i=1}^n \sum_{a \in A} \pi_e(a|s^i_0) Q(s^i_0, a)`
 
     Where:
-        - :math:`D` is the offline collected dataset.
+        - :math:`D = \{\{ (s_t, a_t, r_t) \}^{T-1}_{t=0}\}^n_{i=1}` is the offline collected dataset
+          consisting of n trajectories.
         - :math:`\pi_e` is the target policy.
-        - :math:`Q` is the Q model trained to estimate the expected reward of the initial state under the behavior policy.
-        - :math:`n` is the number of samples.
+        - :math:`Q(s^i_0, a)` is the Q model trained to estimate the expected discounted sum of rewards
+          from the initial state :math:`s^i_0` when taking action :math:`a` under the behavior policy.
+        - :math:`n` is the number of episodes/trajectories.
         - :math:`a` is the action taken in the set of actions :math:`A`.
-        - :math:`s_0` is the initial state.
+        - :math:`s^i_0` is the initial state of the i-th trajectory.
 
-    This estimator trains a Q model using supervised learning, then uses it to estimate the expected reward of the
-    initial state under the target policy. The performance of this estimator depends on the quality of the Q model.
+    This estimator trains a Q model using supervised learning on initial states and their corresponding
+    discounted cumulative returns, then uses it to estimate the expected value under the target policy.
+    The performance of this estimator depends on the quality of the Q model.
     """
 
     def __init__(
@@ -371,6 +374,7 @@ class DirectMethod(BaseEstimator):
         behavior_policy_act: np.ndarray,
         behavior_policy_rewards: np.ndarray,
         steps_per_episode: int,
+        discount_factor: float = 1.0,
         q_model_type: str = "random_forest",
         q_model_params: dict | None = None,
     ) -> None:
@@ -378,13 +382,15 @@ class DirectMethod(BaseEstimator):
 
         :param q_model_cls: the class of the Q model to use.
         :param behavior_policy_obs: the observations for training the Q model, shape:
-            (batch_size, obs_dim).
+            (batch_size, obs_dim). These should be observations from all timesteps.
         :param behavior_policy_act: the actions for training the Q model, shape:
-            (batch_size,).
+            (batch_size,). These should be actions from all timesteps.
         :param behavior_policy_rewards: the rewards for training the Q model, shape:
-            (batch_size,).
+            (batch_size,). These should be rewards from all timesteps.
         :param steps_per_episode: the number of steps per episode. The number of samples
             must be divisible by this number.
+        :param discount_factor: the discount factor for computing cumulative returns. Must
+            be in [0, 1].
         :param q_model_type: the type of regression model to use for the Q model.
         :param q_model_params: the parameters of the regression model.
         """
@@ -407,6 +413,7 @@ class DirectMethod(BaseEstimator):
         assert (
             behavior_policy_obs.shape[0] % steps_per_episode == 0
         ), "The number of samples must be divisible by the number of steps per episode."
+        assert 0 <= discount_factor <= 1, "The discount factor must be in [0, 1]."
 
         self.q_model_cls = q_model_cls
         self.q_model_type = q_model_type
@@ -416,17 +423,40 @@ class DirectMethod(BaseEstimator):
         self.behavior_policy_act = behavior_policy_act
         self.behavior_policy_rewards = behavior_policy_rewards
         self.steps_per_episode = steps_per_episode
+        self.discount_factor = discount_factor
 
     def fit(self) -> dict[str, float] | None:
-        """Fit the Q model to estimate the expected reward of the initial state under the behavior
-        policy.
+        """Fit the Q model to estimate the expected discounted sum of rewards from the initial
+        state.
+
+        The Q model is trained on (initial_state, initial_action) pairs with their corresponding
+        discounted cumulative returns computed as:
+        G_0 = r_0 + γ*r_1 + γ²*r_2 + ... + γ^(T-1)*r_(T-1)
 
         :return: the fit statistics of the Q model.
         """
+        # Reshape data into episodes
+        num_episodes = self.behavior_policy_obs.shape[0] // self.steps_per_episode
+        obs_episodes = self.behavior_policy_obs.reshape(num_episodes, self.steps_per_episode, -1)
+        act_episodes = self.behavior_policy_act.reshape(num_episodes, self.steps_per_episode)
+        rew_episodes = self.behavior_policy_rewards.reshape(num_episodes, self.steps_per_episode)
+
+        # Extract initial states and actions
+        initial_obs = obs_episodes[:, 0, :]  # shape: (num_episodes, obs_dim)
+        initial_act = act_episodes[:, 0]  # shape: (num_episodes,)
+
+        # Compute discounted cumulative returns from initial state
+        # G_0 = r_0 + γ*r_1 + γ²*r_2 + ... + γ^(T-1)*r_(T-1)
+        discount_powers = np.power(self.discount_factor, np.arange(self.steps_per_episode))
+        cumulative_returns = np.sum(
+            rew_episodes * discount_powers, axis=1
+        )  # shape: (num_episodes,)
+
+        # Train Q model on initial states and cumulative returns
         self.q_model = self.q_model_cls(
-            obs=self.behavior_policy_obs,
-            act=self.behavior_policy_act,
-            rew=self.behavior_policy_rewards,
+            obs=initial_obs,
+            act=initial_act,
+            rew=cumulative_returns,
             regression_model=self.q_model_type,
             model_params=self.q_model_params,
         )
@@ -445,24 +475,53 @@ class DirectMethod(BaseEstimator):
 
     @override(BaseEstimator)
     def estimate_weighted_rewards(self) -> np.ndarray:
-        """Estimate the weighted rewards using the Direct Method estimator."""
+        """Estimate the weighted rewards using the Direct Method estimator.
+
+        For each episode `i`, computes: `V(s^i_0) = Σ_{a∈A} π_e(a|s^i_0) * Q(s^i_0, a)`
+
+        Where `Q(s^i_0, a)` is the predicted discounted cumulative return from the initial state `s^i_0`.
+
+        :return: the estimated values for each episode/trajectory.
+        """
         self.check_parameters()
 
-        # use the Q model to predict the expected rewards
-        state_action_value_prediction = self.q_model.estimate(
-            obs=self.behavior_policy_obs,
-            act=self.behavior_policy_act,
-        ).reshape(-1, 1)
+        # Extract initial states and their action probabilities
+        num_episodes = self.behavior_policy_obs.shape[0] // self.steps_per_episode
+        obs_episodes = self.behavior_policy_obs.reshape(num_episodes, self.steps_per_episode, -1)
+        initial_obs = obs_episodes[:, 0, :]  # shape: (num_episodes, obs_dim)
 
-        # compute the expected reward of the initial state under the target policy
-        # shape: (n, steps_per_episode)
-        state_value = (
-            (state_action_value_prediction * self.target_policy_action_probabilities)
-            # sum over the actions
-            .sum(axis=1).reshape(-1, self.steps_per_episode)
+        # Extract initial state action probabilities
+        target_policy_probs_episodes = self.target_policy_action_probabilities.reshape(
+            num_episodes, self.steps_per_episode, -1
         )
-        # take the value of the initial state
-        initial_state_value = state_value[:, 0]
+        initial_action_probs = target_policy_probs_episodes[
+            :, 0, :
+        ]  # shape: (num_episodes, num_actions)
+
+        num_actions = initial_action_probs.shape[1]
+
+        # Predict Q(s_0, a) for all actions at initial states
+        # Expand initial states to evaluate all actions
+        initial_obs_expanded = np.repeat(
+            initial_obs, num_actions, axis=0
+        )  # shape: (num_episodes * num_actions, obs_dim)
+        all_actions = np.tile(
+            np.arange(num_actions), num_episodes
+        )  # shape: (num_episodes * num_actions,)
+
+        # Get Q values for all (s_0, a) pairs
+        q_values = self.q_model.estimate(
+            obs=initial_obs_expanded,
+            act=all_actions,
+        )  # shape: (num_episodes * num_actions,)
+
+        # Reshape Q values to (num_episodes, num_actions)
+        q_values = q_values.reshape(num_episodes, num_actions)
+
+        # Compute expected value: V(s_0) = Σ_a π_e(a|s_0) * Q(s_0, a)
+        initial_state_value = np.sum(
+            initial_action_probs * q_values, axis=1
+        )  # shape: (num_episodes,)
 
         return initial_state_value
 

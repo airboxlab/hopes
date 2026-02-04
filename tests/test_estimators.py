@@ -115,6 +115,7 @@ class TestEstimators(unittest.TestCase):
             behavior_policy_act=act,
             behavior_policy_rewards=rew,
             steps_per_episode=num_steps_per_episode,
+            discount_factor=0.99,
         )
         fit_stats = dm.fit()
         self.assertIsInstance(fit_stats, dict)
@@ -134,6 +135,53 @@ class TestEstimators(unittest.TestCase):
         self.assertGreaterEqual(policy_value, 0.0)
 
         self._test_ci(dm)
+
+    def test_dm_discount_computation(self):
+        """Test that DM correctly computes discounted cumulative returns."""
+        num_actions = 2
+        num_obs = 2
+        num_episodes = 3
+        num_steps_per_episode = 4
+        num_samples = num_episodes * num_steps_per_episode
+        discount_factor = 0.9
+
+        # Create deterministic data
+        np.random.seed(42)
+        obs = np.random.rand(num_samples, num_obs)
+        act = np.array([0, 1, 0, 1] * num_episodes)  # alternating actions
+
+        # Create rewards: each episode has rewards [1, 2, 3, 4]
+        rew = np.tile([1.0, 2.0, 3.0, 4.0], num_episodes)
+
+        # Expected cumulative discounted returns from initial states:
+        # G_0 = r_0 + γ*r_1 + γ²*r_2 + γ³*r_3
+        # G_0 = 1 + 0.9*2 + 0.9²*3 + 0.9³*4
+        gamma = discount_factor
+        expected_return = 1.0 + gamma * 2.0 + gamma**2 * 3.0 + gamma**3 * 4.0
+
+        dm = DirectMethod(
+            q_model_cls=RegressionBasedRewardModel,
+            q_model_type="linear",  # Use linear for predictability
+            behavior_policy_obs=obs,
+            behavior_policy_act=act,
+            behavior_policy_rewards=rew,
+            steps_per_episode=num_steps_per_episode,
+            discount_factor=discount_factor,
+        )
+
+        fit_stats = dm.fit()
+        self.assertIsInstance(fit_stats, dict)
+
+        # Since we have perfect linear model training data, the model should learn
+        # to predict similar values for similar initial states
+        # Verify the Q model was trained on initial states only
+        self.assertEqual(dm.q_model.obs.shape[0], num_episodes)
+        self.assertEqual(dm.q_model.act.shape[0], num_episodes)
+        self.assertEqual(dm.q_model.rew.shape[0], num_episodes)
+
+        # Verify cumulative returns are approximately correct
+        for i in range(num_episodes):
+            self.assertAlmostEqual(dm.q_model.rew[i], expected_return, delta=0.01)
 
     def test_tis_sntis_pdis(self):
         traj_length = 10
