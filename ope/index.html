@@ -524,8 +524,8 @@ The performance of this estimator depends on the quality of the Q model.</p>
 <dt class="sig sig-object py" id="hopes.ope.estimators.DirectMethod.estimate_weighted_rewards">
 <span class="sig-name descname"><span class="pre">estimate_weighted_rewards</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.ope.estimators.DirectMethod.estimate_weighted_rewards" title="Link to this definition">#</a></dt>
 <dd><p>Estimate the weighted rewards using the Direct Method estimator.</p>
-<p>For each episode <cite>i</cite>, computes: <cite>V(s^i_0) = Σ_{a∈A} π_e(a|s^i_0) * Q(s^i_0, a)</cite></p>
-<p>Where <cite>Q(s^i_0, a)</cite> is the predicted discounted cumulative return from the initial state <cite>s^i_0</cite>.</p>
+<p>For each episode <cite>i</cite>, computes: <span class="math notranslate nohighlight">\(V(s^i_0) = Σ_{a∈A} π_e(a|s^i_0) * Q(s^i_0, a)\)</span></p>
+<p>Where <span class="math notranslate nohighlight">\(Q(s^i_0, a)\)</span> is the predicted discounted cumulative return from the initial state <span class="math notranslate nohighlight">\(s^i_0\)</span>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the estimated values for each episode/trajectory.</p>
@@ -539,8 +539,8 @@ The performance of this estimator depends on the quality of the Q model.</p>
 <dd><p>Fit the Q model to estimate the expected discounted sum of rewards from the initial
 state.</p>
 <p>The Q model is trained on (initial_state, initial_action) pairs with their corresponding
-discounted cumulative returns computed as:
-G_0 = r_0 + γ*r_1 + γ²*r_2 + … + γ^(T-1)*r_(T-1)</p>
+discounted cumulative returns computed as:</p>
+<p><span class="math notranslate nohighlight">\(G_0 = r_0 + γ*r_1 + γ²*r_2 + ... + γ^(T-1)*r_(T-1)\)</span></p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the fit statistics of the Q model.</p>
