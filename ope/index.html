@@ -487,23 +487,26 @@ self-normalized importance weights.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hopes.ope.estimators.DirectMethod">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.estimators.</span></span><span class="sig-name descname"><span class="pre">DirectMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q_model_cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">RegressionBasedRewardModel</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy_obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy_act</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy_rewards</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps_per_episode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_model_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'random_forest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_model_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.ope.estimators.DirectMethod" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">hopes.ope.estimators.</span></span><span class="sig-name descname"><span class="pre">DirectMethod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q_model_cls</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">type</span><span class="p"><span class="pre">[</span></span><span class="pre">RegressionBasedRewardModel</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy_obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy_act</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">behavior_policy_rewards</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">steps_per_episode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">discount_factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_model_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'random_forest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_model_params</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hopes.ope.estimators.DirectMethod" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hopes.ope.estimators.BaseEstimator" title="hopes.ope.estimators.BaseEstimator"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEstimator</span></code></a></p>
 <p>Direct Method (DM) estimator.</p>
-<p><span class="math notranslate nohighlight">\(V_{DM}(\pi_e, D, Q)=\frac {1}{n} \sum_{t=1}^n \sum_{a \in A} \pi_e(a|s_0) Q(s_0, a)\)</span></p>
+<p><span class="math notranslate nohighlight">\(V_{DM}(\pi_e, D, Q)=\frac {1}{n} \sum_{i=1}^n \sum_{a \in A} \pi_e(a|s^i_0) Q(s^i_0, a)\)</span></p>
 <dl class="simple">
 <dt>Where:</dt><dd><ul class="simple">
-<li><p><span class="math notranslate nohighlight">\(D\)</span> is the offline collected dataset.</p></li>
+<li><p><span class="math notranslate nohighlight">\(D = \{\{ (s_t, a_t, r_t) \}^{T-1}_{t=0}\}^n_{i=1}\)</span> is the offline collected dataset
+consisting of n trajectories.</p></li>
 <li><p><span class="math notranslate nohighlight">\(\pi_e\)</span> is the target policy.</p></li>
-<li><p><span class="math notranslate nohighlight">\(Q\)</span> is the Q model trained to estimate the expected reward of the initial state under the behavior policy.</p></li>
-<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of samples.</p></li>
+<li><p><span class="math notranslate nohighlight">\(Q(s^i_0, a)\)</span> is the Q model trained to estimate the expected discounted sum of rewards
+from the initial state <span class="math notranslate nohighlight">\(s^i_0\)</span> when taking action <span class="math notranslate nohighlight">\(a\)</span> under the behavior policy.</p></li>
+<li><p><span class="math notranslate nohighlight">\(n\)</span> is the number of episodes/trajectories.</p></li>
 <li><p><span class="math notranslate nohighlight">\(a\)</span> is the action taken in the set of actions <span class="math notranslate nohighlight">\(A\)</span>.</p></li>
-<li><p><span class="math notranslate nohighlight">\(s_0\)</span> is the initial state.</p></li>
+<li><p><span class="math notranslate nohighlight">\(s^i_0\)</span> is the initial state of the i-th trajectory.</p></li>
 </ul>
 </dd>
 </dl>
-<p>This estimator trains a Q model using supervised learning, then uses it to estimate the expected reward of the
-initial state under the target policy. The performance of this estimator depends on the quality of the Q model.</p>
+<p>This estimator trains a Q model using supervised learning on initial states and their corresponding
+discounted cumulative returns, then uses it to estimate the expected value under the target policy.
+The performance of this estimator depends on the quality of the Q model.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hopes.ope.estimators.DirectMethod.check_parameters">
 <span class="sig-name descname"><span class="pre">check_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#hopes.ope.estimators.DirectMethod.check_parameters" title="Link to this definition">#</a></dt>
@@ -521,13 +524,23 @@ initial state under the target policy. The performance of this estimator depends
 <dt class="sig sig-object py" id="hopes.ope.estimators.DirectMethod.estimate_weighted_rewards">
 <span class="sig-name descname"><span class="pre">estimate_weighted_rewards</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.ope.estimators.DirectMethod.estimate_weighted_rewards" title="Link to this definition">#</a></dt>
 <dd><p>Estimate the weighted rewards using the Direct Method estimator.</p>
+<p>For each episode <cite>i</cite>, computes: <cite>V(s^i_0) = Σ_{a∈A} π_e(a|s^i_0) * Q(s^i_0, a)</cite></p>
+<p>Where <cite>Q(s^i_0, a)</cite> is the predicted discounted cumulative return from the initial state <cite>s^i_0</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>the estimated values for each episode/trajectory.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hopes.ope.estimators.DirectMethod.fit">
 <span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#hopes.ope.estimators.DirectMethod.fit" title="Link to this definition">#</a></dt>
-<dd><p>Fit the Q model to estimate the expected reward of the initial state under the behavior
-policy.</p>
+<dd><p>Fit the Q model to estimate the expected discounted sum of rewards from the initial
+state.</p>
+<p>The Q model is trained on (initial_state, initial_action) pairs with their corresponding
+discounted cumulative returns computed as:
+G_0 = r_0 + γ*r_1 + γ²*r_2 + … + γ^(T-1)*r_(T-1)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>the fit statistics of the Q model.</p>
