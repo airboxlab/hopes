@@ -1,6 +1,6 @@
 sphinx==7.4.0
 pydata-sphinx-theme==0.15.4
-sphinx-design==0.6.0
+sphinx-design==0.6.1
 # this should be mocked in autodoc_mock_imports
 # however, it causes issues with union types PEP 604 support
 # ie fails with TypeError: unsupported operand type(s) for |: 'ndarray' and 'NoneType'
