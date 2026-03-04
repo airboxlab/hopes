@@ -1,4 +1,14 @@
+import logging
+import tempfile
+from pathlib import Path
+from re import Pattern
+
+import boto3
 import numpy as np
+import onnx
+from onnx import numpy_helper
+
+s3 = boto3.client("s3")
 
 
 def log_probs_for_deterministic_policy(
@@ -59,3 +69,88 @@ def piecewise_linear(x, left_cp, right_cp, slope, y0, y1) -> np.ndarray:
         lambda _: y1,
     ]
     return np.piecewise(x, conditions, funcs)
+
+
+def load_latest_model_onnx(bucket: str, prefix: str, checkpoint_model_regex: Pattern):
+    """Find and load the model.onnx corresponding to the highest checkpoint number under the given
+    S3 prefix.
+
+    Returns:
+        model_bytes (bytes): ONNX model content
+        checkpoint_num (int): highest checkpoint number
+        model_key (str): full S3 key of the selected model
+    """
+    paginator = s3.get_paginator("list_objects_v2")
+
+    models_by_checkpoint = {}
+
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            key = obj["Key"]
+            match = checkpoint_model_regex.search(key)
+            if match:
+                checkpoint_num = int(match.group(1))
+                models_by_checkpoint.setdefault(checkpoint_num, []).append(
+                    {
+                        "Key": key,
+                        "LastModified": obj["LastModified"],
+                    }
+                )
+
+    if not models_by_checkpoint:
+        raise FileNotFoundError(f"No model.onnx found under prefix: s3://{bucket}/{prefix}")
+
+    # Select highest checkpoint
+    latest_checkpoint = max(models_by_checkpoint.keys())
+
+    # If multiple models exist for the same checkpoint, take the most recent one
+    latest_obj = max(models_by_checkpoint[latest_checkpoint], key=lambda x: x["LastModified"])
+
+    model_key = latest_obj["Key"]
+
+    response = s3.get_object(Bucket=bucket, Key=model_key)
+    model_bytes = response["Body"].read()
+
+    return model_bytes, latest_checkpoint, model_key
+
+
+def remove_onnx_model_initializer(model: onnx.ModelProto, name: str) -> bool:
+    """Remove initializer with given name from ONNX model and add it as model input if not already
+    present."""
+    for i, init in enumerate(model.graph.initializer):
+        if name in init.name:
+            old_value = numpy_helper.to_array(init)
+            logging.info(
+                f"[ONNX model prep] Found initializer '{name}' with shape {old_value.shape}, dtype {old_value.dtype} and value {old_value}"
+            )
+
+            # Move initializer to model input so it can be provided at runtime.
+            if not any(inp.name == init.name for inp in model.graph.input):
+                value_info = onnx.helper.make_tensor_value_info(
+                    init.name, init.data_type, list(old_value.shape)
+                )
+                model.graph.input.append(value_info)
+
+            del model.graph.initializer[i]
+            logging.info(f"[ONNX model prep] Converted initializer '{name}' to model input")
+            return True
+    return False
+
+
+def prepare_onnx_model(model_in: str, model_out: str) -> None:
+    """Utility to prepare ONNX model by zeroing out specific initializers."""
+    model = onnx.load(model_in)
+    targets = ["is_exploring"]
+    for name in targets:
+        if remove_onnx_model_initializer(model, name):
+            logging.info(f"[ONNX model prep] initializer '{name}' now expected as model input")
+        else:
+            logging.info(f"[ONNX model prep] initializer '{name}' not found in the model")
+
+    onnx.save(model, model_out)
+
+
+def write_onnx_bytes(model_bytes: bytes, name: str) -> str:
+    p = Path(tempfile.gettempdir()) / f"{name}.onnx"
+    p.write_bytes(model_bytes)
+    return str(p)
