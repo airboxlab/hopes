@@ -101,7 +101,6 @@ def wpdis_daily(
 
 ### IPS/WIS step-wise
 def compute_stepwise_ips_wis(
-    *,
     p_b_taken_flat: np.ndarray,
     p_e_taken_flat: np.ndarray,
     rew_flat: np.ndarray,
