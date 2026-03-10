@@ -5,8 +5,8 @@ import numpy as np
 import scipy
 
 from hopes.assert_utils import check_array
-from hopes.data.batch_utils import apply_stickiness_correction_to_rho
 from hopes.dev_utils import override
+from hopes.ope.utils import apply_stickiness_correction_to_rho
 from hopes.rew.rewards import RegressionBasedRewardModel
 
 

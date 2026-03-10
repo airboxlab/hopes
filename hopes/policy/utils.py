@@ -154,3 +154,9 @@ def write_onnx_bytes(model_bytes: bytes, name: str) -> str:
     p = Path(tempfile.gettempdir()) / f"{name}.onnx"
     p.write_bytes(model_bytes)
     return str(p)
+
+
+def log_softmax(x, axis=-1):
+    """log_softmax is used instead of softmax to improve numerical stability."""
+    x = x - np.max(x, axis=axis, keepdims=True)
+    return x - np.log(np.sum(np.exp(x), axis=axis, keepdims=True))

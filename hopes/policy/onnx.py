@@ -5,8 +5,8 @@ import numpy as np
 import onnxruntime as rt
 
 from hopes.dev_utils import override
-from hopes.general_utils import log_softmax
 from hopes.policy.policies import Policy
+from hopes.policy.utils import log_softmax
 
 
 class OnnxModelBasedPolicy(Policy):
