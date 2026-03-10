@@ -183,6 +183,7 @@ def run_ope_for_one_prefix(
         num_days=num_days,
         steps_per_episode=steps_per_episode,
         rew_flat=rew_flat,
+        act_flat=act_flat,
         p_b_taken_flat=p_b_taken_flat,
         p_e_taken_flat=p_e_taken_flat,
         sticky_act_flat=sticky_act_flat,
@@ -200,6 +201,7 @@ def run_ope_for_one_prefix(
         num_days=num_days,
         steps_per_episode=steps_per_episode,
         rew_flat=rew_flat,
+        act_flat=act_flat,
         p_b_taken_flat=p_b_taken_flat,
         p_e_taken_flat=p_b_taken_flat,  # identity case since we are checking on behaviour policy
         sticky_act_flat=sticky_act_flat,
