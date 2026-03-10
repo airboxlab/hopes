@@ -1362,6 +1362,7 @@ class StickySequentialDoublyRobust(BaseEstimator):
         self.Q0 = None
         self.Q1 = None
 
+    @override(BaseEstimator)
     def set_parameters(
         self,
         *,
