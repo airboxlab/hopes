@@ -146,7 +146,7 @@ def run_ope_for_one_prefix(
 
     # 5) Step-wise IPS/WIS diagnostics
     results_ips_wis_stepwise = compute_stepwise_ips_wis(
-        N, p_b_taken_flat, eps, p_e_taken_flat, rew_flat
+        p_b_taken_flat, eps, p_e_taken_flat, rew_flat
     )
 
     # Clipped WIS is reported to assess how sensitive the estimate is to large importance weights
