@@ -132,7 +132,11 @@ def wpdis_daily(
         num_samples=num_bootstrap_samples,
     )
 
-    return ci["mean"], ci["lower_bound"], ci["upper_bound"]
+    return (
+        ci["mean"] / steps_per_episode,
+        ci["lower_bound"] / steps_per_episode,
+        ci["upper_bound"] / steps_per_episode,
+    )
 
 
 def compute_stepwise_ips_wis(

@@ -87,7 +87,7 @@ class TestWrappers(unittest.TestCase):
         )
 
         expected_daily_returns = rew_flat.reshape(num_days, steps_per_episode).sum(axis=1)
-        expected_mean = float(np.mean(expected_daily_returns))
+        expected_mean = float(np.mean(expected_daily_returns) / steps_per_episode)
 
         self.assertIsInstance(mean, float)
         self.assertIsInstance(lower, float)
