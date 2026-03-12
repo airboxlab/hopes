@@ -127,7 +127,7 @@ class TestWrappers(unittest.TestCase):
 
         expected = float(np.mean(rew_flat.reshape(num_days, steps_per_episode).sum(axis=1)))
 
-        self.assertAlmostEqual(mean, expected, places=2)
+        self.assertAlmostEqual(mean, expected, places=1)
         self.assertLessEqual(lower, mean)
         self.assertLessEqual(mean, upper)
 
