@@ -956,6 +956,31 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
     https://arxiv.org/abs/1906.03735
     """
 
+    def __init__(
+        self,
+        *,
+        steps_per_episode: int,
+        discount_factor: float = 1.0,
+        normalization: str = "per_timestep",
+        eps: float = 1e-12,
+    ) -> None:
+        super().__init__(
+            steps_per_episode=steps_per_episode,
+            discount_factor=discount_factor,
+        )
+        self.normalization = normalization
+        self.eps = eps
+
+    @override(BaseEstimator)
+    def check_parameters(self) -> None:
+        super().check_parameters()
+
+        if self.normalization not in {"per_timestep", "global"}:
+            raise ValueError("normalization must be 'per_timestep' or 'global'.")
+
+        if self.eps <= 0:
+            raise ValueError("eps must be > 0.")
+
     @override(TrajectoryPerDecisionMixin)
     def normalize(self, weights: np.ndarray) -> np.ndarray:
         """Normalize the importance weights using the self-normalization strategy.
@@ -968,6 +993,43 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         """
         return weights / (np.mean(weights) + 1e-10)
 
+    # @override(BaseEstimator)
+    # def estimate_weighted_rewards(self) -> np.ndarray:
+    #     if self.importance_ratios is None:
+    #         return super().estimate_weighted_rewards()
+    #
+    #     self.check_parameters()
+    #
+    #     rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
+    #     n_episodes = rewards.shape[0]
+    #
+    #     discount_factors = np.full(
+    #         (n_episodes, self.steps_per_episode),
+    #         self.discount_factor,
+    #         dtype=np.float32,
+    #     )
+    #     discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
+    #
+    #     discounted_returns = np.sum(discount_factors * rewards, axis=1)
+    #
+    #     rho = np.asarray(self.importance_ratios, dtype=np.float32)
+    #     if rho.ndim == 1:
+    #         rho = rho.reshape(n_episodes, self.steps_per_episode)
+    #     elif rho.ndim != 2:
+    #         raise ValueError("importance_ratios must be 1D or 2D.")
+    #
+    #     if rho.shape != rewards.shape:
+    #         raise ValueError("importance_ratios shape must match rewards reshaped by episode.")
+    #
+    #     W = np.prod(rho, axis=1)
+    #     den = float(np.sum(W))
+    #
+    #     weighted_rewards = (n_episodes * (W * discounted_returns) / np.maximum(den, 1e-12)).reshape(
+    #         -1, 1
+    #     )
+    #
+    #     return weighted_rewards.astype(np.float32)
+
     @override(BaseEstimator)
     def estimate_weighted_rewards(self) -> np.ndarray:
         if self.importance_ratios is None:
@@ -976,38 +1038,115 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         self.check_parameters()
 
         rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
-        n_episodes = rewards.shape[0]
-
-        discount_factors = np.full(
-            (n_episodes, self.steps_per_episode),
-            self.discount_factor,
-            dtype=np.float32,
-        )
-        discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
-
-        discounted_returns = np.sum(discount_factors * rewards, axis=1)
+        n_episodes, horizon = rewards.shape
 
         rho = np.asarray(self.importance_ratios, dtype=np.float32)
         if rho.ndim == 1:
-            rho = rho.reshape(n_episodes, self.steps_per_episode)
+            rho = rho.reshape(n_episodes, horizon)
         elif rho.ndim != 2:
             raise ValueError("importance_ratios must be 1D or 2D.")
 
         if rho.shape != rewards.shape:
             raise ValueError("importance_ratios shape must match rewards reshaped by episode.")
 
-        W = np.prod(rho, axis=1)
+        discount_factors = np.full(
+            (n_episodes, horizon),
+            self.discount_factor,
+            dtype=np.float32,
+        )
+        discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
+
+        W = np.cumprod(rho, axis=1)
+
+        if self.normalization == "per_timestep":
+            denom_t = np.sum(W, axis=0, keepdims=True)
+            normalized_weights = n_episodes * W / np.maximum(denom_t, self.eps)
+
+            weighted_rewards = np.sum(
+                normalized_weights * discount_factors * rewards,
+                axis=1,
+            ).reshape(-1, 1)
+
+            return weighted_rewards.astype(np.float32)
+
+        # global normalization: historical pipeline behaviour
+        num_i = np.sum(W * discount_factors * rewards, axis=1)
         den = float(np.sum(W))
 
-        weighted_rewards = (n_episodes * (W * discounted_returns) / np.maximum(den, 1e-12)).reshape(
-            -1, 1
-        )
+        weighted_rewards = (n_episodes * num_i / np.maximum(den, self.eps)).reshape(-1, 1)
 
         return weighted_rewards.astype(np.float32)
 
     @override(BaseEstimator)
     def estimate_policy_value(self) -> float:
         return float(np.mean(self.estimate_weighted_rewards()))
+
+    @override(BaseEstimator)
+    def estimate_policy_value_with_confidence_interval(
+        self,
+        method: str = "bootstrap",
+        significance_level: float = 0.05,
+        num_samples: int = 1000,
+    ) -> dict[str, float]:
+        if self.normalization != "global" or self.importance_ratios is None:
+            return super().estimate_policy_value_with_confidence_interval(
+                method=method,
+                significance_level=significance_level,
+                num_samples=num_samples,
+            )
+
+        if method != "bootstrap":
+            raise ValueError(
+                "SelfNormalizedPerDecisionImportanceSampling with normalization='global' "
+                "currently supports only method='bootstrap'."
+            )
+
+        if not (0 < significance_level < 1):
+            raise ValueError("significance_level must be in (0, 1).")
+
+        self.check_parameters()
+
+        rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
+        n_episodes, horizon = rewards.shape
+
+        rho = np.asarray(self.importance_ratios, dtype=np.float32)
+        if rho.ndim == 1:
+            rho = rho.reshape(n_episodes, horizon)
+        elif rho.ndim != 2:
+            raise ValueError("importance_ratios must be 1D or 2D.")
+
+        if rho.shape != rewards.shape:
+            raise ValueError("importance_ratios shape must match rewards reshaped by episode.")
+
+        discount_factors = np.full(
+            (n_episodes, horizon),
+            self.discount_factor,
+            dtype=np.float32,
+        )
+        discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
+
+        rng = np.random.default_rng(0)
+        vals = np.empty(num_samples, dtype=np.float32)
+
+        for b in range(num_samples):
+            idx = rng.integers(0, n_episodes, size=n_episodes)
+
+            rewards_b = rewards[idx]
+            rho_b = rho[idx]
+            discount_b = discount_factors[idx]
+
+            W_b = np.cumprod(rho_b, axis=1)
+            num = float(np.sum(W_b * discount_b * rewards_b))
+            den = float(np.sum(W_b))
+
+            vals[b] = num / np.maximum(den, self.eps)
+
+        return {
+            "lower_bound": float(np.quantile(vals, significance_level / 2)),
+            "upper_bound": float(np.quantile(vals, 1 - significance_level / 2)),
+            "mean": float(np.mean(vals)),
+            "std": float(np.std(vals)),
+        }
 
 
 class SequentialDoublyRobust(BaseEstimator):

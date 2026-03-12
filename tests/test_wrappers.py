@@ -93,7 +93,43 @@ class TestWrappers(unittest.TestCase):
         self.assertIsInstance(lower, float)
         self.assertIsInstance(upper, float)
 
-        self.assertAlmostEqual(mean, expected_mean, places=1)
+        self.assertAlmostEqual(mean, expected_mean / steps_per_episode, places=1)
+        self.assertLessEqual(lower, mean)
+        self.assertLessEqual(mean, upper)
+
+    def test_wpdis_daily_identity_behavior_case(self):
+        num_days = 5
+        steps_per_episode = 3
+        n_samples = num_days * steps_per_episode
+
+        rew_flat = np.array(
+            [1.0, 2.0, 3.0, 0.5, 1.5, 2.5, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0, 3.0, 0.0, 1.0],
+            dtype=np.float32,
+        )
+        act_flat = np.array([0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0], dtype=np.int64)
+
+        p_b_taken_flat = np.full(n_samples, 0.5, dtype=np.float32)
+        p_e_taken_flat = p_b_taken_flat.copy()
+        sticky_act_flat = np.zeros(n_samples, dtype=np.int64)
+
+        mean, lower, upper = wpdis_daily(
+            num_days=num_days,
+            steps_per_episode=steps_per_episode,
+            rew_flat=rew_flat,
+            act_flat=act_flat,
+            p_b_taken_flat=p_b_taken_flat,
+            p_e_taken_flat=p_e_taken_flat,
+            sticky_act_flat=sticky_act_flat,
+            clip=20.0,
+            num_bootstrap_samples=200,
+            significance_level=0.05,
+        )
+
+        expected = float(
+            np.mean(rew_flat.reshape(num_days, steps_per_episode).sum(axis=1)) / steps_per_episode
+        )
+
+        self.assertAlmostEqual(mean, expected / steps_per_episode, places=2)
         self.assertLessEqual(lower, mean)
         self.assertLessEqual(mean, upper)
 

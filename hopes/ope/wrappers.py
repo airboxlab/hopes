@@ -19,6 +19,7 @@ def wpdis_daily(
     clip: float = 20.0,
     num_bootstrap_samples: int = 2000,
     significance_level: float = 0.05,
+    normalization: str = "global",
 ) -> tuple[float, float, float]:
     """Estimate daily self-normalized per-decision IS with optional stickiness correction.
 
@@ -118,7 +119,10 @@ def wpdis_daily(
     estimator = SelfNormalizedPerDecisionImportanceSampling(
         steps_per_episode=steps_per_episode,
         discount_factor=1.0,
+        normalization=normalization,
+        eps=eps,
     )
+
     estimator.set_parameters(
         target_policy_action_probabilities=p_e,
         behavior_policy_action_probabilities=p_b,
