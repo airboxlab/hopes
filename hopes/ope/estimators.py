@@ -933,20 +933,20 @@ class PerDecisionImportanceSampling(BaseEstimator, TrajectoryPerDecisionMixin):
 
 
 class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling):
-    r"""Self-Normalized Per-Decision Importance Sampling (PDIS) estimator.
+    """Self-Normalized Per-Decision Importance Sampling (PDIS) estimator.
 
     .. math::
-        V_{PDIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^n \sum_{t=0}^{T-1}
-            \gamma^t \frac {w^{(i)}_{t}} {\frac {1}{n} \sum_{j=1}^n w^{(j)}_{t}} r_t^{(i)}
+        V_{PDIS} (\\pi_e, D) = \frac {1}{n} \\sum_{i=1}^n \\sum_{t=0}^{T-1}
+            \\gamma^t \frac {w^{(i)}_{t}} {\frac {1}{n} \\sum_{j=1}^n w^{(j)}_{t}} r_t^{(i)}
 
     Where:
 
     - :math:`D` is the offline collected dataset.
-    - :math:`w^{(i)}_{t}` is the importance weight of the decision :math:`t` of trajectory :math:`i` defined as :math:`w_{t} = \frac {\pi_e(a_t|s_t)} {\pi_b(a_t|s_t)}`
-    - :math:`\pi_e` is the target policy and :math:`\pi_b` is the behavior policy.
+    - :math:`w^{(i)}_{t}` is the importance weight of the decision :math:`t` of trajectory :math:`i` defined as :math:`w_{t} = \frac {\\pi_e(a_t|s_t)} {\\pi_b(a_t|s_t)}`
+    - :math:`\\pi_e` is the target policy and :math:`\\pi_b` is the behavior policy.
     - :math:`n` is the number of trajectories.
     - :math:`T` is the length of the trajectory.
-    - :math:`\gamma_t` is the discount factor at time :math:`t`.
+    - :math:`\\gamma_t` is the discount factor at time :math:`t`.
     - :math:`r_t^{(i)}` is the reward at time :math:`t` of trajectory :math:`i`.
 
     SNPDIS is a variance reduction technique for PDIS.
@@ -970,6 +970,12 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         )
         self.normalization = normalization
         self.eps = eps
+
+    """
+    :param normalization: the normalization strategy to use. Supported values are "per_timestep" and "global".
+        1) "per_timestep" normalizes the importance weights at each timestep by the mean of the importance weights at that timestep.
+        2) "global" normalizes the importance weights by the mean of the importance weights over the entire trajectory.
+    """
 
     @override(BaseEstimator)
     def check_parameters(self) -> None:

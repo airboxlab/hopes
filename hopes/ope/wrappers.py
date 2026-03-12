@@ -19,7 +19,7 @@ def wpdis_daily(
     clip: float = 20.0,
     num_bootstrap_samples: int = 2000,
     significance_level: float = 0.05,
-    normalization: str = "global",
+    normalization: str = "per_timestep",
 ) -> tuple[float, float, float]:
     """Estimate daily self-normalized per-decision IS with optional stickiness correction.
 
@@ -55,6 +55,8 @@ def wpdis_daily(
         Number of bootstrap samples used for the confidence interval.
     significance_level:
         Significance level used for the confidence interval.
+    normalization:
+        Normalization method for WIS. Can be "global" or "per_timestep".
 
     Returns
     -------
