@@ -6,185 +6,270 @@ from hopes.ope.wrappers import compute_stepwise_ips_wis, dr_step_daily, wpdis_da
 
 
 class TestWrappers(unittest.TestCase):
-    def setUp(self):
-        self.num_days = 2
-        self.T = 3
-        N = self.num_days * self.T
+    def test_compute_stepwise_ips_wis(self):
+        p_b_taken_flat = np.array([0.5, 0.4, 0.2, 0.8], dtype=np.float32)
+        p_e_taken_flat = np.array([0.25, 0.2, 0.4, 0.4], dtype=np.float32)
+        rew_flat = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32)
 
-        # deterministic actions alternating
-        self.act_flat = np.array([0, 1, 0, 1, 0, 1], dtype=np.int64)
-
-        # simple rewards
-        self.rew_flat = np.array([1.0, 0.5, 0.0, 1.0, 0.5, 0.0], dtype=np.float32)
-
-        # behavior propensities (taken)
-        self.p_b_taken_flat = np.full(N, 0.6, dtype=np.float32)
-
-        # target propensities (taken)
-        self.p_e_taken_flat = np.full(N, 0.8, dtype=np.float32)
-
-        # no stickiness (all zeros)
-        self.sticky_act_flat = np.zeros(N, dtype=np.int64)
-
-    # compute_stepwise_ips_wis
-    def test_compute_stepwise_ips_wis_basic(self):
-        result = compute_stepwise_ips_wis(
-            p_b_taken_flat=self.p_b_taken_flat,
-            p_e_taken_flat=self.p_e_taken_flat,
-            rew_flat=self.rew_flat,
+        out = compute_stepwise_ips_wis(
+            p_b_taken_flat=p_b_taken_flat,
+            p_e_taken_flat=p_e_taken_flat,
+            rew_flat=rew_flat,
         )
 
-        self.assertIn("weights", result)
-        self.assertIn("ips", result)
-        self.assertIn("wis", result)
+        expected_weights = p_e_taken_flat / p_b_taken_flat
+        expected_ips = float(np.mean(expected_weights * rew_flat))
+        expected_wis = float(np.sum(expected_weights * rew_flat) / np.sum(expected_weights))
 
-        w = result["weights"]
+        self.assertIsInstance(out, dict)
+        self.assertIn("weights", out)
+        self.assertIn("ips", out)
+        self.assertIn("wis", out)
+        self.assertIn("w_max", out)
+        self.assertIn("w_p99", out)
 
-        # weights must be finite and positive
-        self.assertTrue(np.all(np.isfinite(w)))
-        self.assertTrue(np.all(w > 0))
+        self.assertTrue(np.allclose(out["weights"], expected_weights))
+        self.assertAlmostEqual(out["ips"], expected_ips, places=6)
+        self.assertAlmostEqual(out["wis"], expected_wis, places=6)
+        self.assertAlmostEqual(out["w_max"], float(expected_weights.max()), places=6)
+        self.assertTrue(np.isfinite(out["w_p99"]))
 
-        # IPS and WIS must be finite
-        self.assertTrue(np.isfinite(result["ips"]))
-        self.assertTrue(np.isfinite(result["wis"]))
-
-    def test_compute_stepwise_invalid_probs(self):
-        bad_p = self.p_e_taken_flat.copy()
-        bad_p[0] = 1.5  # invalid prob
+    def test_compute_stepwise_ips_wis_raises_on_length_mismatch(self):
+        p_b_taken_flat = np.array([0.5, 0.4], dtype=np.float32)
+        p_e_taken_flat = np.array([0.25, 0.2, 0.4], dtype=np.float32)
+        rew_flat = np.array([1.0, 2.0], dtype=np.float32)
 
         with self.assertRaises(ValueError):
             compute_stepwise_ips_wis(
-                p_b_taken_flat=self.p_b_taken_flat,
-                p_e_taken_flat=bad_p,
-                rew_flat=self.rew_flat,
+                p_b_taken_flat=p_b_taken_flat,
+                p_e_taken_flat=p_e_taken_flat,
+                rew_flat=rew_flat,
             )
 
-    # wpdis_daily
-    def test_wpdis_daily_basic(self):
-        mean, lo, hi = wpdis_daily(
-            num_days=self.num_days,
-            steps_per_episode=self.T,
-            rew_flat=self.rew_flat,
-            act_flat=self.act_flat,
-            p_b_taken_flat=self.p_b_taken_flat,
-            p_e_taken_flat=self.p_e_taken_flat,
-            sticky_act_flat=self.sticky_act_flat,
-            n_boot=100,  # keep small for test speed
-            alpha=0.1,
-            seed=42,
+    def test_compute_stepwise_ips_wis_raises_on_invalid_probs(self):
+        p_b_taken_flat = np.array([0.5, 1.2], dtype=np.float32)
+        p_e_taken_flat = np.array([0.25, 0.2], dtype=np.float32)
+        rew_flat = np.array([1.0, 2.0], dtype=np.float32)
+
+        with self.assertRaises(ValueError):
+            compute_stepwise_ips_wis(
+                p_b_taken_flat=p_b_taken_flat,
+                p_e_taken_flat=p_e_taken_flat,
+                rew_flat=rew_flat,
+            )
+
+    def test_wpdis_daily_returns_metrics(self):
+        num_days = 3
+        steps_per_episode = 4
+        n_samples = num_days * steps_per_episode
+
+        rew_flat = np.array(
+            [1.0, 2.0, 3.0, 4.0, 0.5, 1.5, 2.5, 3.5, 2.0, 2.0, 2.0, 2.0],
+            dtype=np.float32,
+        )
+        act_flat = np.array([0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 1], dtype=np.int64)
+
+        p_b_taken_flat = np.full(n_samples, 0.5, dtype=np.float32)
+        p_e_taken_flat = np.full(n_samples, 0.5, dtype=np.float32)
+        sticky_act_flat = np.zeros(n_samples, dtype=np.int64)
+
+        mean, lower, upper = wpdis_daily(
+            num_days=num_days,
+            steps_per_episode=steps_per_episode,
+            rew_flat=rew_flat,
+            act_flat=act_flat,
+            p_b_taken_flat=p_b_taken_flat,
+            p_e_taken_flat=p_e_taken_flat,
+            sticky_act_flat=sticky_act_flat,
+            clip=20.0,
+            num_bootstrap_samples=200,
+            significance_level=0.05,
         )
 
-        # all outputs must be finite scalars
-        self.assertTrue(np.isfinite(mean))
-        self.assertTrue(np.isfinite(lo))
-        self.assertTrue(np.isfinite(hi))
+        expected_daily_returns = rew_flat.reshape(num_days, steps_per_episode).sum(axis=1)
+        expected_mean = float(np.mean(expected_daily_returns))
 
-        # CI bounds should be ordered
-        self.assertLessEqual(lo, hi)
+        self.assertIsInstance(mean, float)
+        self.assertIsInstance(lower, float)
+        self.assertIsInstance(upper, float)
 
-    def test_wpdis_daily_dimension_mismatch(self):
-        # break N consistency
-        bad_rew = self.rew_flat[:-1]
+        self.assertAlmostEqual(mean, expected_mean, places=1)
+        self.assertLessEqual(lower, mean)
+        self.assertLessEqual(mean, upper)
+
+    def test_wpdis_daily_raises_on_invalid_n(self):
+        rew_flat = np.array([1.0, 2.0, 3.0], dtype=np.float32)
+        act_flat = np.array([0, 1, 0], dtype=np.int64)
+        p_b_taken_flat = np.array([0.5, 0.5, 0.5], dtype=np.float32)
+        p_e_taken_flat = np.array([0.5, 0.5, 0.5], dtype=np.float32)
+        sticky_act_flat = np.array([0, 0, 0], dtype=np.int64)
 
         with self.assertRaises(ValueError):
             wpdis_daily(
-                num_days=self.num_days,
-                steps_per_episode=self.T,
-                rew_flat=bad_rew,
-                act_flat=self.act_flat,
-                p_b_taken_flat=self.p_b_taken_flat,
-                p_e_taken_flat=self.p_e_taken_flat,
-                sticky_act_flat=self.sticky_act_flat,
+                num_days=2,
+                steps_per_episode=2,
+                rew_flat=rew_flat,
+                act_flat=act_flat,
+                p_b_taken_flat=p_b_taken_flat,
+                p_e_taken_flat=p_e_taken_flat,
+                sticky_act_flat=sticky_act_flat,
             )
 
-    def test_wpdis_daily_with_stickiness(self):
-        # introduce stickiness at first step of first episode
-        sticky = self.sticky_act_flat.copy()
-        sticky[1] = 1  # force switch in episode 1
+    def test_wpdis_daily_raises_on_length_mismatch(self):
+        rew_flat = np.array([1.0, 2.0, 3.0, 4.0], dtype=np.float32)
+        act_flat = np.array([0, 1, 0], dtype=np.int64)
+        p_b_taken_flat = np.full(4, 0.5, dtype=np.float32)
+        p_e_taken_flat = np.full(4, 0.5, dtype=np.float32)
+        sticky_act_flat = np.zeros(4, dtype=np.int64)
 
-        mean, lo, hi = wpdis_daily(
-            num_days=self.num_days,
-            steps_per_episode=self.T,
-            rew_flat=self.rew_flat,
-            act_flat=self.act_flat,
-            p_b_taken_flat=self.p_b_taken_flat,
-            p_e_taken_flat=self.p_e_taken_flat,
-            sticky_act_flat=sticky,
-            n_boot=100,
-            alpha=0.1,
-            seed=0,
+        with self.assertRaises(ValueError):
+            wpdis_daily(
+                num_days=2,
+                steps_per_episode=2,
+                rew_flat=rew_flat,
+                act_flat=act_flat,
+                p_b_taken_flat=p_b_taken_flat,
+                p_e_taken_flat=p_e_taken_flat,
+                sticky_act_flat=sticky_act_flat,
+            )
+
+    def test_dr_step_daily_identity_case(self):
+        num_days = 4
+        steps_per_episode = 3
+        num_actions = 2
+        n_samples = num_days * steps_per_episode
+
+        rewards_flat = np.array(
+            [1.0, 2.0, 3.0, 4.0, 1.0, 0.0, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0],
+            dtype=np.float32,
+        )
+        logged_actions = np.array([0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1], dtype=np.int64)
+
+        target_policy_action_probabilities = np.full(
+            (n_samples, num_actions),
+            0.5,
+            dtype=np.float32,
+        )
+        behavior_policy_action_probabilities = np.full(
+            (n_samples, num_actions),
+            0.5,
+            dtype=np.float32,
         )
 
-        self.assertTrue(np.isfinite(mean))
-        self.assertLessEqual(lo, hi)
+        q_values = np.zeros((n_samples, num_actions), dtype=np.float32)
 
-    def test_dr_step_daily_shapes_and_finite(self):
-        rng = np.random.default_rng(3)
-        steps_per_episode = 5
-        num_days = 9
-        N = steps_per_episode * num_days
-
-        rtg_flat = rng.normal(size=N).astype(np.float32)
-        act_flat = rng.integers(0, 2, size=N, dtype=np.int64)
-
-        p_b_taken_flat = rng.uniform(0.2, 0.9, size=N).astype(np.float32)
-
-        P_new = rng.uniform(0.1, 0.9, size=(N, 2)).astype(np.float32)
-        P_new /= P_new.sum(axis=1, keepdims=True)
-
-        Q0 = rng.normal(size=N).astype(np.float32)
-        Q1 = rng.normal(size=N).astype(np.float32)
-
-        dr_day, w_logged = dr_step_daily(
+        dr_day, rho = dr_step_daily(
             num_days=num_days,
             steps_per_episode=steps_per_episode,
-            rtg_flat=rtg_flat,
-            P_new=P_new,
-            act_flat=act_flat,
-            p_b_taken_flat=p_b_taken_flat,
-            Q0=Q0,
-            Q1=Q1,
-            eps=1e-12,
-            cap=20,
+            rewards_flat=rewards_flat,
+            target_policy_action_probabilities=target_policy_action_probabilities,
+            behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+            logged_actions=logged_actions,
+            q_values=q_values,
+            apply_stickiness=False,
+        )
+
+        expected = rewards_flat.reshape(num_days, steps_per_episode).sum(axis=1)
+
+        self.assertIsInstance(dr_day, np.ndarray)
+        self.assertIsInstance(rho, np.ndarray)
+        self.assertEqual(dr_day.shape, (num_days,))
+        self.assertEqual(rho.shape, (n_samples,))
+        self.assertTrue(np.allclose(rho, np.ones(n_samples, dtype=np.float32)))
+        self.assertTrue(np.allclose(dr_day, expected))
+
+    def test_dr_step_daily_with_stickiness_runs(self):
+        num_days = 3
+        steps_per_episode = 4
+        num_actions = 3
+        n_samples = num_days * steps_per_episode
+
+        rng = np.random.default_rng(0)
+
+        rewards_flat = rng.random(n_samples, dtype=np.float32)
+        logged_actions = rng.integers(0, num_actions, size=n_samples, dtype=np.int64)
+
+        target_policy_action_probabilities = np.full(
+            (n_samples, num_actions),
+            1.0 / num_actions,
+            dtype=np.float32,
+        )
+        behavior_policy_action_probabilities = np.full(
+            (n_samples, num_actions),
+            1.0 / num_actions,
+            dtype=np.float32,
+        )
+
+        q_values = rng.random((n_samples, num_actions), dtype=np.float32)
+        sticky_actions = np.zeros(n_samples, dtype=np.int64)
+        sticky_actions[1] = 1
+
+        dr_day, rho = dr_step_daily(
+            num_days=num_days,
+            steps_per_episode=steps_per_episode,
+            rewards_flat=rewards_flat,
+            target_policy_action_probabilities=target_policy_action_probabilities,
+            behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+            logged_actions=logged_actions,
+            q_values=q_values,
+            sticky_actions=sticky_actions,
+            apply_stickiness=True,
+            value_after_switch=1.0,
         )
 
         self.assertEqual(dr_day.shape, (num_days,))
-        self.assertEqual(w_logged.shape, (N,))
-        self.assertTrue(np.isfinite(dr_day).all())
-        self.assertTrue(np.isfinite(w_logged).all())
+        self.assertEqual(rho.shape, (n_samples,))
+        self.assertTrue(np.all(np.isfinite(dr_day)))
+        self.assertTrue(np.all(np.isfinite(rho)))
 
-    def test_dr_step_daily_weight_clipping(self):
-        rng = np.random.default_rng(4)
-        steps_per_episode = 4
-        num_days = 6
-        N = steps_per_episode * num_days
+    def test_dr_step_daily_raises_on_invalid_q_shape(self):
+        num_days = 2
+        steps_per_episode = 3
+        num_actions = 2
+        n_samples = num_days * steps_per_episode
 
-        rtg_flat = rng.normal(size=N).astype(np.float32)
-        act_flat = rng.integers(0, 2, size=N, dtype=np.int64)
+        rewards_flat = np.ones(n_samples, dtype=np.float32)
+        logged_actions = np.zeros(n_samples, dtype=np.int64)
 
-        # Make pb tiny to create huge ratios, then check clipping
-        p_b_taken_flat = np.full(N, 1e-6, dtype=np.float32)
-
-        P_new = np.zeros((N, 2), dtype=np.float32)
-        P_new[np.arange(N), act_flat] = 0.9
-        P_new[np.arange(N), 1 - act_flat] = 0.1
-
-        Q0 = rng.normal(size=N).astype(np.float32)
-        Q1 = rng.normal(size=N).astype(np.float32)
-
-        cap = 10
-        dr_day, w_logged = dr_step_daily(
-            num_days=num_days,
-            steps_per_episode=steps_per_episode,
-            rtg_flat=rtg_flat,
-            P_new=P_new,
-            act_flat=act_flat,
-            p_b_taken_flat=p_b_taken_flat,
-            Q0=Q0,
-            Q1=Q1,
-            eps=1e-12,
-            cap=cap,
+        target_policy_action_probabilities = np.full(
+            (n_samples, num_actions),
+            0.5,
+            dtype=np.float32,
+        )
+        behavior_policy_action_probabilities = np.full(
+            (n_samples, num_actions),
+            0.5,
+            dtype=np.float32,
         )
 
-        self.assertTrue(np.all(w_logged <= cap + 1e-6))
-        self.assertTrue(np.all(w_logged >= (1.0 / cap) - 1e-6))
+        q_values = np.ones((n_samples, num_actions + 1), dtype=np.float32)
+
+        with self.assertRaises(ValueError):
+            dr_step_daily(
+                num_days=num_days,
+                steps_per_episode=steps_per_episode,
+                rewards_flat=rewards_flat,
+                target_policy_action_probabilities=target_policy_action_probabilities,
+                behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+                logged_actions=logged_actions,
+                q_values=q_values,
+            )
+
+    def test_dr_step_daily_raises_on_invalid_n(self):
+        rewards_flat = np.array([1.0, 2.0, 3.0], dtype=np.float32)
+        logged_actions = np.array([0, 1, 0], dtype=np.int64)
+        q_values = np.ones((3, 2), dtype=np.float32)
+
+        target_policy_action_probabilities = np.full((3, 2), 0.5, dtype=np.float32)
+        behavior_policy_action_probabilities = np.full((3, 2), 0.5, dtype=np.float32)
+
+        with self.assertRaises(ValueError):
+            dr_step_daily(
+                num_days=2,
+                steps_per_episode=2,
+                rewards_flat=rewards_flat,
+                target_policy_action_probabilities=target_policy_action_probabilities,
+                behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+                logged_actions=logged_actions,
+                q_values=q_values,
+            )

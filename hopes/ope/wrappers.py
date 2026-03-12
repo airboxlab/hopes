@@ -1,6 +1,10 @@
 import numpy as np
 
-from hopes.ope.estimators import WeightedPerDecisionImportanceSampling
+from hopes.data.pre_processing import build_stepwise_importance_ratios_with_stickiness
+from hopes.ope.estimators import (
+    SelfNormalizedPerDecisionImportanceSampling,
+    SequentialDoublyRobust,
+)
 
 
 def wpdis_daily(
@@ -13,145 +17,182 @@ def wpdis_daily(
     sticky_act_flat: np.ndarray,
     eps: float = 1e-12,
     clip: float = 20.0,
-    n_boot: int = 2000,
-    alpha: float = 0.05,
-    seed: int = 0,
+    num_bootstrap_samples: int = 2000,
+    significance_level: float = 0.05,
 ) -> tuple[float, float, float]:
-    """Daily wrapper around BaseEstimator-style WPDIS.
+    """Estimate daily self-normalized per-decision IS with optional stickiness correction.
 
-    This wrapper adapts notebook-style flat arrays (including taken propensities) to the
-    BaseEstimator API which expects full (N, A) probability matrices.
+    This wrapper adapts notebook-style flat arrays of taken propensities to the estimator API.
+    Since the estimators now expect either:
+    - full target/behavior action probability matrices, or
+    - precomputed step-wise importance ratios,
 
-    Since we only have taken propensities, we build "minimal" probability matrices that
-    place p_taken at the logged action index and distribute the remaining mass uniformly
-    across other actions (for numerical validity).
+    this function builds minimal valid probability matrices from the logged actions and taken
+    propensities, then computes corrected step-wise importance ratios in preprocessing.
 
-    Returns (mean, lo, hi) from episode-level bootstrap CI.
+    Parameters
+    ----------
+    num_days:
+        Number of episodes / days.
+    steps_per_episode:
+        Number of timesteps per episode.
+    rew_flat:
+        Flat reward array of shape `(N,)`.
+    act_flat:
+        Logged action indices of shape `(N,)`.
+    p_b_taken_flat:
+        Behavior policy probabilities on logged actions, shape `(N,)`.
+    p_e_taken_flat:
+        Target policy probabilities on logged actions, shape `(N,)`.
+    sticky_act_flat:
+        Sticky action indicator, shape `(N,)`.
+    eps:
+        Numerical stabilizer.
+    clip:
+        Optional symmetric clipping threshold for importance ratios.
+    num_bootstrap_samples:
+        Number of bootstrap samples used for the confidence interval.
+    significance_level:
+        Significance level used for the confidence interval.
+
+    Returns
+    -------
+    tuple[float, float, float]
+        `(mean, lower_bound, upper_bound)`.
     """
-
-    # rewards per day
     rew_flat = np.asarray(rew_flat, dtype=np.float32).reshape(-1)
     act_flat = np.asarray(act_flat, dtype=np.int64).reshape(-1)
-
-    # behavior + target propensities per step
     p_b_taken_flat = np.asarray(p_b_taken_flat, dtype=np.float32).reshape(-1)
     p_e_taken_flat = np.asarray(p_e_taken_flat, dtype=np.float32).reshape(-1)
-
-    # stickiness correction
     sticky_act_flat = np.asarray(sticky_act_flat, dtype=np.int64).reshape(-1)
 
-    N = rew_flat.shape[0]
-    if N != num_days * steps_per_episode:
-        raise ValueError("N must equal num_days * steps_per_episode")
-    if act_flat.shape[0] != N:
-        raise ValueError("act_flat must have length N")
-    if p_b_taken_flat.shape[0] != N or p_e_taken_flat.shape[0] != N:
-        raise ValueError("p_*_taken_flat must have length N")
-    if sticky_act_flat.shape[0] != N:
-        raise ValueError("sticky_act_flat must have length N")
+    n_samples = rew_flat.shape[0]
 
-    # Infer number of actions from act_flat (assumes actions are 0..A-1)
+    if n_samples != num_days * steps_per_episode:
+        raise ValueError("N must equal num_days * steps_per_episode.")
+    if act_flat.shape[0] != n_samples:
+        raise ValueError("act_flat must have length N.")
+    if p_b_taken_flat.shape[0] != n_samples or p_e_taken_flat.shape[0] != n_samples:
+        raise ValueError("p_b_taken_flat and p_e_taken_flat must have length N.")
+    if sticky_act_flat.shape[0] != n_samples:
+        raise ValueError("sticky_act_flat must have length N.")
+
     num_actions = int(act_flat.max()) + 1
     if num_actions < 2:
-        raise ValueError("num_actions inferred from act_flat must be >= 2")
+        raise ValueError("num_actions inferred from act_flat must be >= 2.")
 
-    # Build minimal valid distributions (N, A) from taken propensities:
-    # - put p_taken on the logged action
-    # - distribute leftover mass uniformly to other actions (positive + rows sum to 1)
     def build_probs_from_taken(p_taken: np.ndarray) -> np.ndarray:
-        p_taken = np.clip(p_taken.astype(np.float32), eps, 1.0 - eps)
-        P = np.full((N, num_actions), 0.0, dtype=np.float32)
+        """Build a minimal valid probability matrix from taken propensities.
 
+        The logged action receives `p_taken`, and the remaining mass is distributed
+        uniformly over the other actions.
+        """
+        p_taken = np.clip(np.asarray(p_taken, dtype=np.float32), eps, 1.0 - eps)
+
+        probs = np.zeros((n_samples, num_actions), dtype=np.float32)
         leftover = 1.0 - p_taken
-        fill = leftover / float(num_actions - 1)
+        fill_value = leftover / float(num_actions - 1)
 
-        P[:] = fill.reshape(-1, 1)
-        P[np.arange(N), act_flat] = p_taken
-        # ensure strictly positive
-        P = np.clip(P, eps, 1.0)
-        # re-normalize exactly
-        P /= P.sum(axis=1, keepdims=True)
-        return P
+        probs[:] = fill_value.reshape(-1, 1)
+        probs[np.arange(n_samples), act_flat] = p_taken
 
-    P_b = build_probs_from_taken(p_b_taken_flat)
-    P_e = build_probs_from_taken(p_e_taken_flat)
+        probs = np.clip(probs, eps, 1.0)
+        probs /= probs.sum(axis=1, keepdims=True)
+        return probs
 
-    # estimate + CI
-    est = WeightedPerDecisionImportanceSampling(
+    p_b = build_probs_from_taken(p_b_taken_flat)
+    p_e = build_probs_from_taken(p_e_taken_flat)
+
+    rho = build_stepwise_importance_ratios_with_stickiness(
+        target_policy_action_probabilities=p_e,
+        behavior_policy_action_probabilities=p_b,
+        logged_actions=act_flat,
         steps_per_episode=steps_per_episode,
         eps=eps,
         clip=clip,
         apply_stickiness=True,
-    )
-    est.set_logged_data(actions=act_flat, sticky_actions=sticky_act_flat)
-    est.set_parameters(
-        target_policy_action_probabilities=P_e,
-        behavior_policy_action_probabilities=P_b,
-        rewards=rew_flat,
+        sticky_actions=sticky_act_flat,
+        value_after_switch=1.0,
     )
 
-    ci = est.estimate_policy_value_with_confidence_interval(
-        n_boot=n_boot,
-        alpha=alpha,
-        seed=seed,
+    estimator = SelfNormalizedPerDecisionImportanceSampling(
+        steps_per_episode=steps_per_episode,
+        discount_factor=1.0,
     )
+    estimator.set_parameters(
+        target_policy_action_probabilities=p_e,
+        behavior_policy_action_probabilities=p_b,
+        rewards=rew_flat,
+    )
+    estimator.set_importance_ratios(rho)
+
+    ci = estimator.estimate_policy_value_with_confidence_interval(
+        method="bootstrap",
+        significance_level=significance_level,
+        num_samples=num_bootstrap_samples,
+    )
+
     return ci["mean"], ci["lower_bound"], ci["upper_bound"]
 
 
-### IPS/WIS step-wise
 def compute_stepwise_ips_wis(
     p_b_taken_flat: np.ndarray,
     p_e_taken_flat: np.ndarray,
     rew_flat: np.ndarray,
     eps: float = 1e-12,
 ) -> dict[str, np.ndarray | float]:
-    """Computing step-wise IPS and self-normalized IS (WIS) estimates as basic off-policy
-    baselines. Importance weights are built from the ratio between new-policy and behavior-policy
-    propensities on logged actions, and clipping is used to inspect sensitivity to high-variance
-    weights.
+    r"""Compute step-wise IPS and WIS diagnostics from taken propensities.
 
-    Args:
-        p_b_taken_flat: behavior propensities π_b(a_t|s_t), shape (N,)
-        p_e_taken_flat: target propensities π_e(a_t|s_t), shape (N,)
-        rew_flat: rewards r_t, shape (N,)
-        eps: numerical stability constant
+    Parameters
+    ----------
+    p_b_taken_flat:
+        Behavior propensities :math:`\pi_b(a_t \mid s_t)`, shape `(N,)`.
+    p_e_taken_flat:
+        Target propensities :math:`\pi_e(a_t \mid s_t)`, shape `(N,)`.
+    rew_flat:
+        Rewards :math:`r_t`, shape `(N,)`.
+    eps:
+        Numerical stabilizer.
 
-    Returns:
-        dict with:
-            weights: importance weights per step
-            ips: step-wise IPS estimate
-            wis: step-wise WIS estimate
+    Returns
+    -------
+    dict[str, np.ndarray | float]
+        Dictionary containing:
+        - `weights`
+        - `ips`
+        - `wis`
+        - `w_max`
+        - `w_p99`
     """
+    rew_flat = np.asarray(rew_flat, dtype=np.float32).reshape(-1)
+    p_b_taken_flat = np.asarray(p_b_taken_flat, dtype=np.float32).reshape(-1)
+    p_e_taken_flat = np.asarray(p_e_taken_flat, dtype=np.float32).reshape(-1)
 
-    # pb and pe correspond to pi_b(a_t | s_t) and pi_e(a_t | s_t) respectively
-    # Behavior propensity (from logits -> softmax)
-    pb = np.maximum(p_b_taken_flat.astype(float), eps)
+    if rew_flat.shape[0] != p_b_taken_flat.shape[0] or rew_flat.shape[0] != p_e_taken_flat.shape[0]:
+        raise ValueError("rew_flat, p_b_taken_flat, and p_e_taken_flat must have the same length.")
 
-    # Target propensity (new policy evaluated on logged actions)
-    pe = p_e_taken_flat.astype(float)
+    pb = np.maximum(p_b_taken_flat, eps)
+    pe = p_e_taken_flat
 
     if not np.all((pe >= 0.0) & (pe <= 1.0)):
-        raise ValueError("p_e_taken_flat must be in [0,1]")
-
+        raise ValueError("p_e_taken_flat must be in [0, 1].")
     if not np.all((pb >= 0.0) & (pb <= 1.0)):
-        raise ValueError("p_b_taken_flat must be in [0,1]")
+        raise ValueError("p_b_taken_flat must be in [0, 1].")
 
-    # Importance weights (per-step)
-    w = pe / pb
+    weights = pe / pb
 
-    if not np.isfinite(w).all():
-        raise ValueError("Importance weights contain NaN or Inf")
+    if not np.isfinite(weights).all():
+        raise ValueError("Importance weights contain NaN or Inf.")
 
-    # Step-wise IPS / WIS (keep as diagnostics)
-    ips = float(np.mean(w * rew_flat))
-    wis = float(np.sum(w * rew_flat) / (np.sum(w) + eps))
+    ips = float(np.mean(weights * rew_flat))
+    wis = float(np.sum(weights * rew_flat) / (np.sum(weights) + eps))
 
     return {
-        "weights": w,
+        "weights": weights.astype(np.float32),
         "ips": ips,
         "wis": wis,
-        "w_max": float(w.max()),
-        "w_p99": float(np.quantile(w, 0.99)),
+        "w_max": float(weights.max()),
+        "w_p99": float(np.quantile(weights, 0.99)),
     }
 
 
@@ -159,60 +200,107 @@ def dr_step_daily(
     *,
     num_days: int,
     steps_per_episode: int,
-    rtg_flat: np.ndarray,  # (N,)
-    P_new: np.ndarray,  # (N, A)
-    act_flat: np.ndarray,  # (N,)
-    p_b_taken_flat: np.ndarray,  # (N,)
-    Q0: np.ndarray,  # (N,)
-    Q1: np.ndarray,  # (N,)
+    rewards_flat: np.ndarray,
+    target_policy_action_probabilities: np.ndarray,
+    behavior_policy_action_probabilities: np.ndarray,
+    logged_actions: np.ndarray,
+    q_values: np.ndarray,
+    sticky_actions: np.ndarray | None = None,
     eps: float = 1e-12,
-    cap: float = 20.0,
+    clip: float = 20.0,
+    apply_stickiness: bool = False,
+    value_after_switch: float | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Doubly Robust (per-step) aggregated daily Computing a step-wise DR estimate of the daily
-    return.
+    """Compute daily Sequential DR estimates and the step-wise ratios used by the estimator.
 
-    The DR estimator combines the DR baseline with importance-weighted corrections on the logged actions,
-    and optional clipping is applied to stabilize large weights.
+    Parameters
+    ----------
+    num_days:
+        Number of episodes / days.
+    steps_per_episode:
+        Number of timesteps per episode.
+    rewards_flat:
+        Flat reward array of shape `(N,)`.
+    target_policy_action_probabilities:
+        Target policy action probabilities, shape `(N, A)`.
+    behavior_policy_action_probabilities:
+        Behavior policy action probabilities, shape `(N, A)`.
+    logged_actions:
+        Logged action indices, shape `(N,)`.
+    q_values:
+        Estimated Q-values for all actions, shape `(N, A)`.
+    sticky_actions:
+        Sticky action indicator, shape `(N,)`. Required when `apply_stickiness=True`.
+    eps:
+        Numerical stabilizer.
+    clip:
+        Optional symmetric clipping threshold.
+    apply_stickiness:
+        Whether to apply stickiness correction in preprocessing.
+    value_after_switch:
+        Replacement value after the first sticky switch. Required when
+        `apply_stickiness=True`.
 
     Returns
     -------
-    dr_day: (num_days,)  daily DR estimate taken at t=0
-    w_logged: (N,)       clipped importance weights on logged actions
+    tuple[np.ndarray, np.ndarray]
+        - `dr_day`: daily DR estimates, shape `(num_days,)`
+        - `rho`: step-wise importance ratios, shape `(N,)`
     """
+    rewards_flat = np.asarray(rewards_flat, dtype=np.float32).reshape(-1)
+    logged_actions = np.asarray(logged_actions, dtype=np.int64).reshape(-1)
+    target_policy_action_probabilities = np.asarray(
+        target_policy_action_probabilities,
+        dtype=np.float32,
+    )
+    behavior_policy_action_probabilities = np.asarray(
+        behavior_policy_action_probabilities,
+        dtype=np.float32,
+    )
+    q_values = np.asarray(q_values, dtype=np.float32)
 
-    rtg_flat = np.asarray(rtg_flat, dtype=np.float32).reshape(-1)
-    act_flat = np.asarray(act_flat).reshape(-1).astype(np.int64)
-    p_b_taken_flat = np.asarray(p_b_taken_flat, dtype=np.float32).reshape(-1)
+    n_samples = rewards_flat.shape[0]
 
-    P_new = np.asarray(P_new, dtype=np.float32)
-    Q0 = np.asarray(Q0, dtype=np.float32).reshape(-1)
-    Q1 = np.asarray(Q1, dtype=np.float32).reshape(-1)
+    if n_samples != num_days * steps_per_episode:
+        raise ValueError("N must equal num_days * steps_per_episode.")
+    if logged_actions.shape[0] != n_samples:
+        raise ValueError("logged_actions must have length N.")
+    if target_policy_action_probabilities.shape[0] != n_samples:
+        raise ValueError("target_policy_action_probabilities must have shape (N, A).")
+    if behavior_policy_action_probabilities.shape[0] != n_samples:
+        raise ValueError("behavior_policy_action_probabilities must have shape (N, A).")
+    if q_values.shape != target_policy_action_probabilities.shape:
+        raise ValueError(
+            "q_values must have the same shape as target_policy_action_probabilities: (N, A)."
+        )
 
-    N = rtg_flat.shape[0]
-    assert P_new.shape[0] == N
-    assert Q0.shape[0] == N and Q1.shape[0] == N
-    assert act_flat.shape[0] == N and p_b_taken_flat.shape[0] == N
-    assert N == num_days * steps_per_episode, "N must be num_days * steps_per_episode"
+    rho = build_stepwise_importance_ratios_with_stickiness(
+        target_policy_action_probabilities=target_policy_action_probabilities,
+        behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+        logged_actions=logged_actions,
+        steps_per_episode=steps_per_episode,
+        eps=eps,
+        clip=clip,
+        apply_stickiness=apply_stickiness,
+        sticky_actions=sticky_actions,
+        value_after_switch=value_after_switch,
+    )
 
-    idx = np.arange(N)
+    estimator = SequentialDoublyRobust(
+        steps_per_episode=steps_per_episode,
+        discount_factor=1.0,
+        eps=eps,
+        clip=clip,
+    )
+    estimator.set_parameters(
+        target_policy_action_probabilities=target_policy_action_probabilities,
+        behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+        rewards=rewards_flat,
+    )
+    estimator.set_logged_actions(logged_actions)
+    estimator.set_model_predictions(q_values=q_values)
+    estimator.set_importance_ratios(rho)
 
-    # w_logged = pi_e(a_logged|s) / pi_b(a_logged|s)
-    p_e_taken_flat = P_new[idx, act_flat]
-    w_logged = p_e_taken_flat / np.maximum(p_b_taken_flat, eps)
+    dr_day = estimator.estimate_weighted_rewards().reshape(-1)
 
-    # Clipping is used to limit the impact of rare transitions with very small behavior propensities
-    w_logged = np.clip(w_logged, 1.0 / cap, cap).astype(np.float32)
-
-    # Q(s, a_logged)
-    Q_taken = np.where(act_flat == 0, Q0, Q1).astype(np.float32)
-
-    # V_hat(s) = sum_a pi(a|s) Q(s,a)
-    V_hat = (P_new[:, 0] * Q0 + P_new[:, 1] * Q1).astype(np.float32)
-
-    # DR per step: V_hat(s) + w*(G - Q_taken)
-    dr_step = V_hat + w_logged * (rtg_flat - Q_taken)
-
-    # The daily value is taken at t=0 for consistency with the DM formulation used above
-    dr_day = dr_step.reshape(num_days, steps_per_episode)[:, 0]
-
-    return dr_day.astype(np.float32), w_logged
+    return dr_day.astype(np.float32), rho.astype(np.float32)

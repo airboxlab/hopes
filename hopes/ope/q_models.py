@@ -14,55 +14,95 @@ class QModelTrainResult:
 
     The model takes the state (observation + timestep) and action as input and predicts the
     return-to-go, providing the Q estimates required by DM and DR OPE estimators.
+
+    Parameters
+    ----------
+    q_values:
+        Estimated Q-values for all actions, shape `(N, A)`.
+    model:
+        Fitted regression model.
     """
 
-    Q0: np.ndarray  # (N,) float32
-    Q1: np.ndarray  # (N,) float32
+    q_values: np.ndarray
     model: HistGradientBoostingRegressor
 
 
 class RTGQModelHGBoost:
-    """Regression-based Q-model trained on logged trajectories.
+    """Train a regression model approximating the action-value function Q.
 
-    The model approximates Q(s,a) by supervised learning on step-level samples.
+    The model is trained using logged trajectories and predicts
+    return-to-go (RTG) from `(state, timestep, action)` features.
 
-    Target:
-        Return-to-go (RTG) at each timestep:
-            RTG_t = sum_{k=t..T-1} r_k
+    RTG target:
 
-    Features:
-        X = [obs, step_idx]
-        X_sa = [obs, step_idx, action] --> Action appended as last feature.
+    .. math::
 
-    After training, the model can be evaluated for both discrete actions (0/1)
-    to produce:
-        Q0[i] = Q(s_i, 0)
-        Q1[i] = Q(s_i, 1)
+        RTG_t = \\sum_{k=t}^{T-1} r_k
 
-    Notes
-    -----
-    - Assumes 2 discrete actions {0,1}.
-    - steps_per_episode must divide N.
+    Features used for regression:
+
+    .. math::
+
+        X = [obs, step\\_idx, action]
+
+    where:
+
+    - `obs` is the observation vector
+    - `step_idx` is the timestep index within the episode
+    - `action` is the discrete action index
+
+    After training, the model can evaluate **all possible actions**
+    to produce a matrix:
+
+    .. math::
+
+        Q(s,a) \\in \\mathbb{R}^{N \times A}
+
+    where:
+
+    - `N` = number of samples
+    - `A` = number of discrete actions
     """
 
     def __init__(
         self,
         *,
         steps_per_episode: int,
+        num_actions: int,
         model_params: dict[str, Any] | None = None,
         random_state: int = 0,
     ) -> None:
+        """Initialize the Q-model trainer.
+
+        Parameters
+        ----------
+        steps_per_episode:
+            Number of timesteps per episode.
+        num_actions:
+            Number of discrete actions.
+        model_params:
+            Optional parameters for `HistGradientBoostingRegressor`.
+        random_state:
+            Random seed.
+        """
         if steps_per_episode <= 0:
             raise ValueError("steps_per_episode must be > 0")
+
+        if num_actions <= 1:
+            raise ValueError("num_actions must be > 1")
+
         self.steps_per_episode = steps_per_episode
-        self.model_params = dict(model_params or {})
+        self.num_actions = num_actions
+        self.model_params = model_params or {}
         self.random_state = random_state
 
         self.model: HistGradientBoostingRegressor | None = None
 
-    # ---------- internal helpers ----------
+    # -----------------------------------------------------
+    # utilities
+    # -----------------------------------------------------
 
-    def _check_and_cast_inputs(
+    def _check_inputs(
         self,
         *,
         obs_flat: np.ndarray,
@@ -70,44 +110,58 @@ class RTGQModelHGBoost:
         rew_flat: np.ndarray,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         obs_flat = np.asarray(obs_flat, dtype=np.float32)
+        act_flat = np.asarray(act_flat, dtype=np.int64).reshape(-1)
+        rew_flat = np.asarray(rew_flat, dtype=np.float32).reshape(-1)
+
         if obs_flat.ndim != 2:
-            raise ValueError(f"obs_flat must be 2D (N, obs_dim), got {obs_flat.shape}")
+            raise ValueError("obs_flat must be (N, obs_dim)")
 
-        act_flat = np.asarray(act_flat).reshape(-1)
-        rew_flat = np.asarray(rew_flat).reshape(-1)
+        n_samples = obs_flat.shape[0]
 
-        N = obs_flat.shape[0]
-        if act_flat.shape[0] != N or rew_flat.shape[0] != N:
-            raise ValueError("obs_flat, act_flat, rew_flat must have the same length")
+        if act_flat.shape[0] != n_samples:
+            raise ValueError("act_flat length mismatch")
 
-        if N % self.steps_per_episode != 0:
-            raise ValueError(
-                f"N ({N}) is not divisible by steps_per_episode ({self.steps_per_episode}). "
-                "Check episode filtering/flattening."
-            )
+        if rew_flat.shape[0] != n_samples:
+            raise ValueError("rew_flat length mismatch")
+
+        if n_samples % self.steps_per_episode != 0:
+            raise ValueError("samples must be divisible by steps_per_episode")
+
+        if np.any(act_flat < 0) or np.any(act_flat >= self.num_actions):
+            raise ValueError("invalid action index")
 
         return obs_flat, act_flat, rew_flat
 
-    def _compute_rtg_flat(self, rew_flat: np.ndarray) -> np.ndarray:
-        """Compute RTG per step, flattened back to (N,)."""
-        N = rew_flat.shape[0]
-        num_eps = N // self.steps_per_episode
+    def _compute_rtg(self, rew_flat: np.ndarray) -> np.ndarray:
+        """Compute return-to-go."""
+        n_samples = rew_flat.shape[0]
+        num_eps = n_samples // self.steps_per_episode
 
-        rew_day = rew_flat.astype(np.float32).reshape(num_eps, self.steps_per_episode)
-        rtg_day = np.flip(np.cumsum(np.flip(rew_day, axis=1), axis=1), axis=1)
-        return rtg_day.reshape(-1).astype(np.float32)
+        rew = rew_flat.reshape(num_eps, self.steps_per_episode)
 
-    # ---- BUILD FEATURES ----
-    # The timestep index is included to help the model capture time-dependent effects within the episode
+        rtg = np.flip(np.cumsum(np.flip(rew, axis=1), axis=1), axis=1)
+
+        return rtg.reshape(-1).astype(np.float32)
+
     def _build_state_features(self, obs_flat: np.ndarray) -> np.ndarray:
-        """Build X = [obs, step_idx]."""
-        N = obs_flat.shape[0]
-        num_eps = N // self.steps_per_episode
+        """Build state features `[obs, step_idx]`."""
+        n_samples = obs_flat.shape[0]
+        num_eps = n_samples // self.steps_per_episode
 
         step_idx = (
-            np.tile(np.arange(self.steps_per_episode), num_eps).reshape(-1, 1).astype(np.float32)
+            np.tile(
+                np.arange(self.steps_per_episode),
+                num_eps,
+            )
+            .reshape(-1, 1)
+            .astype(np.float32)
         )
-        return np.concatenate([obs_flat, step_idx], axis=1)  # (N, obs_dim+1)
+
+        return np.concatenate([obs_flat, step_idx], axis=1)
+
+    # -----------------------------------------------------
+    # training
+    # -----------------------------------------------------
 
     def fit(
         self,
@@ -116,21 +170,22 @@ class RTGQModelHGBoost:
         act_flat: np.ndarray,
         rew_flat: np.ndarray,
     ) -> HistGradientBoostingRegressor:
-        """Fit Q-model on logged data.
+        """Fit the regression model."""
 
-        After calling fit(), you can call predict_q0_q1(obs_flat) to obtain Q0/Q1.
-        """
-        obs_flat, act_flat, rew_flat = self._check_and_cast_inputs(
-            obs_flat=obs_flat, act_flat=act_flat, rew_flat=rew_flat
+        obs_flat, act_flat, rew_flat = self._check_inputs(
+            obs_flat=obs_flat,
+            act_flat=act_flat,
+            rew_flat=rew_flat,
         )
 
-        y = self._compute_rtg_flat(rew_flat)
-        X = self._build_state_features(obs_flat)
+        rtg = self._compute_rtg(rew_flat)
 
-        a_feat = act_flat.astype(np.float32).reshape(-1, 1)
-        X_sa = np.concatenate([X, a_feat], axis=1)
+        x_state = self._build_state_features(obs_flat)
 
-        # ---- TRAIN MODEL ----
+        action_feat = act_flat.astype(np.float32).reshape(-1, 1)
+
+        x_sa = np.concatenate([x_state, action_feat], axis=1)
+
         params = dict(
             max_depth=6,
             learning_rate=0.05,
@@ -138,60 +193,87 @@ class RTGQModelHGBoost:
             random_state=self.random_state,
         )
 
-        if self.model_params:
-            params.update(self.model_params)
+        params.update(self.model_params)
 
         self.model = HistGradientBoostingRegressor(**params)
-        self.model.fit(X_sa, y)
+
+        self.model.fit(x_sa, rtg)
 
         return self.model
 
-    def predict_q0_q1(self, *, obs_flat: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-        """Predict Q(s,0) and Q(s,1) for each step.
+    # -----------------------------------------------------
+    # prediction
+    # -----------------------------------------------------
+
+    def predict_q_values(
+        self,
+        *,
+        obs_flat: np.ndarray,
+    ) -> np.ndarray:
+        """Predict Q-values for all actions.
 
         Returns
         -------
-        (Q0, Q1): both shape (N,), float32
+        np.ndarray
+            Shape `(N, A)`
         """
+
         if self.model is None:
-            raise ValueError("Model is not fitted. Call fit(...) first.")
+            raise ValueError("model not fitted")
 
         obs_flat = np.asarray(obs_flat, dtype=np.float32)
+
         if obs_flat.ndim != 2:
-            raise ValueError(f"obs_flat must be 2D (N, obs_dim), got {obs_flat.shape}")
+            raise ValueError("obs_flat must be (N, obs_dim)")
 
-        N = obs_flat.shape[0]
-        if N % self.steps_per_episode != 0:
-            raise ValueError(
-                f"N ({N}) is not divisible by steps_per_episode ({self.steps_per_episode})."
+        n_samples = obs_flat.shape[0]
+
+        if n_samples % self.steps_per_episode != 0:
+            raise ValueError("samples must be divisible by steps_per_episode")
+
+        x_state = self._build_state_features(obs_flat)
+
+        # repeat state for each action
+        x_state_rep = np.repeat(x_state, self.num_actions, axis=0)
+
+        all_actions = (
+            np.tile(
+                np.arange(self.num_actions),
+                n_samples,
             )
+            .reshape(-1, 1)
+            .astype(np.float32)
+        )
 
-        X = self._build_state_features(obs_flat)
+        x_sa = np.concatenate([x_state_rep, all_actions], axis=1)
 
-        a0 = np.zeros((N, 1), dtype=np.float32)
-        a1 = np.ones((N, 1), dtype=np.float32)
+        q = self.model.predict(x_sa).astype(np.float32)
 
-        Q0 = self.model.predict(np.concatenate([X, a0], axis=1)).astype(np.float32)
-        Q1 = self.model.predict(np.concatenate([X, a1], axis=1)).astype(np.float32)
+        return q.reshape(n_samples, self.num_actions)
 
-        return Q0, Q1
+    # -----------------------------------------------------
+    # convenience
+    # -----------------------------------------------------
 
-    def fit_predict_q0_q1(
+    def fit_predict_q_values(
         self,
         *,
         obs_flat: np.ndarray,
         act_flat: np.ndarray,
         rew_flat: np.ndarray,
         return_model: bool = True,
-    ) -> tuple[np.ndarray, np.ndarray, HistGradientBoostingRegressor | None]:
-        """Notebook-friendly one-shot API.
+    ) -> tuple[np.ndarray, HistGradientBoostingRegressor | None]:
+        """Fit and predict Q-values in a single call."""
 
-        Returns:
-            Q0, Q1, model (or None if return_model=False)
-        """
-        model = self.fit(obs_flat=obs_flat, act_flat=act_flat, rew_flat=rew_flat)
-        Q0, Q1 = self.predict_q0_q1(obs_flat=obs_flat)
+        model = self.fit(
+            obs_flat=obs_flat,
+            act_flat=act_flat,
+            rew_flat=rew_flat,
+        )
+
+        q_values = self.predict_q_values(obs_flat=obs_flat)
 
         if return_model:
-            return Q0, Q1, model
-        return Q0, Q1, None
+            return q_values, model
+
+        return q_values, None
