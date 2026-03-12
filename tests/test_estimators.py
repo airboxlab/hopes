@@ -391,7 +391,7 @@ class TestEstimators(unittest.TestCase):
         value = est.estimate_policy_value()
 
         expected = float(np.mean(rewards.reshape(num_episodes, steps_per_episode).sum(axis=1)))
-        self.assertAlmostEqual(value, expected / steps_per_episode, places=6)
+        self.assertAlmostEqual(value, expected, places=6)
 
     def test_snpdis_global_bootstrap_ci(self):
         steps_per_episode = 4

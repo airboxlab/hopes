@@ -87,13 +87,13 @@ class TestWrappers(unittest.TestCase):
         )
 
         expected_daily_returns = rew_flat.reshape(num_days, steps_per_episode).sum(axis=1)
-        expected_mean = float(np.mean(expected_daily_returns) / steps_per_episode)
+        expected_mean = float(np.mean(expected_daily_returns))
 
         self.assertIsInstance(mean, float)
         self.assertIsInstance(lower, float)
         self.assertIsInstance(upper, float)
 
-        self.assertAlmostEqual(mean, expected_mean / steps_per_episode, places=1)
+        self.assertAlmostEqual(mean, expected_mean, places=1)
         self.assertLessEqual(lower, mean)
         self.assertLessEqual(mean, upper)
 
@@ -125,11 +125,9 @@ class TestWrappers(unittest.TestCase):
             significance_level=0.05,
         )
 
-        expected = float(
-            np.mean(rew_flat.reshape(num_days, steps_per_episode).sum(axis=1)) / steps_per_episode
-        )
+        expected = float(np.mean(rew_flat.reshape(num_days, steps_per_episode).sum(axis=1)))
 
-        self.assertAlmostEqual(mean, expected / steps_per_episode, places=2)
+        self.assertAlmostEqual(mean, expected, places=2)
         self.assertLessEqual(lower, mean)
         self.assertLessEqual(mean, upper)
 

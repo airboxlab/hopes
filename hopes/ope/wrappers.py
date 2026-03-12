@@ -139,9 +139,9 @@ def wpdis_daily(
     )
 
     return (
-        ci["mean"] / steps_per_episode,
-        ci["lower_bound"] / steps_per_episode,
-        ci["upper_bound"] / steps_per_episode,
+        ci["mean"],
+        ci["lower_bound"],
+        ci["upper_bound"],
     )
 
 
