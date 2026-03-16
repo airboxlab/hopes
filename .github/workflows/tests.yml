@@ -45,7 +45,10 @@ jobs:
           skip_covered: false
 
       - name: Coverage Badge
-        uses: tj-actions/coverage-badge-py@v2
+        run: |
+          pip install -U "setuptools<82.0.0" coverage-badge
+          coverage-badge -f -o coverage.svg
+        shell: bash
 
       - name: Verify Changed files
         uses: tj-actions/verify-changed-files@v19
