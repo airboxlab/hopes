@@ -40,20 +40,15 @@ class BaseEstimator(ABC):
         self.check_parameters()
 
     def set_importance_ratios(self, importance_ratios: np.ndarray | None) -> None:
-        """Set precomputed step-wise importance ratios.
+        """Set precomputed step-wise importance ratios used by the estimator. This is useful when
+        the taken-action ratios are built in a preprocessing step, for example after applying
+        stickiness correction outside the estimator.
 
-        Parameters
-        ----------
-        importance_ratios:
-            Precomputed importance ratios for the logged actions. Supported shapes are:
-            - (n_samples,)
-            - (n_episodes, steps_per_episode)
-
-        Notes
-        -----
-        This is useful when the taken-action ratios are built in a preprocessing step,
-        for example after applying stickiness correction outside the estimator.
+        param importance_ratios: Precomputed importance ratios for the logged actions.
+            Supported shapes are ``(n_samples,)`` or ``(n_episodes, steps_per_episode)``.
+        :raises ValueError: If the shape of ``importance_ratios`` is invalid.
         """
+
         if importance_ratios is None:
             self.importance_ratios = None
             return
@@ -591,30 +586,23 @@ class TrajectoryPerDecisionMixin(ABC):
         is_per_decision: bool,
         importance_ratios: np.ndarray | None = None,
     ) -> np.ndarray:
-        """Compute weighted rewards for trajectory-wise or per-decision estimators.
+        """
+        Compute weighted rewards for trajectory-wise or per-decision estimators.
+        When `importance_ratios` is provided, the estimator uses these precomputed
+        step-wise ratios directly instead of recomputing them from policy probabilities.
 
-        Parameters
-        ----------
-        target_policy_action_probabilities:
-            Target policy action probabilities, shape (n_samples, n_actions).
-        behavior_policy_action_probabilities:
-            Behavior policy action probabilities, shape (n_samples, n_actions).
-        rewards:
-            Logged rewards, shape (n_samples,).
-        steps_per_episode:
-            Number of steps per episode.
-        discount_factor:
-            Discount factor in [0, 1].
-        is_per_decision:
-            Whether to compute per-decision or trajectory-wise weighting.
-        importance_ratios:
-            Optional precomputed step-wise importance ratios for the logged actions.
-            Supported shapes are (n_samples,) or (n_episodes, steps_per_episode).
-
-        Returns
-        -------
-        np.ndarray
-            Weighted rewards per episode, shape (n_episodes, 1).
+        :param target_policy_action_probabilities: Target policy action probabilities,
+            shape ``(n_samples, n_actions)``.
+        :param behavior_policy_action_probabilities: Behavior policy action probabilities,
+            shape ``(n_samples, n_actions)``.
+        :param rewards: Logged rewards, shape ``(n_samples,)``.
+        :param steps_per_episode: Number of steps per episode.
+        :param discount_factor: Discount factor in ``[0, 1]``.
+        :param is_per_decision: Whether to compute per-decision or trajectory-wise weighting.
+        :param importance_ratios: Optional precomputed step-wise importance ratios for the
+            logged actions. Supported shapes are ``(n_samples,)`` or
+            ``(n_episodes, steps_per_episode)``.
+        :return: Weighted rewards per episode, shape ``(n_episodes, 1)``.
         """
 
         # rewards, shape: (n, T)
@@ -631,6 +619,10 @@ class TrajectoryPerDecisionMixin(ABC):
         # [gamma^0, gamma^1, ..., gamma^(T-1)] = [gamma^1, gamma^2, ..., gamma^T] / gamma
         discount_factors = np.cumprod(discount_factors, axis=1) / discount_factor
 
+        # Support an alternate input path where step-wise importance ratios are
+        # precomputed upstream (e.g. after stickiness correction in preprocessing).
+        # This keeps the estimator logic generic while avoiding estimator-specific
+        # handling of sticky actions.
         if importance_ratios is not None:
             importance_ratios = np.asarray(importance_ratios, dtype=np.float32)
 
@@ -822,50 +814,6 @@ class SelfNormalizedTrajectoryWiseImportanceSampling(TrajectoryWiseImportanceSam
         """
         return weights / (np.mean(weights) + 1e-10)
 
-    @override(BaseEstimator)
-    def estimate_weighted_rewards(self) -> np.ndarray:
-        if self.importance_ratios is None:
-            return super().estimate_weighted_rewards()
-
-        self.check_parameters()
-
-        rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
-        n_episodes, horizon = rewards.shape
-
-        rho = np.asarray(self.importance_ratios, dtype=np.float32)
-        if rho.ndim == 1:
-            rho = rho.reshape(n_episodes, horizon)
-        elif rho.ndim != 2:
-            raise ValueError("importance_ratios must be 1D or 2D.")
-
-        if rho.shape != rewards.shape:
-            raise ValueError("importance_ratios shape must match rewards reshaped by episode.")
-
-        discount_factors = np.full(
-            (n_episodes, horizon),
-            self.discount_factor,
-            dtype=np.float32,
-        )
-        discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
-
-        W = np.cumprod(rho, axis=1)  # shape (n_episodes, horizon)
-
-        denom_t = np.sum(W, axis=0, keepdims=True)  # shape (1, horizon)
-
-        normalized_weights = n_episodes * W / np.maximum(denom_t, 1e-12)
-
-        weighted_rewards = np.sum(
-            normalized_weights * discount_factors * rewards,
-            axis=1,
-        ).reshape(-1, 1)
-
-        return weighted_rewards.astype(np.float32)
-
-    @override(BaseEstimator)
-    def estimate_policy_value(self) -> float:
-        weighted_rewards = self.estimate_weighted_rewards()
-        return float(np.mean(weighted_rewards))
-
 
 class PerDecisionImportanceSampling(BaseEstimator, TrajectoryPerDecisionMixin):
     r"""Per-Decision Importance Sampling (PDIS) estimator.
@@ -999,43 +947,6 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         """
         return weights / (np.mean(weights) + 1e-10)
 
-    # @override(BaseEstimator)
-    # def estimate_weighted_rewards(self) -> np.ndarray:
-    #     if self.importance_ratios is None:
-    #         return super().estimate_weighted_rewards()
-    #
-    #     self.check_parameters()
-    #
-    #     rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
-    #     n_episodes = rewards.shape[0]
-    #
-    #     discount_factors = np.full(
-    #         (n_episodes, self.steps_per_episode),
-    #         self.discount_factor,
-    #         dtype=np.float32,
-    #     )
-    #     discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
-    #
-    #     discounted_returns = np.sum(discount_factors * rewards, axis=1)
-    #
-    #     rho = np.asarray(self.importance_ratios, dtype=np.float32)
-    #     if rho.ndim == 1:
-    #         rho = rho.reshape(n_episodes, self.steps_per_episode)
-    #     elif rho.ndim != 2:
-    #         raise ValueError("importance_ratios must be 1D or 2D.")
-    #
-    #     if rho.shape != rewards.shape:
-    #         raise ValueError("importance_ratios shape must match rewards reshaped by episode.")
-    #
-    #     W = np.prod(rho, axis=1)
-    #     den = float(np.sum(W))
-    #
-    #     weighted_rewards = (n_episodes * (W * discounted_returns) / np.maximum(den, 1e-12)).reshape(
-    #         -1, 1
-    #     )
-    #
-    #     return weighted_rewards.astype(np.float32)
-
     @override(BaseEstimator)
     def estimate_weighted_rewards(self) -> np.ndarray:
         if self.importance_ratios is None:
@@ -1153,277 +1064,3 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
             "mean": float(np.mean(vals)),
             "std": float(np.std(vals)),
         }
-
-
-class SequentialDoublyRobust(BaseEstimator):
-    """Sequential Doubly Robust estimator.
-
-    This estimator computes a per-decision doubly robust estimate using a
-    temporal-difference-style formulation. It combines model-based predictions
-    with cumulative importance weights built from behavior and target policy
-    action probabilities.
-
-    The per-episode estimate is computed as:
-
-    .. math::
-        \\hat{V}_{\\mathrm{DR}}^{(i)} =
-        \\hat{V}(s_{i,0}) +
-        \\sum_{t=0}^{T-1}
-        W_{i,t}
-        \\left(
-            r_{i,t}
-            + \\gamma \\hat{V}(s_{i,t+1})
-            - \\hat{Q}(s_{i,t}, a_{i,t})
-        \right)
-
-    where:
-
-    .. math::
-        W_{i,t} = \\prod_{k=0}^{t} \rho_{i,k}
-
-    and
-
-    .. math::
-        \rho_{i,t} =
-        \frac{\\pi_e(a_{i,t} \\mid s_{i,t})}{\\pi_b(a_{i,t} \\mid s_{i,t})}
-
-    with:
-
-    - :math:`i` denoting the episode index,
-    - :math:`t` denoting the timestep index,
-    - :math:`r_{i,t}` the observed reward at timestep :math:`t`,
-    - :math:`\\hat{Q}(s_{i,t}, a_{i,t})` the estimated action-value for the logged action,
-    - :math:`\\hat{V}(s_{i,t})` the estimated state value under the target policy,
-    - :math:`\\gamma` the discount factor,
-    - :math:`\\pi_e` the target policy,
-    - :math:`\\pi_b` the behavior policy.
-
-    If precomputed step-wise importance ratios are provided, they are used directly.
-    Otherwise, the ratios are constructed from the target and behavior policy action
-    probabilities and the logged actions.
-
-    Stickiness handling, when needed, must be applied upstream during preprocessing.
-    """
-
-    def __init__(
-        self,
-        *,
-        steps_per_episode: int,
-        discount_factor: float = 1.0,
-        eps: float = 1e-12,
-        clip: float | None = None,
-    ) -> None:
-        """Initialize the Sequential Doubly Robust estimator.
-
-        Parameters
-        ----------
-        steps_per_episode:
-            Number of timesteps in each episode.
-        discount_factor:
-            Discount factor :math:`\\gamma` used in the TD correction term.
-            Must be in :math:`[0, 1]`.
-        eps:
-            Numerical stabilizer used in importance-ratio computation to avoid
-            division by zero.
-        clip:
-            Optional symmetric clipping threshold applied to step-wise importance
-            ratios as :math:`\rho_t \\leftarrow \\mathrm{clip}(\rho_t, 1 / c, c)`.
-            When provided, it must satisfy :math:`c \\geq 1`.
-        """
-        super().__init__()
-        self.steps_per_episode = steps_per_episode
-        self.discount_factor = discount_factor
-        self.eps = eps
-        self.clip = clip
-
-        self.logged_actions: np.ndarray | None = None
-        self.q_values: np.ndarray | None = None
-
-    def set_logged_actions(self, logged_actions: np.ndarray) -> None:
-        """Set logged actions.
-
-        Parameters
-        ----------
-        logged_actions:
-            Logged action indices with shape `(n_samples,)`.
-
-        Notes
-        -----
-        Logged actions are only required when step-wise importance ratios are not
-        provided through :meth:`set_importance_ratios`.
-        """
-        self.logged_actions = np.asarray(logged_actions, dtype=np.int64).reshape(-1)
-
-    def set_model_predictions(
-        self,
-        *,
-        q_values: np.ndarray,
-    ) -> None:
-        r"""Set model-based predictions used by the sequential DR estimator.
-
-        Parameters
-        ----------
-        q_values:
-            Estimated action-values for all actions, shape `(n_samples, n_actions)`.
-            Each row must contain the estimated action-values
-            :math:`[\hat{Q}(s_t, a)]_{a \in \mathcal{A}}`.
-        """
-        self.q_values = np.asarray(q_values, dtype=np.float32)
-
-    def check_parameters(self) -> None:
-        """Run generic checks and DR estimator hyperparameter checks.
-
-        Notes
-        -----
-        DR-specific arrays (`q_values`, `logged_actions`) are not fully validated here
-        because :meth:`BaseEstimator.set_parameters` calls this method before those
-        arrays may be set. They are validated later in :meth:`_check_dr_inputs`.
-        """
-        super().check_parameters()
-
-        if self.steps_per_episode <= 0:
-            raise ValueError("steps_per_episode must be > 0.")
-
-        if not (0.0 <= self.discount_factor <= 1.0):
-            raise ValueError("discount_factor must be in [0, 1].")
-
-        if self.eps <= 0:
-            raise ValueError("eps must be > 0.")
-
-        if self.clip is not None and self.clip < 1.0:
-            raise ValueError("clip must be >= 1.0 when provided.")
-
-    def _check_dr_inputs(self) -> None:
-        """Validate DR-specific inputs once all estimator inputs are set."""
-        if self.rewards is None:
-            raise ValueError("rewards not set.")
-
-        if self.target_policy_action_probabilities is None:
-            raise ValueError("target_policy_action_probabilities not set.")
-
-        n_samples = self.rewards.shape[0]
-        n_actions = self.target_policy_action_probabilities.shape[1]
-
-        if n_samples % self.steps_per_episode != 0:
-            raise ValueError("Number of samples must be divisible by steps_per_episode.")
-
-        if self.q_values is None:
-            raise ValueError("q_values not set. Call set_model_predictions(...).")
-
-        self.q_values = np.asarray(self.q_values, dtype=np.float32)
-        if self.q_values.ndim != 2:
-            raise ValueError("q_values must be a 2D array of shape (n_samples, n_actions).")
-
-        if self.q_values.shape != (n_samples, n_actions):
-            raise ValueError(
-                "q_values must have shape (n_samples, n_actions), matching "
-                "target_policy_action_probabilities."
-            )
-
-        if self.importance_ratios is None:
-            if self.logged_actions is None:
-                raise ValueError(
-                    "logged_actions must be provided when importance_ratios are not set."
-                )
-
-            self.logged_actions = np.asarray(self.logged_actions, dtype=np.int64).reshape(-1)
-            if self.logged_actions.shape[0] != n_samples:
-                raise ValueError("logged_actions length must match rewards length.")
-
-            if np.any(self.logged_actions < 0) or np.any(self.logged_actions >= n_actions):
-                raise ValueError("logged_actions contains invalid action indices.")
-
-    def _get_stepwise_importance_ratios(self) -> np.ndarray:
-        """Return step-wise importance ratios with shape `(n_episodes, steps_per_episode)`."""
-        if self.rewards is None:
-            raise ValueError("rewards not set.")
-
-        n_samples = self.rewards.shape[0]
-        n_episodes = n_samples // self.steps_per_episode
-
-        if self.importance_ratios is not None:
-            rho = np.asarray(self.importance_ratios, dtype=np.float32)
-
-            if rho.ndim == 1:
-                if rho.shape[0] != n_samples:
-                    raise ValueError("1D importance_ratios length must match rewards length.")
-                rho = rho.reshape(n_episodes, self.steps_per_episode)
-
-            elif rho.ndim == 2:
-                if rho.shape != (n_episodes, self.steps_per_episode):
-                    raise ValueError(
-                        "2D importance_ratios must have shape " "(n_episodes, steps_per_episode)."
-                    )
-            else:
-                raise ValueError("importance_ratios must be 1D or 2D.")
-
-            return rho
-
-        if self.target_policy_action_probabilities is None:
-            raise ValueError("target_policy_action_probabilities not set.")
-
-        if self.behavior_policy_action_probabilities is None:
-            raise ValueError("behavior_policy_action_probabilities not set.")
-
-        if self.logged_actions is None:
-            raise ValueError("logged_actions must be provided when importance_ratios are not set.")
-
-        idx = np.arange(n_samples, dtype=np.int64)
-        a = self.logged_actions
-
-        p_e_taken = self.target_policy_action_probabilities[idx, a].astype(np.float32)
-        p_b_taken = self.behavior_policy_action_probabilities[idx, a].astype(np.float32)
-
-        rho = p_e_taken / np.maximum(p_b_taken, self.eps)
-
-        if self.clip is not None:
-            rho = np.clip(rho, 1.0 / self.clip, self.clip)
-
-        return rho.reshape(n_episodes, self.steps_per_episode)
-
-    @override(BaseEstimator)
-    def estimate_weighted_rewards(self) -> np.ndarray:
-        """Estimate episode-level sequential DR contributions.
-
-        Returns
-        -------
-        np.ndarray
-            Episode-level DR estimates, shape `(n_episodes, 1)`.
-        """
-        self.check_parameters()
-        self._check_dr_inputs()
-
-        rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
-        rho = self._get_stepwise_importance_ratios()
-
-        n_episodes, horizon = rewards.shape
-        n_samples = n_episodes * horizon
-
-        idx = np.arange(n_samples, dtype=np.int64)
-
-        q_logged = self.q_values[idx, self.logged_actions].reshape(n_episodes, horizon)
-
-        v_current = np.sum(
-            self.target_policy_action_probabilities * self.q_values,
-            axis=1,
-        ).reshape(n_episodes, horizon)
-
-        v_next = np.zeros_like(v_current)
-        v_next[:, :-1] = v_current[:, 1:]
-        v_next[:, -1] = 0.0
-
-        cumulative_weights = np.cumprod(rho, axis=1)
-
-        episode_estimates = v_current[:, 0].copy()
-
-        for t in range(horizon):
-            td_term = rewards[:, t] + self.discount_factor * v_next[:, t] - q_logged[:, t]
-            episode_estimates += cumulative_weights[:, t] * td_term
-
-        return episode_estimates.reshape(-1, 1).astype(np.float32)
-
-    @override(BaseEstimator)
-    def estimate_policy_value(self) -> float:
-        """Estimate the value of the target policy."""
-        weighted_rewards = self.estimate_weighted_rewards()
-        return float(np.mean(weighted_rewards))
