@@ -160,132 +160,25 @@ class BaseEstimator(ABC):
                     if rho.shape[0] * rho.shape[1] != n_samples:
                         raise ValueError("2D importance_ratios size must match rewards length.")
 
-    # def _bootstrap_sample_policy_value(self, weighted_rewards: np.ndarray) -> float:
-    #     """Return one bootstrap estimate of the policy value.
-    #
-    #     By default, we assume that the estimator can be expressed as the mean of per-episode
-    #     weighted rewards. In that case, a bootstrap sample is obtained by resampling these
-    #     values and taking their mean.
-    #
-    #     Subclasses can override this method when the estimator is not a simple average of
-    #     independent episode-level contributions (e.g. ratio estimators with a global
-    #     normalization term).
-    #
-    #     :param weighted_rewards: Episode-level weighted rewards.
-    #     :return: One bootstrap estimate of the policy value.
-    #     """
-    #     return float(
-    #         np.mean(
-    #             np.random.choice(weighted_rewards, size=weighted_rewards.shape[0], replace=True)
-    #         )
-    #     )
-    #
-    # def estimate_policy_value_with_confidence_interval(
-    #     self,
-    #     method: str = "bootstrap",
-    #     significance_level: float = 0.05,
-    #     num_samples: int = 1000,
-    # ) -> dict[str, float]:
-    #     r"""Estimate the confidence interval of the policy value.
-    #
-    #     The `bootstrap` method uses bootstrapping to estimate the confidence interval of the policy value. Bootstrapping
-    #     consists in resampling the data with replacement to infer the distribution of the estimated weighted rewards.
-    #     The confidence interval is then computed as the quantiles of the bootstrapped samples.
-    #
-    #     The `t-test` method (or `Student's t-test`) uses the t-distribution of the estimated weighted rewards - assuming
-    #     that the weighted rewards are normally distributed - to estimate the confidence interval of the policy value.
-    #     It follows the t-distribution formula :math:`t = \frac{\hat{\mu} - \mu}{\hat{\sigma} / \sqrt{n}}`, where
-    #     :math:`\hat{\mu}` is the mean of the weighted rewards, :math:`\mu` is the true mean of the weighted rewards,
-    #     :math:`\hat{\sigma}` is the standard deviation of the weighted rewards, and :math:`n` is the number of samples.
-    #     The confidence interval is then computed as:
-    #
-    #     .. math::
-    #         [\hat{\mu} - t_{\mathrm{test}}(1 - \alpha, n-1) \frac{\hat{\sigma}}{\sqrt{n}},
-    #         \hat{\mu} + t_{\mathrm{test}}(1 - \alpha, n-1) \frac{\hat{\sigma}}{\sqrt{n}}]
-    #
-    #     The input data is sampled from the estimated weighted rewards, using :meth:`estimate_weighted_rewards`.
-    #
-    #     Example:
-    #
-    #     .. code-block:: python
-    #
-    #         ipw = InverseProbabilityWeighting()
-    #         ipw.set_parameters(
-    #             target_policy_action_probabilities=target_policy_action_probabilities,
-    #             behavior_policy_action_probabilities=behavior_policy_action_probabilities,
-    #             rewards=rewards,
-    #         )
-    #         metrics = ipw.estimate_policy_value_with_confidence_interval(
-    #             method="bootstrap", significance_level=0.05
-    #         )
-    #         print(metrics)
-    #
-    #     Should output something like:
-    #
-    #     .. code-block:: python
-    #
-    #         {
-    #             "lower_bound": 10.2128,
-    #             "upper_bound": 10.6167,
-    #             "mean": 10.4148,
-    #             "std": 6.72408,
-    #         }
-    #
-    #     :param method: the method to use for estimating the confidence interval. Currently, only "bootstrap" and
-    #         "t-test" are supported.
-    #     :param significance_level: the significance level of the confidence interval.
-    #     :param num_samples: the number of bootstrap samples to use. Only used when `method` is "bootstrap".
-    #     :return: a dictionary containing the confidence interval of the policy value. The keys are:
-    #
-    #         - "lower_bound": the lower bound of the policy value, given the significance level.
-    #         - "upper_bound": the upper bound of the policy value, given the significance level.
-    #         - "mean": the mean of the policy value.
-    #         - "std": the standard deviation of the policy value.
-    #     """
-    #     assert method in ["bootstrap", "t-test"], "The method must be 'bootstrap' or 't-test'."
-    #     assert 0 < significance_level < 1, "The significance level must be in (0, 1)."
-    #
-    #     weighted_rewards = self.estimate_weighted_rewards()
-    #     assert (
-    #         weighted_rewards is not None and len(weighted_rewards) > 0
-    #     ), "The weighted rewards must not be empty."
-    #     weighted_rewards = weighted_rewards.reshape(-1)
-    #
-    #     if method == "bootstrap":
-    #         # Delegate the computation of each bootstrap sample to a hook.
-    #         # This allows subclasses to override only the statistic computation
-    #         # without duplicating the whole CI logic.
-    #         boot_samples = [
-    #             self._bootstrap_sample_policy_value(weighted_rewards)
-    #             for _ in np.arange(num_samples)
-    #         ]
-    #
-    #         lower_bound = np.quantile(boot_samples, significance_level / 2)
-    #         upper_bound = np.quantile(boot_samples, 1 - significance_level / 2)
-    #
-    #         return {
-    #             "lower_bound": float(lower_bound),
-    #             "upper_bound": float(upper_bound),
-    #             "mean": float(np.mean(boot_samples)),
-    #             "std": float(np.std(boot_samples)),
-    #         }
-    #
-    #     elif method == "t-test":
-    #         num_samples = weighted_rewards.shape[0]
-    #         mean = np.mean(weighted_rewards)
-    #         # compute the standard deviation of the weighted rewards, using degrees of freedom = num_samples - 1
-    #         std = np.std(weighted_rewards, ddof=1)
-    #         # compute t, with alpha = significance_level / 2 and degrees of freedom = num_samples - 1
-    #         t = scipy.stats.t.ppf(1 - significance_level / 2, num_samples - 1)
-    #         # compute the confidence interval
-    #         ci = t * std / np.sqrt(num_samples)
-    #
-    #         return {
-    #             "lower_bound": float(mean - ci),
-    #             "upper_bound": float(mean + ci),
-    #             "mean": float(mean),
-    #             "std": float(std),
-    #         }
+    def _bootstrap_sample_policy_value(self, weighted_rewards: np.ndarray) -> float:
+        """Return one bootstrap estimate of the policy value.
+
+        By default, we assume that the estimator can be expressed as the mean of per-episode
+        weighted rewards. In that case, a bootstrap sample is obtained by resampling these
+        values and taking their mean.
+
+        Subclasses can override this method when the estimator is not a simple average of
+        independent episode-level contributions (e.g. ratio estimators with a global
+        normalization term).
+
+        :param weighted_rewards: Episode-level weighted rewards.
+        :return: One bootstrap estimate of the policy value.
+        """
+        return float(
+            np.mean(
+                np.random.choice(weighted_rewards, size=weighted_rewards.shape[0], replace=True)
+            )
+        )
 
     def estimate_policy_value_with_confidence_interval(
         self,
@@ -356,14 +249,14 @@ class BaseEstimator(ABC):
         assert (
             weighted_rewards is not None and len(weighted_rewards) > 0
         ), "The weighted rewards must not be empty."
-
         weighted_rewards = weighted_rewards.reshape(-1)
 
         if method == "bootstrap":
+            # Delegate the computation of each bootstrap sample to a hook.
+            # This allows subclasses to override only the statistic computation
+            # without duplicating the whole CI logic.
             boot_samples = [
-                np.mean(
-                    np.random.choice(weighted_rewards, size=weighted_rewards.shape[0], replace=True)
-                )
+                self._bootstrap_sample_policy_value(weighted_rewards)
                 for _ in np.arange(num_samples)
             ]
 
@@ -1118,75 +1011,20 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
     def estimate_policy_value(self) -> float:
         return float(np.mean(self.estimate_weighted_rewards()))
 
-    # @override(BaseEstimator)
-    # def _bootstrap_sample_policy_value(self, weighted_rewards: np.ndarray) -> float:
-    #     """For standard per-timestep SNPDIS, we can reuse the base implementation, where the
-    #     estimator is an average of episode-level contributions. However, for global normalization,
-    #     the estimator is a ratio where the denominator depends on all samples jointly, so it's
-    #     needed to recompute it for each bootstrap resample.
-    #
-    #     .. math::
-    #     \frac{\\sum_{i=1}^n \\sum_{t=0}^{T-1} W_{i,t} r_{i,t}}
-    #          {\\sum_{i=1}^n \\sum_{t=0}^{T-1} W_{i,t}}
-    #     """
-    #
-    #     if self.normalization != "global" or self.importance_ratios is None:
-    #         return super()._bootstrap_sample_policy_value(weighted_rewards)
-    #
-    #     rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
-    #     n_episodes, horizon = rewards.shape
-    #
-    #     rho = np.asarray(self.importance_ratios, dtype=np.float32)
-    #     if rho.ndim == 1:
-    #         rho = rho.reshape(n_episodes, horizon)
-    #
-    #     discount_factors = np.full(
-    #         (n_episodes, horizon),
-    #         self.discount_factor,
-    #         dtype=np.float32,
-    #     )
-    #     discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
-    #
-    #     # Resample episodes with replacement
-    #     idx = np.random.choice(n_episodes, size=n_episodes, replace=True)
-    #
-    #     rewards_b = rewards[idx]
-    #     rho_b = rho[idx]
-    #     discount_b = discount_factors[idx]
-    #
-    #     # Recompute cumulative importance weights on the bootstrap sample
-    #     W_b = np.cumprod(rho_b, axis=1)
-    #
-    #     # Compute numerator and denominator of the ratio estimator
-    #     num = float(np.sum(W_b * discount_b * rewards_b))
-    #     den = float(np.sum(W_b))
-    #
-    #     return float(num / np.maximum(den, self.eps))
-
     @override(BaseEstimator)
-    def estimate_policy_value_with_confidence_interval(
-        self,
-        method: str = "bootstrap",
-        significance_level: float = 0.05,
-        num_samples: int = 1000,
-    ) -> dict[str, float]:
+    def _bootstrap_sample_policy_value(self, weighted_rewards: np.ndarray) -> float:
+        """For standard per-timestep SNPDIS, we can reuse the base implementation, where the
+        estimator is an average of episode-level contributions. However, for global normalization,
+        the estimator is a ratio where the denominator depends on all samples jointly, so it's
+        needed to recompute it for each bootstrap resample.
+
+        .. math::
+        \frac{\\sum_{i=1}^n \\sum_{t=0}^{T-1} W_{i,t} r_{i,t}}
+             {\\sum_{i=1}^n \\sum_{t=0}^{T-1} W_{i,t}}
+        """
+
         if self.normalization != "global" or self.importance_ratios is None:
-            return super().estimate_policy_value_with_confidence_interval(
-                method=method,
-                significance_level=significance_level,
-                num_samples=num_samples,
-            )
-
-        if method != "bootstrap":
-            raise ValueError(
-                "SelfNormalizedPerDecisionImportanceSampling with normalization='global' "
-                "currently supports only method='bootstrap'."
-            )
-
-        if not (0 < significance_level < 1):
-            raise ValueError("significance_level must be in (0, 1).")
-
-        self.check_parameters()
+            return super()._bootstrap_sample_policy_value(weighted_rewards)
 
         rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
         n_episodes, horizon = rewards.shape
@@ -1194,11 +1032,6 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         rho = np.asarray(self.importance_ratios, dtype=np.float32)
         if rho.ndim == 1:
             rho = rho.reshape(n_episodes, horizon)
-        elif rho.ndim != 2:
-            raise ValueError("importance_ratios must be 1D or 2D.")
-
-        if rho.shape != rewards.shape:
-            raise ValueError("importance_ratios shape must match rewards reshaped by episode.")
 
         discount_factors = np.full(
             (n_episodes, horizon),
@@ -1207,25 +1040,18 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         )
         discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
 
-        rng = np.random.default_rng(0)
-        vals = np.empty(num_samples, dtype=np.float32)
+        # Resample episodes with replacement
+        idx = np.random.choice(n_episodes, size=n_episodes, replace=True)
 
-        for b in range(num_samples):
-            idx = rng.integers(0, n_episodes, size=n_episodes)
+        rewards_b = rewards[idx]
+        rho_b = rho[idx]
+        discount_b = discount_factors[idx]
 
-            rewards_b = rewards[idx]
-            rho_b = rho[idx]
-            discount_b = discount_factors[idx]
+        # Recompute cumulative importance weights on the bootstrap sample
+        W_b = np.cumprod(rho_b, axis=1)
 
-            W_b = np.cumprod(rho_b, axis=1)
-            num = float(np.sum(W_b * discount_b * rewards_b))
-            den = float(np.sum(W_b))
+        # Compute numerator and denominator of the ratio estimator
+        num = float(np.sum(W_b * discount_b * rewards_b))
+        den = float(np.sum(W_b))
 
-            vals[b] = num / np.maximum(den, self.eps)
-
-        return {
-            "lower_bound": float(np.quantile(vals, significance_level / 2)),
-            "upper_bound": float(np.quantile(vals, 1 - significance_level / 2)),
-            "mean": float(np.mean(vals)),
-            "std": float(np.std(vals)),
-        }
+        return float(num / np.maximum(den, self.eps))
