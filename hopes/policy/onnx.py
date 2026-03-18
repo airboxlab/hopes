@@ -1,12 +1,20 @@
+import logging
 import os
+import tempfile
 from pathlib import Path
+from re import Pattern
 
+import boto3
 import numpy as np
+import onnx
 import onnxruntime as rt
+from onnx import numpy_helper
 
 from hopes.dev_utils import override
 from hopes.policy.policies import Policy
 from hopes.policy.utils import log_softmax
+
+s3 = boto3.client("s3")
 
 
 class OnnxModelBasedPolicy(Policy):
@@ -180,8 +188,8 @@ class OnnxModelBasedPolicy(Policy):
     def output_names(self) -> list[str]:
         """The names of the outputs of the ONNX model.
 
-        By default, returns all output names. It can be overridden to return a subset of
-        output names.
+        :return: by default, the list of output names. It can be overridden to return a
+            subset of output names.
         """
         return [output.name for output in self.session.get_outputs()]
 
@@ -235,6 +243,12 @@ class OnnxModelBasedPolicy(Policy):
 
     @override(Policy)
     def log_probabilities(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-probabilities of actions given the observations by feeding them through
+        the ONNX model.
+
+        :param obs: the observations for which to compute the log-probabilities.
+        :return: the log-probabilities of the actions given the observations.
+        """
         # get the output of the ONNX model
         output = self.session.run(input_feed=self.map_inputs(obs), output_names=self.output_names)
 
@@ -341,7 +355,14 @@ class OnnxRunner:
       ``prev_actions`` with the *logged* action after each step.
     """
 
-    def __init__(self, onnx_path: str, T: int = 10, obs_dim: int = 16, act_dim: int = 2):
+    def __init__(self, onnx_path: str, T: int = 10, obs_dim: int = 16, act_dim: int = 2) -> None:
+        """Initialize the ONNX runner.
+
+        :param onnx_path: the path to the ONNX model file.
+        :param T: the sequence length for the recurrent state and previous actions buffer.
+        :param obs_dim: the dimensionality of the observation space.
+        :param act_dim: the dimensionality of the action space.
+        """
         self.sess = rt.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
         self.T = T
         self.obs_dim = obs_dim
@@ -367,7 +388,7 @@ class OnnxRunner:
 
         self.reset()
 
-    def reset(self):
+    def reset(self) -> None:
         self.state = np.zeros((1, self.T, 32), dtype=np.float32)
         self.prev_actions = np.zeros((1, self.T), dtype=np.int64)
         self.seq_lens = np.array([self.T], dtype=np.int32)
@@ -377,6 +398,12 @@ class OnnxRunner:
     # The runner maintains the recurrent hidden state and the prev_actions buffer
     # to match the original policy execution context during offline replay
     def step_log_probs(self, obs_t: np.ndarray) -> np.ndarray:
+        """Run a single step of the ONNX model given the current observation and internal state,
+        and return the log-probabilities of all actions.
+
+        :param obs_t: the current observation, expected shape (obs_dim,).
+        :return: the log-probabilities of all actions, shape (1, act_dim).
+        """
         obs_t = np.asarray(obs_t, dtype=np.float32).reshape(1, self.obs_dim)
 
         feed = {
@@ -410,12 +437,18 @@ class OnnxRunner:
 
         return logp
 
-    def update_prev_actions(self, a_t: int):
+    def update_prev_actions(self, a_t: int) -> None:
+        """Update the previous actions buffer with the logged action at the current timestep.
+
+        :param a_t: the logged action at the current timestep.
+        """
         a = np.array([[a_t]], dtype=np.int64)
         self.prev_actions = np.concatenate([self.prev_actions[:, 1:], a], axis=1)
 
 
-def probs_from_runner(runner: OnnxRunner, obs_batches, act_batches):
+def probs_from_runner(
+    runner: OnnxRunner, obs_batches, act_batches
+) -> tuple[np.ndarray, np.ndarray]:
     """Evaluating the new policy on the logged trajectories to compute its action probabilities in
     the same states visited by the behavior policy. For each timestep, it extracts the full action
     distribution and the probability assigned by the new policy to the logged action, which are
@@ -425,9 +458,11 @@ def probs_from_runner(runner: OnnxRunner, obs_batches, act_batches):
     :param obs_batches: list of np.ndarray with shapes [(T_ep, obs_dim), ...] containing the observations for each episode.
     :param act_batches: list of np.ndarray with shapes [(T_ep,), ...] containing the logged actions for each episode.
     :return: a tuple (probs_all, logp_taken_all) where:
+        - probs_all is a np.ndarray of shape (sum_t over all episodes, act_dim) containing the action probabilities for all actions at each timestep.
+        - logp_taken_all is a np.ndarray of shape (sum_t over all episodes) containing the log-probability assigned by the new policy to the logged action at each timestep.
     """
     probs_all = []
-    logp_taken_all = []  # optional
+    logp_taken_all = []
 
     for obs_ep, act_ep in zip(obs_batches, act_batches):
         assert obs_ep.shape[0] == act_ep.shape[0], "obs/actions length mismatch in episode"
@@ -449,3 +484,108 @@ def probs_from_runner(runner: OnnxRunner, obs_batches, act_batches):
             runner.update_prev_actions(a_logged)
 
     return np.vstack(probs_all), np.array(logp_taken_all, dtype=np.float32)
+
+
+def load_latest_model_onnx(
+    bucket: str, prefix: str, checkpoint_model_regex: Pattern
+) -> tuple[bytes, int, str]:
+    """Find and load the model.onnx corresponding to the highest checkpoint number under the given
+    S3 prefix. :param bucket: the S3 bucket name. :param prefix: the S3 prefix under which to look
+    for model.onnx files. :param checkpoint_model_regex: a compiled regular expression pattern with
+    a capture group for the checkpoint number, to identify model.onnx files and extract their
+    checkpoint numbers from their S3 keys.
+
+    :return: a tuple (model_bytes, checkpoint_num, model_key) where:
+        - model_bytes is the content of the latest model.onnx file as bytes.
+        - checkpoint_num is the checkpoint number extracted from the filename of the latest model.onnx.
+        - model_key is the S3 key of the latest model.onnx file.
+    """
+    paginator = s3.get_paginator("list_objects_v2")
+
+    models_by_checkpoint = {}
+
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        for obj in page.get("Contents", []):
+            key = obj["Key"]
+            match = checkpoint_model_regex.search(key)
+            if match:
+                checkpoint_num = int(match.group(1))
+                models_by_checkpoint.setdefault(checkpoint_num, []).append(
+                    {
+                        "Key": key,
+                        "LastModified": obj["LastModified"],
+                    }
+                )
+
+    if not models_by_checkpoint:
+        raise FileNotFoundError(f"No model.onnx found under prefix: s3://{bucket}/{prefix}")
+
+    # Select highest checkpoint
+    latest_checkpoint = max(models_by_checkpoint.keys())
+
+    # If multiple models exist for the same checkpoint, take the most recent one
+    latest_obj = max(models_by_checkpoint[latest_checkpoint], key=lambda x: x["LastModified"])
+
+    model_key = latest_obj["Key"]
+
+    response = s3.get_object(Bucket=bucket, Key=model_key)
+    model_bytes = response["Body"].read()
+
+    return model_bytes, latest_checkpoint, model_key
+
+
+def remove_onnx_model_initializer(model: onnx.ModelProto, name: str) -> bool:
+    """Remove initializer with given name from ONNX model and add it as model input if not already
+    present.
+
+    :param model: the ONNX model from which to remove the initializer.
+    :param name: the name (or substring of the name) of the initializer to remove.
+    :return: True if the initializer was found and removed, False otherwise.
+    """
+    for i, init in enumerate(model.graph.initializer):
+        if name in init.name:
+            old_value = numpy_helper.to_array(init)
+            logging.info(
+                f"[ONNX model prep] Found initializer '{name}' with shape {old_value.shape}, dtype {old_value.dtype} and value {old_value}"
+            )
+
+            # Move initializer to model input so it can be provided at runtime.
+            if not any(inp.name == init.name for inp in model.graph.input):
+                value_info = onnx.helper.make_tensor_value_info(
+                    init.name, init.data_type, list(old_value.shape)
+                )
+                model.graph.input.append(value_info)
+
+            del model.graph.initializer[i]
+            logging.info(f"[ONNX model prep] Converted initializer '{name}' to model input")
+            return True
+    return False
+
+
+def prepare_onnx_model(model_in: str, model_out: str) -> None:
+    """Utility to prepare ONNX model by zeroing out specific initializers.
+
+    :param model_in: path to the input ONNX model file.
+    :param model_out: path to the output ONNX model file after preparation.
+    """
+    model = onnx.load(model_in)
+    targets = ["is_exploring"]
+    for name in targets:
+        if remove_onnx_model_initializer(model, name):
+            logging.info(f"[ONNX model prep] initializer '{name}' now expected as model input")
+        else:
+            raise ValueError(f"[ONNX model prep] initializer '{name}' not found in the model")
+
+    onnx.save(model, model_out)
+
+
+def write_onnx_bytes(model_bytes: bytes, name: str) -> str:
+    """Write ONNX model bytes to a temporary file and return the file path.
+
+    :param model_bytes: the ONNX model content as bytes.
+    :param name: the name to use for the temporary ONNX file (without extension).
+    :return: the file path to the temporary ONNX file.
+    """
+    p = Path(tempfile.gettempdir()) / f"{name}.onnx"
+    p.write_bytes(model_bytes)
+    return str(p)

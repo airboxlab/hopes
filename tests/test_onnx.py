@@ -1,10 +1,18 @@
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, PropertyMock, patch
 
 import numpy as np
+import onnx
+from onnx import TensorProto, helper, numpy_helper
 
-from hopes.policy.onnx import OnnxModelBasedPolicy, OnnxRunner
+from hopes.policy.onnx import (
+    OnnxModelBasedPolicy,
+    OnnxRunner,
+    prepare_onnx_model,
+    remove_onnx_model_initializer,
+)
 from tests.utils import assert_log_probs
 
 
@@ -353,3 +361,72 @@ class TestOnnxPolicy(unittest.TestCase):
                 action_output_name="x",
                 action_dist_inputs_output_name="y",
             )
+
+    def _make_minimal_model_with_initializer(self, init_name="is_exploring"):
+        x = helper.make_tensor_value_info("obs", TensorProto.FLOAT, [1, 4])
+        y = helper.make_tensor_value_info("out", TensorProto.FLOAT, [1, 2])
+
+        init_tensor = numpy_helper.from_array(
+            np.array([False], dtype=np.bool_),
+            name=init_name,
+        )
+
+        node = helper.make_node("Identity", inputs=["obs"], outputs=["out"])
+
+        graph = helper.make_graph(
+            [node],
+            "test_graph",
+            [x],
+            [y],
+            initializer=[init_tensor],
+        )
+        model = helper.make_model(graph)
+        return model
+
+    def test_remove_onnx_model_initializer_moves_initializer_to_input(self):
+        model = self._make_minimal_model_with_initializer("is_exploring")
+
+        self.assertEqual(len(model.graph.initializer), 1)
+        self.assertFalse(any(inp.name == "is_exploring" for inp in model.graph.input))
+
+        found = remove_onnx_model_initializer(model, "is_exploring")
+
+        self.assertTrue(found)
+        self.assertEqual(len(model.graph.initializer), 0)
+        self.assertTrue(any(inp.name == "is_exploring" for inp in model.graph.input))
+
+    def test_remove_onnx_model_initializer_returns_false_when_missing(self):
+        model = self._make_minimal_model_with_initializer("another_initializer")
+
+        found = remove_onnx_model_initializer(model, "is_exploring")
+
+        self.assertFalse(found)
+        self.assertEqual(len(model.graph.initializer), 1)
+        self.assertFalse(any(inp.name == "is_exploring" for inp in model.graph.input))
+
+    def test_prepare_onnx_model_converts_initializer_to_input(self):
+        model = self._make_minimal_model_with_initializer("is_exploring")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            model_in = Path(tmpdir) / "in.onnx"
+            model_out = Path(tmpdir) / "out.onnx"
+
+            onnx.save(model, model_in)
+            prepare_onnx_model(str(model_in), str(model_out))
+
+            prepared = onnx.load(str(model_out))
+
+            self.assertEqual(len(prepared.graph.initializer), 0)
+            self.assertTrue(any(inp.name == "is_exploring" for inp in prepared.graph.input))
+
+    def test_prepare_onnx_model_raises_when_initializer_missing(self):
+        model = self._make_minimal_model_with_initializer("something_else")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            model_in = Path(tmpdir) / "in.onnx"
+            model_out = Path(tmpdir) / "out.onnx"
+
+            onnx.save(model, model_in)
+
+            with self.assertRaises(ValueError):
+                prepare_onnx_model(str(model_in), str(model_out))

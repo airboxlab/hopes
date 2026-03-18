@@ -975,10 +975,17 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
 
     @override(BaseEstimator)
     def estimate_weighted_rewards(self) -> np.ndarray:
-        if self.importance_ratios is None:
+        # The standard self-normalized per-timestep case is already handled by the base implementation in TrajectoryPerDecisionMixin,
+        # including the path where importance ratios are precomputed upstream.
+        if self.normalization == "per_timestep":
             return super().estimate_weighted_rewards()
 
+        # Only the custom global normalization case needs to be handled here, where the normalization
+        # is done at the trajectory level instead of per timestep.
         self.check_parameters()
+
+        if self.importance_ratios is None:
+            raise ValueError("importance_ratios must be provided for global normalization.")
 
         rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
         n_episodes, horizon = rewards.shape
@@ -996,18 +1003,8 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
 
         W = np.cumprod(rho, axis=1)
 
-        if self.normalization == "per_timestep":
-            denom_t = np.sum(W, axis=0, keepdims=True)
-            normalized_weights = n_episodes * W / np.maximum(denom_t, self.eps)
-
-            weighted_rewards = np.sum(
-                normalized_weights * discount_factors * rewards,
-                axis=1,
-            ).reshape(-1, 1)
-
-            return weighted_rewards.astype(np.float32)
-
-        # global normalization: historical pipeline behaviour
+        # Global normalization: compute the sum of importance weights over the entire trajectory
+        # and normalize the weighted rewards by this sum.
         num_i = np.sum(W * discount_factors * rewards, axis=1)
         den = float(np.sum(W))
 

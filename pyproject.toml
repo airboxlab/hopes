@@ -2,7 +2,7 @@
 name = "hopes"
 version = "0.0.3"
 description = "HVAC optimisation with Off-Policy Evaluation and Selection methods"
-authors = ["Antoine Galataud <antoine@foobot.io>"]
+authors = ["Antoine Galataud <antoine@foobot.io>", "Davide Coraci <davide@foobot.io>"]
 packages = [
     { include = "hopes/" },
 ]
