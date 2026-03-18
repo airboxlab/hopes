@@ -422,6 +422,7 @@ class TestEstimators(unittest.TestCase):
             method="bootstrap",
             significance_level=0.05,
             num_samples=200,
+            random_state=0,
         )
 
         self.assertIsInstance(metrics, dict)
@@ -431,6 +432,83 @@ class TestEstimators(unittest.TestCase):
 
         self.assertLessEqual(metrics["lower_bound"], metrics["mean"])
         self.assertLessEqual(metrics["mean"], metrics["upper_bound"])
+
+    def test_bootstrap_random_state_reproducibility(self):
+        steps_per_episode = 4
+        num_episodes = 10
+        num_actions = 2
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(123)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+
+        est = SelfNormalizedPerDecisionImportanceSampling(
+            steps_per_episode=steps_per_episode,
+            discount_factor=1.0,
+            normalization="global",
+        )
+        est.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rewards,
+        )
+
+        rho = np.ones(n_samples, dtype=np.float32)
+        est.set_importance_ratios(rho)
+
+        metrics_1 = est.estimate_policy_value_with_confidence_interval(
+            method="bootstrap",
+            significance_level=0.05,
+            num_samples=200,
+            random_state=42,
+        )
+        metrics_2 = est.estimate_policy_value_with_confidence_interval(
+            method="bootstrap",
+            significance_level=0.05,
+            num_samples=200,
+            random_state=42,
+        )
+
+        self.assertEqual(metrics_1, metrics_2)
+
+    def test_sntis_bootstrap_random_state_reproducibility(self):
+        traj_length = 10
+        num_episodes = 100
+        num_actions = 3
+
+        target, behavior, rewards = self._get_is_data(
+            traj_length=traj_length,
+            num_actions=num_actions,
+            num_episodes=num_episodes,
+        )
+
+        est = SelfNormalizedTrajectoryWiseImportanceSampling(
+            steps_per_episode=traj_length,
+            discount_factor=0.99,
+        )
+        est.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rewards,
+        )
+
+        metrics_1 = est.estimate_policy_value_with_confidence_interval(
+            method="bootstrap",
+            significance_level=0.05,
+            num_samples=200,
+            random_state=7,
+        )
+        metrics_2 = est.estimate_policy_value_with_confidence_interval(
+            method="bootstrap",
+            significance_level=0.05,
+            num_samples=200,
+            random_state=7,
+        )
+
+        self.assertEqual(metrics_1, metrics_2)
 
     def test_snpdis_invalid_normalization_raises(self):
         steps_per_episode = 4
@@ -473,6 +551,7 @@ class TestEstimators(unittest.TestCase):
         metrics = estimator.estimate_policy_value_with_confidence_interval(
             num_samples=200,
             significance_level=0.05,
+            random_state=0,
         )
         self.assertIsInstance(metrics, dict)
 

@@ -160,7 +160,11 @@ class BaseEstimator(ABC):
                     if rho.shape[0] * rho.shape[1] != n_samples:
                         raise ValueError("2D importance_ratios size must match rewards length.")
 
-    def _bootstrap_sample_policy_value(self, weighted_rewards: np.ndarray) -> float:
+    def _bootstrap_sample_policy_value(
+        self,
+        weighted_rewards: np.ndarray,
+        rng: np.random.Generator,
+    ) -> float:
         """Return one bootstrap estimate of the policy value.
 
         By default, we assume that the estimator can be expressed as the mean of per-episode
@@ -172,12 +176,11 @@ class BaseEstimator(ABC):
         normalization term).
 
         :param weighted_rewards: Episode-level weighted rewards.
+        :param rng: Random number generator for reproducibility.
         :return: One bootstrap estimate of the policy value.
         """
         return float(
-            np.mean(
-                np.random.choice(weighted_rewards, size=weighted_rewards.shape[0], replace=True)
-            )
+            np.mean(rng.choice(weighted_rewards, size=weighted_rewards.shape[0], replace=True))
         )
 
     def estimate_policy_value_with_confidence_interval(
@@ -185,6 +188,7 @@ class BaseEstimator(ABC):
         method: str = "bootstrap",
         significance_level: float = 0.05,
         num_samples: int = 1000,
+        random_state: int | None = None,
     ) -> dict[str, float]:
         r"""Estimate the confidence interval of the policy value.
 
@@ -235,6 +239,7 @@ class BaseEstimator(ABC):
             "t-test" are supported.
         :param significance_level: the significance level of the confidence interval.
         :param num_samples: the number of bootstrap samples to use. Only used when `method` is "bootstrap".
+        :param random_state: the random state to use for reproducibility. Only used when `method` is "bootstrap".
         :return: a dictionary containing the confidence interval of the policy value. The keys are:
 
             - "lower_bound": the lower bound of the policy value, given the significance level.
@@ -252,11 +257,14 @@ class BaseEstimator(ABC):
         weighted_rewards = weighted_rewards.reshape(-1)
 
         if method == "bootstrap":
+            # set the random state for reproducibility when using the bootstrap method
+            rng = np.random.default_rng(random_state)
+
             # Delegate the computation of each bootstrap sample to a hook.
             # This allows subclasses to override only the statistic computation
             # without duplicating the whole CI logic.
             boot_samples = [
-                self._bootstrap_sample_policy_value(weighted_rewards)
+                self._bootstrap_sample_policy_value(weighted_rewards, rng)
                 for _ in np.arange(num_samples)
             ]
 
@@ -1012,7 +1020,11 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         return float(np.mean(self.estimate_weighted_rewards()))
 
     @override(BaseEstimator)
-    def _bootstrap_sample_policy_value(self, weighted_rewards: np.ndarray) -> float:
+    def _bootstrap_sample_policy_value(
+        self,
+        weighted_rewards: np.ndarray,
+        rng: np.random.Generator,
+    ) -> float:
         """For standard per-timestep SNPDIS, we can reuse the base implementation, where the
         estimator is an average of episode-level contributions. However, for global normalization,
         the estimator is a ratio where the denominator depends on all samples jointly, so it's
@@ -1024,7 +1036,7 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         """
 
         if self.normalization != "global" or self.importance_ratios is None:
-            return super()._bootstrap_sample_policy_value(weighted_rewards)
+            return super()._bootstrap_sample_policy_value(weighted_rewards, rng)
 
         rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
         n_episodes, horizon = rewards.shape
@@ -1041,7 +1053,7 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
 
         # Resample episodes with replacement
-        idx = np.random.choice(n_episodes, size=n_episodes, replace=True)
+        idx = rng.choice(n_episodes, size=n_episodes, replace=True)
 
         rewards_b = rewards[idx]
         rho_b = rho[idx]
