@@ -684,24 +684,47 @@ class TrajectoryPerDecisionMixin(ABC):
         # normalize the importance weights. Normalization technique depends on the estimator (see implementations).
         importance_weights = self.normalize(importance_weights)
 
+        # # if the estimator is per decision, we need to repeat the discount factors and rewards for each action.
+        # # shape: (n, T * num_actions)
+        # if is_per_decision:
+        #     # discount factors
+        #     # compute a matrix of discount factors, shape: (n, T)
+        #     discount_factors = np.tile(discount_factors, (1, num_actions))
+        #     rewards = np.tile(rewards, (1, num_actions))
+        #
+        # # compute the weighted rewards per trajectory.
+        # # shape: (n, 1)
+        # weighted_rewards = np.sum(
+        #     # element-wise product
+        #     # trajectory wise: (n, 1) * (n, T) * (n, T) -> (n, T)
+        #     # per decision: (n, T * num_actions) * (n, T * num_actions) * (n, T * num_actions) -> (n, T * num_actions)
+        #     importance_weights * discount_factors * rewards,
+        #     # sum weights over the trajectory length
+        #     axis=1,
+        # ).reshape(-1, 1)
+
         # if the estimator is per decision, we need to repeat the discount factors and rewards for each action.
         # shape: (n, T * num_actions)
         if is_per_decision:
             # discount factors
             # compute a matrix of discount factors, shape: (n, T)
             discount_factors = np.tile(discount_factors, (1, num_actions))
-            rewards = np.tile(rewards, (1, num_actions))
-
-        # compute the weighted rewards per trajectory.
-        # shape: (n, 1)
-        weighted_rewards = np.sum(
-            # element-wise product
-            # trajectory wise: (n, 1) * (n, T) * (n, T) -> (n, T)
-            # per decision: (n, T * num_actions) * (n, T * num_actions) * (n, T * num_actions) -> (n, T * num_actions)
-            importance_weights * discount_factors * rewards,
-            # sum weights over the trajectory length
-            axis=1,
-        ).reshape(-1, 1)
+            rewards_tiled = np.tile(rewards, (1, num_actions))
+            weighted_rewards = np.sum(
+                importance_weights * discount_factors * rewards_tiled,
+                axis=1,
+            ).reshape(-1, 1)
+        else:
+            # compute the weighted rewards per trajectory.
+            # shape: (n, 1)
+            weighted_rewards = np.sum(
+                # element-wise product
+                # trajectory wise: (n, 1) * (n, T) * (n, T) -> (n, T)
+                # per decision: (n, T * num_actions) * (n, T * num_actions) * (n, T * num_actions) -> (n, T * num_actions)
+                importance_weights * discount_factors * rewards,
+                # sum weights over the trajectory length
+                axis=1,
+            ).reshape(-1, 1)
 
         return weighted_rewards.astype(np.float32)
 
