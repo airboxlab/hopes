@@ -903,20 +903,20 @@ class PerDecisionImportanceSampling(BaseEstimator, TrajectoryPerDecisionMixin):
 
 
 class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling):
-    """Self-Normalized Per-Decision Importance Sampling (PDIS) estimator.
+    r"""Self-Normalized Per-Decision Importance Sampling (PDIS) estimator.
 
     .. math::
-        V_{PDIS} (\\pi_e, D) = \frac {1}{n} \\sum_{i=1}^n \\sum_{t=0}^{T-1}
-            \\gamma^t \frac {w^{(i)}_{t}} {\frac {1}{n} \\sum_{j=1}^n w^{(j)}_{t}} r_t^{(i)}
+        V_{PDIS} (\pi_e, D) = \frac {1}{n} \sum_{i=1}^n \sum_{t=0}^{T-1}
+            \gamma^t \frac {w^{(i)}_{t}} {\frac {1}{n} \sum_{j=1}^n w^{(j)}_{t}} r_t^{(i)}
 
     Where:
 
     - :math:`D` is the offline collected dataset.
-    - :math:`w^{(i)}_{t}` is the importance weight of the decision :math:`t` of trajectory :math:`i` defined as :math:`w_{t} = \frac {\\pi_e(a_t|s_t)} {\\pi_b(a_t|s_t)}`
-    - :math:`\\pi_e` is the target policy and :math:`\\pi_b` is the behavior policy.
+    - :math:`w^{(i)}_{t}` is the importance weight of the decision :math:`t` of trajectory :math:`i` defined as :math:`w_{t} = \frac {\pi_e(a_t|s_t)} {\pi_b(a_t|s_t)}`
+    - :math:`\pi_e` is the target policy and :math:`\pi_b` is the behavior policy.
     - :math:`n` is the number of trajectories.
     - :math:`T` is the length of the trajectory.
-    - :math:`\\gamma_t` is the discount factor at time :math:`t`.
+    - :math:`\gamma_t` is the discount factor at time :math:`t`.
     - :math:`r_t^{(i)}` is the reward at time :math:`t` of trajectory :math:`i`.
 
     SNPDIS is a variance reduction technique for PDIS.
@@ -1025,14 +1025,14 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         weighted_rewards: np.ndarray,
         rng: np.random.Generator,
     ) -> float:
-        """For standard per-timestep SNPDIS, we can reuse the base implementation, where the
+        r"""For standard per-timestep SNPDIS, we can reuse the base implementation, where the
         estimator is an average of episode-level contributions. However, for global normalization,
         the estimator is a ratio where the denominator depends on all samples jointly, so it's
         needed to recompute it for each bootstrap resample.
 
         .. math::
-        \frac{\\sum_{i=1}^n \\sum_{t=0}^{T-1} W_{i,t} r_{i,t}}
-             {\\sum_{i=1}^n \\sum_{t=0}^{T-1} W_{i,t}}
+        \frac{\sum_{i=1}^n \sum_{t=0}^{T-1} W_{i,t} r_{i,t}}
+             {\sum_{i=1}^n \sum_{t=0}^{T-1} W_{i,t}}
         """
 
         if self.normalization != "global" or self.importance_ratios is None:
