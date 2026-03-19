@@ -51,7 +51,6 @@ class BaseEstimator(ABC):
 
         if importance_ratios is None:
             self.importance_ratios = None
-            return
         else:
             self.importance_ratios = np.asarray(importance_ratios, dtype=np.float32)
 
@@ -145,19 +144,23 @@ class BaseEstimator(ABC):
                 raise ValueError(f"The {name} must sum to 1 on each sample.")
 
         if self.importance_ratios is not None:
-            rho = np.asarray(self.importance_ratios)
-
-            if rho.ndim not in (1, 2):
+            if self.importance_ratios.ndim not in (1, 2):
                 raise ValueError("importance_ratios must be 1D or 2D.")
 
             if self.rewards is not None:
                 n_samples = self.rewards.shape[0]
 
-                if rho.ndim == 1 and rho.shape[0] != n_samples:
+                if (
+                    self.importance_ratios.ndim == 1
+                    and self.importance_ratios.shape[0] != n_samples
+                ):
                     raise ValueError("1D importance_ratios length must match rewards length.")
 
-                if rho.ndim == 2:
-                    if rho.shape[0] * rho.shape[1] != n_samples:
+                if self.importance_ratios.ndim == 2:
+                    if (
+                        self.importance_ratios.shape[0] * self.importance_ratios.shape[1]
+                        != n_samples
+                    ):
                         raise ValueError("2D importance_ratios size must match rewards length.")
 
     def _bootstrap_sample_policy_value(
