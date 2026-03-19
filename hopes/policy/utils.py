@@ -1,7 +1,4 @@
-import boto3
 import numpy as np
-
-s3 = boto3.client("s3")
 
 
 def log_probs_for_deterministic_policy(

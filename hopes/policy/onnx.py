@@ -2,7 +2,6 @@ import logging
 import os
 import tempfile
 from pathlib import Path
-from re import Pattern
 
 import boto3
 import numpy as np
@@ -355,18 +354,30 @@ class OnnxRunner:
       ``prev_actions`` with the *logged* action after each step.
     """
 
-    def __init__(self, onnx_path: str, T: int = 10, obs_dim: int = 16, act_dim: int = 2) -> None:
+    def __init__(
+        self,
+        onnx_path: str,
+        T: int = 10,
+        obs_dim: int = 16,
+        act_dim: int = 2,
+        prev_n_actions: int | None = None,
+        attention_dim: int = 32,
+    ) -> None:
         """Initialize the ONNX runner.
 
         :param onnx_path: the path to the ONNX model file.
         :param T: the sequence length for the recurrent state and previous actions buffer.
         :param obs_dim: the dimensionality of the observation space.
         :param act_dim: the dimensionality of the action space.
+        :param prev_n_actions: the number of previous actions to maintain in the buffer.
+        :param attention_dim: the dimensionality of the attention/recurrent state.
         """
         self.sess = rt.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
         self.T = T
         self.obs_dim = obs_dim
         self.act_dim = act_dim
+        self.prev_n_actions = T if prev_n_actions is None else prev_n_actions
+        self.attention_dim = attention_dim
 
         self.obs_name = "default_policy/obs:0"
         self.state_in_name = "default_policy/state_in_0:0"
@@ -389,8 +400,8 @@ class OnnxRunner:
         self.reset()
 
     def reset(self) -> None:
-        self.state = np.zeros((1, self.T, 32), dtype=np.float32)
-        self.prev_actions = np.zeros((1, self.T), dtype=np.int64)
+        self.state = np.zeros((1, self.T, self.attention_dim), dtype=np.float32)
+        self.prev_actions = np.zeros((1, self.prev_n_actions), dtype=np.int64)
         self.seq_lens = np.array([self.T], dtype=np.int32)
 
     # The runner feeds observations and recurrent state to the exported policy, retrieves action logits,
@@ -428,10 +439,12 @@ class OnnxRunner:
 
         state_out = np.asarray(state_out, dtype=np.float32)
 
-        if state_out.ndim == 3 and state_out.shape[2] == 32:
+        if state_out.ndim == 3 and state_out.shape[2] == self.attention_dim:
             self.state = state_out
-        elif state_out.ndim == 2 and state_out.shape[1] == 32:
-            self.state = np.concatenate([self.state[:, 1:, :], state_out.reshape(1, 1, 32)], axis=1)
+        elif state_out.ndim == 2 and state_out.shape[1] == self.attention_dim:
+            self.state = np.concatenate(
+                [self.state[:, 1:, :], state_out.reshape(1, 1, self.attention_dim)], axis=1
+            )
         else:
             raise RuntimeError(f"Unexpected state_out shape: {state_out.shape}")
 
@@ -484,54 +497,6 @@ def probs_from_runner(
             runner.update_prev_actions(a_logged)
 
     return np.vstack(probs_all), np.array(logp_taken_all, dtype=np.float32)
-
-
-def load_latest_model_onnx(
-    bucket: str, prefix: str, checkpoint_model_regex: Pattern
-) -> tuple[bytes, int, str]:
-    """Find and load the model.onnx corresponding to the highest checkpoint number under the given
-    S3 prefix. :param bucket: the S3 bucket name. :param prefix: the S3 prefix under which to look
-    for model.onnx files. :param checkpoint_model_regex: a compiled regular expression pattern with
-    a capture group for the checkpoint number, to identify model.onnx files and extract their
-    checkpoint numbers from their S3 keys.
-
-    :return: a tuple (model_bytes, checkpoint_num, model_key) where:
-        - model_bytes is the content of the latest model.onnx file as bytes.
-        - checkpoint_num is the checkpoint number extracted from the filename of the latest model.onnx.
-        - model_key is the S3 key of the latest model.onnx file.
-    """
-    paginator = s3.get_paginator("list_objects_v2")
-
-    models_by_checkpoint = {}
-
-    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
-        for obj in page.get("Contents", []):
-            key = obj["Key"]
-            match = checkpoint_model_regex.search(key)
-            if match:
-                checkpoint_num = int(match.group(1))
-                models_by_checkpoint.setdefault(checkpoint_num, []).append(
-                    {
-                        "Key": key,
-                        "LastModified": obj["LastModified"],
-                    }
-                )
-
-    if not models_by_checkpoint:
-        raise FileNotFoundError(f"No model.onnx found under prefix: s3://{bucket}/{prefix}")
-
-    # Select highest checkpoint
-    latest_checkpoint = max(models_by_checkpoint.keys())
-
-    # If multiple models exist for the same checkpoint, take the most recent one
-    latest_obj = max(models_by_checkpoint[latest_checkpoint], key=lambda x: x["LastModified"])
-
-    model_key = latest_obj["Key"]
-
-    response = s3.get_object(Bucket=bucket, Key=model_key)
-    model_bytes = response["Body"].read()
-
-    return model_bytes, latest_checkpoint, model_key
 
 
 def remove_onnx_model_initializer(model: onnx.ModelProto, name: str) -> bool:

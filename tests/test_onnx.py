@@ -104,6 +104,33 @@ class TestOnnxPolicy(unittest.TestCase):
         self.assertEqual(runner.state.shape, state_before.shape)
         self.assertFalse(np.allclose(runner.state, state_before))
 
+    def test_onnx_runner_reset_uses_configurable_attention_dim(self):
+        onnx_file_path = Path(__file__).parent / "resources" / "onnx" / "model.onnx"
+        runner = OnnxRunner(
+            onnx_path=str(onnx_file_path),
+            T=10,
+            obs_dim=15,
+            act_dim=2,
+            attention_dim=32,
+        )
+        runner.reset()
+        self.assertEqual(runner.state.shape, (1, 10, 32))
+
+    def test_onnx_runner_reset_uses_configurable_prev_n_actions(self):
+        onnx_file_path = Path(__file__).parent / "resources" / "onnx" / "model.onnx"
+
+        runner = OnnxRunner(
+            onnx_path=str(onnx_file_path),
+            T=10,
+            obs_dim=15,
+            act_dim=2,
+            prev_n_actions=6,
+        )
+
+        runner.reset()
+        self.assertEqual(runner.prev_actions.shape, (1, 6))
+        self.assertTrue(np.all(runner.prev_actions == 0))
+
     def test_onnx_runner_io_names(self):
         onnx_file_path = Path(__file__).parent / "resources" / "onnx" / "model.onnx"
         runner = OnnxRunner(
