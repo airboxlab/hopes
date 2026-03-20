@@ -539,12 +539,14 @@ prev_n_rewards is &gt; 0.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hopes.policy.OnnxModelBasedPolicy.log_probabilities">
 <span class="sig-name descname"><span class="pre">log_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="headerlink" href="#hopes.policy.OnnxModelBasedPolicy.log_probabilities" title="Link to this definition">#</a></dt>
-<dd><p>Compute the log-probabilities of the actions under the policy for a given set of
-observations.</p>
+<dd><p>Compute the log-probabilities of actions given the observations by feeding them through
+the ONNX model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>obs</strong> – the observation for which to compute the log-probabilities, shape:
-(batch_size, obs_dim).</p>
+<dd class="field-odd"><p><strong>obs</strong> – the observations for which to compute the log-probabilities.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the log-probabilities of the actions given the observations.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -567,8 +569,12 @@ observations.</p>
 <dt class="sig sig-object py" id="hopes.policy.OnnxModelBasedPolicy.output_names">
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">output_names</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hopes.policy.OnnxModelBasedPolicy.output_names" title="Link to this definition">#</a></dt>
 <dd><p>The names of the outputs of the ONNX model.</p>
-<p>By default, returns all output names. It can be overridden to return a subset of
-output names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>by default, the list of output names. It can be overridden to return a
+subset of output names.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
