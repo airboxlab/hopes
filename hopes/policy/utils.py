@@ -59,3 +59,13 @@ def piecewise_linear(x, left_cp, right_cp, slope, y0, y1) -> np.ndarray:
         lambda _: y1,
     ]
     return np.piecewise(x, conditions, funcs)
+
+
+def log_softmax(x, axis=-1):
+    """log_softmax is used instead of softmax to improve numerical stability.
+
+    :param x: the input array.
+    :param axis: the axis along which to compute the log softmax.
+    """
+    x = x - np.max(x, axis=axis, keepdims=True)
+    return x - np.log(np.sum(np.exp(x), axis=axis, keepdims=True))

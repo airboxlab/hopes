@@ -16,6 +16,7 @@ class BaseEstimator(ABC):
         self.target_policy_action_probabilities: np.ndarray | None = None
         self.behavior_policy_action_probabilities: np.ndarray | None = None
         self.rewards: np.ndarray | None = None
+        self.importance_ratios: np.ndarray | None = None
 
     def set_parameters(
         self,
@@ -37,6 +38,21 @@ class BaseEstimator(ABC):
         self.rewards = rewards
 
         self.check_parameters()
+
+    def set_importance_ratios(self, importance_ratios: np.ndarray | None) -> None:
+        """Set precomputed step-wise importance ratios used by the estimator. This is useful when
+        the taken-action ratios are built in a preprocessing step, for example after applying
+        stickiness correction outside the estimator.
+
+        param importance_ratios: Precomputed importance ratios for the logged actions.
+            Supported shapes are ``(n_samples,)`` or ``(n_episodes, steps_per_episode)``.
+        :raises ValueError: If the shape of ``importance_ratios`` is invalid.
+        """
+
+        if importance_ratios is None:
+            self.importance_ratios = None
+        else:
+            self.importance_ratios = np.asarray(importance_ratios, dtype=np.float32)
 
     def check_parameters(self) -> None:
         """Check if the estimator parameters are valid.
@@ -127,11 +143,55 @@ class BaseEstimator(ABC):
             if not np.allclose(np.sum(array, axis=1), np.ones(array.shape[0], dtype=float)):
                 raise ValueError(f"The {name} must sum to 1 on each sample.")
 
+        if self.importance_ratios is not None:
+            if self.importance_ratios.ndim not in (1, 2):
+                raise ValueError("importance_ratios must be 1D or 2D.")
+
+            if self.rewards is not None:
+                n_samples = self.rewards.shape[0]
+
+                if (
+                    self.importance_ratios.ndim == 1
+                    and self.importance_ratios.shape[0] != n_samples
+                ):
+                    raise ValueError("1D importance_ratios length must match rewards length.")
+
+                if self.importance_ratios.ndim == 2:
+                    if (
+                        self.importance_ratios.shape[0] * self.importance_ratios.shape[1]
+                        != n_samples
+                    ):
+                        raise ValueError("2D importance_ratios size must match rewards length.")
+
+    def _bootstrap_sample_policy_value(
+        self,
+        weighted_rewards: np.ndarray,
+        rng: np.random.Generator,
+    ) -> float:
+        """Return one bootstrap estimate of the policy value.
+
+        By default, we assume that the estimator can be expressed as the mean of per-episode
+        weighted rewards. In that case, a bootstrap sample is obtained by resampling these
+        values and taking their mean.
+
+        Subclasses can override this method when the estimator is not a simple average of
+        independent episode-level contributions (e.g. ratio estimators with a global
+        normalization term).
+
+        :param weighted_rewards: Episode-level weighted rewards.
+        :param rng: Random number generator for reproducibility.
+        :return: One bootstrap estimate of the policy value.
+        """
+        return float(
+            np.mean(rng.choice(weighted_rewards, size=weighted_rewards.shape[0], replace=True))
+        )
+
     def estimate_policy_value_with_confidence_interval(
         self,
         method: str = "bootstrap",
         significance_level: float = 0.05,
         num_samples: int = 1000,
+        random_state: int | None = None,
     ) -> dict[str, float]:
         r"""Estimate the confidence interval of the policy value.
 
@@ -182,6 +242,7 @@ class BaseEstimator(ABC):
             "t-test" are supported.
         :param significance_level: the significance level of the confidence interval.
         :param num_samples: the number of bootstrap samples to use. Only used when `method` is "bootstrap".
+        :param random_state: the random state to use for reproducibility. Only used when `method` is "bootstrap".
         :return: a dictionary containing the confidence interval of the policy value. The keys are:
 
             - "lower_bound": the lower bound of the policy value, given the significance level.
@@ -196,14 +257,17 @@ class BaseEstimator(ABC):
         assert (
             weighted_rewards is not None and len(weighted_rewards) > 0
         ), "The weighted rewards must not be empty."
-
         weighted_rewards = weighted_rewards.reshape(-1)
 
         if method == "bootstrap":
+            # set the random state for reproducibility when using the bootstrap method
+            rng = np.random.default_rng(random_state)
+
+            # Delegate the computation of each bootstrap sample to a hook.
+            # This allows subclasses to override only the statistic computation
+            # without duplicating the whole CI logic.
             boot_samples = [
-                np.mean(
-                    np.random.choice(weighted_rewards, size=weighted_rewards.shape[0], replace=True)
-                )
+                self._bootstrap_sample_policy_value(weighted_rewards, rng)
                 for _ in np.arange(num_samples)
             ]
 
@@ -211,10 +275,10 @@ class BaseEstimator(ABC):
             upper_bound = np.quantile(boot_samples, 1 - significance_level / 2)
 
             return {
-                "lower_bound": lower_bound,
-                "upper_bound": upper_bound,
-                "mean": np.mean(boot_samples),
-                "std": np.std(boot_samples),
+                "lower_bound": float(lower_bound),
+                "upper_bound": float(upper_bound),
+                "mean": float(np.mean(boot_samples)),
+                "std": float(np.std(boot_samples)),
             }
 
         elif method == "t-test":
@@ -228,10 +292,10 @@ class BaseEstimator(ABC):
             ci = t * std / np.sqrt(num_samples)
 
             return {
-                "lower_bound": mean - ci,
-                "upper_bound": mean + ci,
-                "mean": mean,
-                "std": std,
+                "lower_bound": float(mean - ci),
+                "upper_bound": float(mean + ci),
+                "mean": float(mean),
+                "std": float(std),
             }
 
     def short_name(self) -> str:
@@ -547,31 +611,79 @@ class TrajectoryPerDecisionMixin(ABC):
         steps_per_episode: int,
         discount_factor: float,
         is_per_decision: bool,
+        importance_ratios: np.ndarray | None = None,
     ) -> np.ndarray:
-        """Compute the weighted rewards for given type of estimator. See the specific estimator for
-        more details.
-
-        :param target_policy_action_probabilities: the probabilities of taking actions under
-            the target policy.
-        :param behavior_policy_action_probabilities: the probabilities of taking actions
-            under the behavior policy.
-        :param rewards: the rewards received under the behavior policy.
-        :param steps_per_episode: the number of steps per episode.
-        :param discount_factor: the discount factor.
-        :param is_per_decision: whether the estimator is per decision or per trajectory.
         """
+        Compute weighted rewards for trajectory-wise or per-decision estimators.
+        When `importance_ratios` is provided, the estimator uses these precomputed
+        step-wise ratios directly instead of recomputing them from policy probabilities.
+
+        :param target_policy_action_probabilities: Target policy action probabilities,
+            shape ``(n_samples, n_actions)``.
+        :param behavior_policy_action_probabilities: Behavior policy action probabilities,
+            shape ``(n_samples, n_actions)``.
+        :param rewards: Logged rewards, shape ``(n_samples,)``.
+        :param steps_per_episode: Number of steps per episode.
+        :param discount_factor: Discount factor in ``[0, 1]``.
+        :param is_per_decision: Whether to compute per-decision or trajectory-wise weighting.
+        :param importance_ratios: Optional precomputed step-wise importance ratios for the
+            logged actions. Supported shapes are ``(n_samples,)`` or
+            ``(n_episodes, steps_per_episode)``.
+        :return: Weighted rewards per episode, shape ``(n_episodes, 1)``.
+        """
+
+        # rewards, shape: (n, T)
+        rewards = np.asarray(rewards, dtype=np.float32).reshape(-1, steps_per_episode)
+
+        # discount factors
+        # compute a matrix of discount factors, shape: (n, T)
+        num_trajectories = rewards.shape[0]
+
+        discount_factors = np.full(
+            (num_trajectories, steps_per_episode), discount_factor, dtype=np.float32
+        )
+        # compute the discount factor at each step as
+        # [gamma^0, gamma^1, ..., gamma^(T-1)] = [gamma^1, gamma^2, ..., gamma^T] / gamma
+        discount_factors = np.cumprod(discount_factors, axis=1) / discount_factor
+
+        # Support an alternate input path where step-wise importance ratios are
+        # precomputed upstream (e.g. after stickiness correction in preprocessing).
+        # This keeps the estimator logic generic while avoiding estimator-specific
+        # handling of sticky actions.
+        if importance_ratios is not None:
+            importance_ratios = np.asarray(importance_ratios, dtype=np.float32)
+
+            if importance_ratios.ndim == 1:
+                step_weights = importance_ratios.reshape(num_trajectories, steps_per_episode)
+            else:
+                step_weights = importance_ratios
+
+            # if the estimator is per decision, we need to repeat the discount factors and rewards for each action.
+            # shape: (n, T * num_actions)
+            if is_per_decision:
+                importance_weights = np.cumprod(step_weights, axis=1)
+            else:
+                importance_weights = np.prod(step_weights, axis=1, keepdims=True)
+
+            importance_weights = self.normalize(importance_weights)
+
+            weighted_rewards = np.sum(
+                importance_weights * discount_factors * rewards,
+                axis=1,
+            ).reshape(-1, 1)
+
+            return weighted_rewards.astype(np.float32)
 
         # compute importance ratios
         importance_weights = (
             target_policy_action_probabilities / behavior_policy_action_probabilities
         )
         num_actions = target_policy_action_probabilities.shape[1]
-        # shape: (n, T * num_actions)
-        importance_weights = importance_weights.reshape(-1, steps_per_episode * num_actions)
 
         # compute the importance weights per decision, which is the cumulative product of the
         # importance weights over the trajectory; at each step t, we'll have the product from 0 to t-1.
         # shape: (n, T * num_actions)
+        importance_weights = importance_weights.reshape(-1, steps_per_episode * num_actions)
         importance_weights = np.cumprod(importance_weights, axis=1)
 
         if not is_per_decision:
@@ -583,20 +695,11 @@ class TrajectoryPerDecisionMixin(ABC):
         # normalize the importance weights. Normalization technique depends on the estimator (see implementations).
         importance_weights = self.normalize(importance_weights)
 
-        # rewards, shape: (n, T)
-        rewards = rewards.reshape(-1, steps_per_episode)
-
-        # discount factors
-        # compute a matrix of discount factors, shape: (n, T)
-        num_trajectories = rewards.shape[0]
-        discount_factors = np.full((num_trajectories, steps_per_episode), discount_factor)
-        # compute the discount factor at each step as
-        # [gamma^0, gamma^1, ..., gamma^(T-1)] = [gamma^1, gamma^2, ..., gamma^T] / gamma
-        discount_factors = np.cumprod(discount_factors, axis=1) / discount_factor
-
         # if the estimator is per decision, we need to repeat the discount factors and rewards for each action.
         # shape: (n, T * num_actions)
         if is_per_decision:
+            # discount factors
+            # compute a matrix of discount factors, shape: (n, T)
             discount_factors = np.tile(discount_factors, (1, num_actions))
             rewards = np.tile(rewards, (1, num_actions))
 
@@ -611,7 +714,7 @@ class TrajectoryPerDecisionMixin(ABC):
             axis=1,
         ).reshape(-1, 1)
 
-        return weighted_rewards
+        return weighted_rewards.astype(np.float32)
 
     def normalize(self, weights: np.ndarray) -> np.ndarray:
         """Normalize the importance weights. This method can be overridden by subclasses to
@@ -685,13 +788,14 @@ class TrajectoryWiseImportanceSampling(BaseEstimator, TrajectoryPerDecisionMixin
             steps_per_episode=self.steps_per_episode,
             discount_factor=self.discount_factor,
             is_per_decision=False,
+            importance_ratios=self.importance_ratios,
         )
 
     @override(BaseEstimator)
     def estimate_policy_value(self) -> float:
         """Estimate the value of the target policy using the Trajectory-wise Importance Sampling
         estimator."""
-        return np.mean(self.estimate_weighted_rewards())
+        return float(np.mean(self.estimate_weighted_rewards()))
 
 
 class SelfNormalizedTrajectoryWiseImportanceSampling(TrajectoryWiseImportanceSampling):
@@ -790,14 +894,15 @@ class PerDecisionImportanceSampling(BaseEstimator, TrajectoryPerDecisionMixin):
             rewards=self.rewards,
             steps_per_episode=self.steps_per_episode,
             discount_factor=self.discount_factor,
-            is_per_decision=True,
+            is_per_decision=False,
+            importance_ratios=self.importance_ratios,
         )
 
     @override(BaseEstimator)
     def estimate_policy_value(self) -> float:
         """Estimate the value of the target policy using the Trajectory-wise Importance Sampling
         estimator."""
-        return np.mean(self.estimate_weighted_rewards())
+        return float(np.mean(self.estimate_weighted_rewards()))
 
 
 class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling):
@@ -824,6 +929,41 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
     https://arxiv.org/abs/1906.03735
     """
 
+    def __init__(
+        self,
+        *,
+        steps_per_episode: int,
+        discount_factor: float = 1.0,
+        normalization: str = "per_timestep",
+        eps: float = 1e-12,
+    ) -> None:
+        super().__init__(
+            steps_per_episode=steps_per_episode,
+            discount_factor=discount_factor,
+        )
+        self.normalization = normalization
+        self.eps = eps
+
+    """
+    :param steps_per_episode: the number of steps per episode. The number of samples must be divisible by this number.
+    :param discount_factor: the discount factor for computing cumulative returns. Must be in [0, 1].
+    :param normalization: the normalization strategy to use. Supported values are "per_timestep" and "global".
+        1) "per_timestep" normalizes the importance weights at each timestep by the mean of the importance weights at that timestep.
+        2) "global" normalizes the importance weights by the mean of the importance weights over the entire trajectory.
+    :param eps: a small value to avoid division by zero when normalizing the importance weights.
+    :return: the estimated value of the target policy.
+    """
+
+    @override(BaseEstimator)
+    def check_parameters(self) -> None:
+        super().check_parameters()
+
+        if self.normalization not in {"per_timestep", "global"}:
+            raise ValueError("normalization must be 'per_timestep' or 'global'.")
+
+        if self.eps <= 0:
+            raise ValueError("eps must be > 0.")
+
     @override(TrajectoryPerDecisionMixin)
     def normalize(self, weights: np.ndarray) -> np.ndarray:
         """Normalize the importance weights using the self-normalization strategy.
@@ -835,3 +975,95 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         :return: the normalized importance weights.
         """
         return weights / (np.mean(weights) + 1e-10)
+
+    @override(BaseEstimator)
+    def estimate_weighted_rewards(self) -> np.ndarray:
+        # The standard self-normalized per-timestep case is already handled by the base implementation in TrajectoryPerDecisionMixin,
+        # including the path where importance ratios are precomputed upstream.
+        if self.normalization == "per_timestep":
+            return super().estimate_weighted_rewards()
+
+        # Only the custom global normalization case needs to be handled here, where the normalization
+        # is done at the trajectory level instead of per timestep.
+        self.check_parameters()
+
+        if self.importance_ratios is None:
+            raise ValueError("importance_ratios must be provided for global normalization.")
+
+        rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
+        n_episodes, horizon = rewards.shape
+
+        rho = np.asarray(self.importance_ratios, dtype=np.float32)
+        if rho.ndim == 1:
+            rho = rho.reshape(n_episodes, horizon)
+
+        discount_factors = np.full(
+            (n_episodes, horizon),
+            self.discount_factor,
+            dtype=np.float32,
+        )
+        discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
+
+        W = np.cumprod(rho, axis=1)
+
+        # Global normalization: compute the sum of importance weights over the entire trajectory
+        # and normalize the weighted rewards by this sum.
+        num_i = np.sum(W * discount_factors * rewards, axis=1)
+        den = float(np.sum(W))
+
+        weighted_rewards = (n_episodes * num_i / np.maximum(den, self.eps)).reshape(-1, 1)
+
+        return weighted_rewards.astype(np.float32)
+
+    @override(BaseEstimator)
+    def estimate_policy_value(self) -> float:
+        return float(np.mean(self.estimate_weighted_rewards()))
+
+    @override(BaseEstimator)
+    def _bootstrap_sample_policy_value(
+        self,
+        weighted_rewards: np.ndarray,
+        rng: np.random.Generator,
+    ) -> float:
+        r"""For standard per-timestep SNPDIS, we can reuse the base implementation, where the
+        estimator is an average of episode-level contributions. However, for global normalization,
+        the estimator is a ratio where the denominator depends on all samples jointly, so it's
+        needed to recompute it for each bootstrap resample.
+
+        .. math::
+        \frac{\sum_{i=1}^n \sum_{t=0}^{T-1} W_{i,t} r_{i,t}}
+             {\sum_{i=1}^n \sum_{t=0}^{T-1} W_{i,t}}
+        """
+
+        if self.normalization != "global" or self.importance_ratios is None:
+            return super()._bootstrap_sample_policy_value(weighted_rewards, rng)
+
+        rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
+        n_episodes, horizon = rewards.shape
+
+        rho = np.asarray(self.importance_ratios, dtype=np.float32)
+        if rho.ndim == 1:
+            rho = rho.reshape(n_episodes, horizon)
+
+        discount_factors = np.full(
+            (n_episodes, horizon),
+            self.discount_factor,
+            dtype=np.float32,
+        )
+        discount_factors = np.cumprod(discount_factors, axis=1) / self.discount_factor
+
+        # Resample episodes with replacement
+        idx = rng.choice(n_episodes, size=n_episodes, replace=True)
+
+        rewards_b = rewards[idx]
+        rho_b = rho[idx]
+        discount_b = discount_factors[idx]
+
+        # Recompute cumulative importance weights on the bootstrap sample
+        W_b = np.cumprod(rho_b, axis=1)
+
+        # Compute numerator and denominator of the ratio estimator
+        num = float(np.sum(W_b * discount_b * rewards_b))
+        den = float(np.sum(W_b))
+
+        return float(num / np.maximum(den, self.eps))

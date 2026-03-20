@@ -19,6 +19,7 @@ from hopes.rew.rewards import RegressionBasedRewardModel
 class TestEstimators(unittest.TestCase):
     def test_check_parameters(self):
         ipw = InverseProbabilityWeighting()
+
         with self.assertRaises(ValueError):
             ipw.check_parameters()
 
@@ -52,14 +53,13 @@ class TestEstimators(unittest.TestCase):
         wrew = ipw.estimate_weighted_rewards()
         self.assertIsInstance(wrew, np.ndarray)
         self.assertEqual(wrew.shape, (10, 3))
+
         policy_value = ipw.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
 
-        # test CI
         self._test_ci(ipw)
 
-        # test with zero rewards
         rewards = np.zeros(10)
 
         ipw.set_parameters(
@@ -88,11 +88,11 @@ class TestEstimators(unittest.TestCase):
         wrew = snipw.estimate_weighted_rewards()
         self.assertIsInstance(wrew, np.ndarray)
         self.assertEqual(wrew.shape, (10, 3))
+
         policy_value = snipw.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
 
-        # test CI
         self._test_ci(snipw)
 
     def test_dm(self):
@@ -100,9 +100,11 @@ class TestEstimators(unittest.TestCase):
         num_obs = 10
         num_samples = 100
         num_steps_per_episode = 2
+
         obs = np.random.rand(num_samples, num_obs)
         act = np.random.randint(num_actions, size=num_samples)
         rew = np.random.rand(num_samples)
+
         target_policy_action_probabilities = generate_action_probs(
             traj_length=num_samples, num_actions=num_actions
         )
@@ -118,6 +120,7 @@ class TestEstimators(unittest.TestCase):
             discount_factor=0.99,
         )
         fit_stats = dm.fit()
+
         self.assertIsInstance(fit_stats, dict)
         self.assertIn("rmse", fit_stats)
 
@@ -130,6 +133,7 @@ class TestEstimators(unittest.TestCase):
         wrew = dm.estimate_weighted_rewards()
         self.assertIsInstance(wrew, np.ndarray)
         self.assertEqual(wrew.shape, (num_samples // num_steps_per_episode,))
+
         policy_value = dm.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
@@ -137,7 +141,6 @@ class TestEstimators(unittest.TestCase):
         self._test_ci(dm)
 
     def test_dm_discount_computation(self):
-        """Test that DM correctly computes discounted cumulative returns."""
         num_actions = 2
         num_obs = 2
         num_episodes = 3
@@ -145,23 +148,17 @@ class TestEstimators(unittest.TestCase):
         num_samples = num_episodes * num_steps_per_episode
         discount_factor = 0.9
 
-        # Create deterministic data
         np.random.seed(42)
         obs = np.random.rand(num_samples, num_obs)
-        act = np.array([0, 1, 0, 1] * num_episodes)  # alternating actions
-
-        # Create rewards: each episode has rewards [1, 2, 3, 4]
+        act = np.array([0, 1, 0, 1] * num_episodes)
         rew = np.tile([1.0, 2.0, 3.0, 4.0], num_episodes)
 
-        # Expected cumulative discounted returns from initial states:
-        # G_0 = r_0 + γ*r_1 + γ²*r_2 + γ³*r_3
-        # G_0 = 1 + 0.9*2 + 0.9²*3 + 0.9³*4
         gamma = discount_factor
         expected_return = 1.0 + gamma * 2.0 + gamma**2 * 3.0 + gamma**3 * 4.0
 
         dm = DirectMethod(
             q_model_cls=RegressionBasedRewardModel,
-            q_model_type="linear",  # Use linear for predictability
+            q_model_type="linear",
             behavior_policy_obs=obs,
             behavior_policy_act=act,
             behavior_policy_rewards=rew,
@@ -172,39 +169,31 @@ class TestEstimators(unittest.TestCase):
         fit_stats = dm.fit()
         self.assertIsInstance(fit_stats, dict)
 
-        # Since we have perfect linear model training data, the model should learn
-        # to predict similar values for similar initial states
-        # Verify the Q model was trained on initial states only
         self.assertEqual(dm.q_model.obs.shape[0], num_episodes)
         self.assertEqual(dm.q_model.act.shape[0], num_episodes)
         self.assertEqual(dm.q_model.rew.shape[0], num_episodes)
 
-        # Verify cumulative returns are approximately correct
         for i in range(num_episodes):
             self.assertAlmostEqual(dm.q_model.rew[i], expected_return, delta=0.01)
 
-    def test_tis_sntis_pdis(self):
+    def test_tis(self):
         traj_length = 10
         num_episodes = 500
         num_actions = 3
 
-        (
-            target_policy_action_probabilities,
-            behavior_policy_action_probabilities,
-            rewards,
-        ) = self._get_is_data(
-            traj_length=traj_length, num_actions=num_actions, num_episodes=num_episodes
+        target, behavior, rewards = self._get_is_data(
+            traj_length=traj_length,
+            num_actions=num_actions,
+            num_episodes=num_episodes,
         )
 
-        # TIS
         tis = TrajectoryWiseImportanceSampling(
             steps_per_episode=traj_length,
             discount_factor=0.99,
         )
-
         tis.set_parameters(
-            target_policy_action_probabilities=target_policy_action_probabilities,
-            behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
             rewards=rewards,
         )
 
@@ -215,7 +204,6 @@ class TestEstimators(unittest.TestCase):
         policy_value = tis.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
-        print("tis", policy_value)
 
         self._test_ci(tis)
 
@@ -224,12 +212,10 @@ class TestEstimators(unittest.TestCase):
         num_episodes = 500
         num_actions = 3
 
-        (
-            target_policy_action_probabilities,
-            behavior_policy_action_probabilities,
-            rewards,
-        ) = self._get_is_data(
-            traj_length=traj_length, num_actions=num_actions, num_episodes=num_episodes
+        target, behavior, rewards = self._get_is_data(
+            traj_length=traj_length,
+            num_actions=num_actions,
+            num_episodes=num_episodes,
         )
 
         sntis = SelfNormalizedTrajectoryWiseImportanceSampling(
@@ -237,8 +223,8 @@ class TestEstimators(unittest.TestCase):
             discount_factor=0.99,
         )
         sntis.set_parameters(
-            target_policy_action_probabilities=target_policy_action_probabilities,
-            behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
             rewards=rewards,
         )
 
@@ -249,7 +235,6 @@ class TestEstimators(unittest.TestCase):
         policy_value = sntis.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
-        print("sntis", policy_value)
 
         self._test_ci(sntis)
 
@@ -258,12 +243,10 @@ class TestEstimators(unittest.TestCase):
         num_episodes = 500
         num_actions = 3
 
-        (
-            target_policy_action_probabilities,
-            behavior_policy_action_probabilities,
-            rewards,
-        ) = self._get_is_data(
-            traj_length=traj_length, num_actions=num_actions, num_episodes=num_episodes
+        target, behavior, rewards = self._get_is_data(
+            traj_length=traj_length,
+            num_actions=num_actions,
+            num_episodes=num_episodes,
         )
 
         pdis = PerDecisionImportanceSampling(
@@ -271,8 +254,8 @@ class TestEstimators(unittest.TestCase):
             discount_factor=0.99,
         )
         pdis.set_parameters(
-            target_policy_action_probabilities=target_policy_action_probabilities,
-            behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
             rewards=rewards,
         )
 
@@ -283,7 +266,6 @@ class TestEstimators(unittest.TestCase):
         policy_value = pdis.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
-        print("pdis", policy_value)
 
         self._test_ci(pdis)
 
@@ -292,12 +274,10 @@ class TestEstimators(unittest.TestCase):
         num_episodes = 500
         num_actions = 3
 
-        (
-            target_policy_action_probabilities,
-            behavior_policy_action_probabilities,
-            rewards,
-        ) = self._get_is_data(
-            traj_length=traj_length, num_actions=num_actions, num_episodes=num_episodes
+        target, behavior, rewards = self._get_is_data(
+            traj_length=traj_length,
+            num_actions=num_actions,
+            num_episodes=num_episodes,
         )
 
         snpdis = SelfNormalizedPerDecisionImportanceSampling(
@@ -305,8 +285,8 @@ class TestEstimators(unittest.TestCase):
             discount_factor=0.99,
         )
         snpdis.set_parameters(
-            target_policy_action_probabilities=target_policy_action_probabilities,
-            behavior_policy_action_probabilities=behavior_policy_action_probabilities,
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
             rewards=rewards,
         )
 
@@ -317,9 +297,241 @@ class TestEstimators(unittest.TestCase):
         policy_value = snpdis.estimate_policy_value()
         self.assertIsInstance(policy_value, float)
         self.assertGreaterEqual(policy_value, 0.0)
-        print("snpdis", policy_value)
 
         self._test_ci(snpdis)
+
+    def test_tis_with_precomputed_importance_ratios_identity(self):
+        steps_per_episode = 4
+        num_episodes = 20
+        num_actions = 3
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(0)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+
+        tis = TrajectoryWiseImportanceSampling(
+            steps_per_episode=steps_per_episode,
+            discount_factor=1.0,
+        )
+        tis.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rewards,
+        )
+
+        rho = np.ones(n_samples, dtype=np.float32)
+        tis.set_importance_ratios(rho)
+
+        value = tis.estimate_policy_value()
+
+        expected = float(np.mean(rewards.reshape(num_episodes, steps_per_episode).sum(axis=1)))
+        self.assertAlmostEqual(value, expected, places=6)
+
+    def test_snpdis_with_precomputed_importance_ratios_identity(self):
+        steps_per_episode = 5
+        num_episodes = 12
+        num_actions = 3
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(1)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+
+        est = SelfNormalizedPerDecisionImportanceSampling(
+            steps_per_episode=steps_per_episode,
+            discount_factor=1.0,
+        )
+        est.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rewards,
+        )
+
+        rho = np.ones(n_samples, dtype=np.float32)
+        est.set_importance_ratios(rho)
+
+        value = est.estimate_policy_value()
+
+        expected = float(np.mean(rewards.reshape(num_episodes, steps_per_episode).sum(axis=1)))
+        self.assertAlmostEqual(value, expected, places=6)
+        self._test_ci(est)
+
+    def test_snpdis_global_with_precomputed_importance_ratios_identity(self):
+        steps_per_episode = 5
+        num_episodes = 12
+        num_actions = 3
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(11)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+
+        est = SelfNormalizedPerDecisionImportanceSampling(
+            steps_per_episode=steps_per_episode,
+            discount_factor=1.0,
+            normalization="global",
+        )
+        est.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rewards,
+        )
+
+        rho = np.ones(n_samples, dtype=np.float32)
+        est.set_importance_ratios(rho)
+
+        value = est.estimate_policy_value()
+
+        expected = float(np.mean(rewards.reshape(num_episodes, steps_per_episode).sum(axis=1)))
+        self.assertAlmostEqual(value, expected / steps_per_episode, places=6)
+
+    def test_snpdis_global_bootstrap_ci(self):
+        steps_per_episode = 4
+        num_episodes = 10
+        num_actions = 2
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(12)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+
+        est = SelfNormalizedPerDecisionImportanceSampling(
+            steps_per_episode=steps_per_episode,
+            discount_factor=1.0,
+            normalization="global",
+        )
+        est.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rewards,
+        )
+
+        rho = np.ones(n_samples, dtype=np.float32)
+        est.set_importance_ratios(rho)
+
+        metrics = est.estimate_policy_value_with_confidence_interval(
+            method="bootstrap",
+            significance_level=0.05,
+            num_samples=200,
+            random_state=0,
+        )
+
+        self.assertIsInstance(metrics, dict)
+        for metric in ["mean", "lower_bound", "upper_bound", "std"]:
+            self.assertIn(metric, metrics)
+            self.assertIsInstance(metrics[metric], float)
+
+        self.assertLessEqual(metrics["lower_bound"], metrics["mean"])
+        self.assertLessEqual(metrics["mean"], metrics["upper_bound"])
+
+    def test_bootstrap_random_state_reproducibility(self):
+        steps_per_episode = 4
+        num_episodes = 10
+        num_actions = 2
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(123)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+
+        est = SelfNormalizedPerDecisionImportanceSampling(
+            steps_per_episode=steps_per_episode,
+            discount_factor=1.0,
+            normalization="global",
+        )
+        est.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rewards,
+        )
+
+        rho = np.ones(n_samples, dtype=np.float32)
+        est.set_importance_ratios(rho)
+
+        metrics_1 = est.estimate_policy_value_with_confidence_interval(
+            method="bootstrap",
+            significance_level=0.05,
+            num_samples=200,
+            random_state=42,
+        )
+        metrics_2 = est.estimate_policy_value_with_confidence_interval(
+            method="bootstrap",
+            significance_level=0.05,
+            num_samples=200,
+            random_state=42,
+        )
+
+        self.assertEqual(metrics_1, metrics_2)
+
+    def test_sntis_bootstrap_random_state_reproducibility(self):
+        traj_length = 10
+        num_episodes = 100
+        num_actions = 3
+
+        target, behavior, rewards = self._get_is_data(
+            traj_length=traj_length,
+            num_actions=num_actions,
+            num_episodes=num_episodes,
+        )
+
+        est = SelfNormalizedTrajectoryWiseImportanceSampling(
+            steps_per_episode=traj_length,
+            discount_factor=0.99,
+        )
+        est.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rewards,
+        )
+
+        metrics_1 = est.estimate_policy_value_with_confidence_interval(
+            method="bootstrap",
+            significance_level=0.05,
+            num_samples=200,
+            random_state=7,
+        )
+        metrics_2 = est.estimate_policy_value_with_confidence_interval(
+            method="bootstrap",
+            significance_level=0.05,
+            num_samples=200,
+            random_state=7,
+        )
+
+        self.assertEqual(metrics_1, metrics_2)
+
+    def test_snpdis_invalid_normalization_raises(self):
+        steps_per_episode = 4
+        num_episodes = 5
+        num_actions = 2
+        n_samples = steps_per_episode * num_episodes
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = np.random.rand(n_samples).astype(np.float32)
+
+        est = SelfNormalizedPerDecisionImportanceSampling(
+            steps_per_episode=steps_per_episode,
+            discount_factor=1.0,
+            normalization="invalid_mode",
+        )
+
+        with self.assertRaises(ValueError):
+            est.set_parameters(
+                target_policy_action_probabilities=target,
+                behavior_policy_action_probabilities=behavior,
+                rewards=rewards,
+            )
 
     def test_neg_rewards(self):
         ipw = InverseProbabilityWeighting()
@@ -328,27 +540,33 @@ class TestEstimators(unittest.TestCase):
         behavior_policy_action_probabilities = generate_action_probs(traj_length=10, num_actions=3)
         rewards = -np.random.rand(10)
 
-        with self.assertRaises(ValueError) as e:
+        with self.assertRaises(ValueError):
             ipw.set_parameters(
                 target_policy_action_probabilities=target_policy_action_probabilities,
                 behavior_policy_action_probabilities=behavior_policy_action_probabilities,
                 rewards=rewards,
             )
-            self.assertTrue("The rewards must be non-negative" in str(e.exception))
 
     def _test_ci(self, estimator: BaseEstimator):
-        # test CI
         metrics = estimator.estimate_policy_value_with_confidence_interval(
-            num_samples=1000, significance_level=0.05
+            num_samples=200,
+            significance_level=0.05,
+            random_state=0,
         )
         self.assertIsInstance(metrics, dict)
-        for m in ["mean", "lower_bound", "upper_bound", "std"]:
-            self.assertIn(m, metrics)
-            self.assertIsInstance(metrics[m], float)
-        self.assertTrue(metrics["lower_bound"] <= metrics["mean"] <= metrics["upper_bound"])
+
+        for metric in ["mean", "lower_bound", "upper_bound", "std"]:
+            self.assertIn(metric, metrics)
+            self.assertIsInstance(metrics[metric], float)
+
+        self.assertLessEqual(metrics["lower_bound"], metrics["mean"])
+        self.assertLessEqual(metrics["mean"], metrics["upper_bound"])
 
     def _get_is_data(
-        self, traj_length: int, num_actions: int, num_episodes: int
+        self,
+        traj_length: int,
+        num_actions: int,
+        num_episodes: int,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         target_policy_action_probabilities = np.concatenate(
             [
@@ -366,4 +584,8 @@ class TestEstimators(unittest.TestCase):
 
         rewards = np.random.rand(traj_length * num_episodes)
 
-        return (target_policy_action_probabilities, behavior_policy_action_probabilities, rewards)
+        return (
+            target_policy_action_probabilities,
+            behavior_policy_action_probabilities,
+            rewards,
+        )

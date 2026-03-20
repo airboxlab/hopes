@@ -2,7 +2,7 @@
 name = "hopes"
 version = "0.0.3"
 description = "HVAC optimisation with Off-Policy Evaluation and Selection methods"
-authors = ["Antoine Galataud <antoine@foobot.io>"]
+authors = ["Antoine Galataud <antoine@foobot.io>", "Davide Coraci <davide@foobot.io>"]
 packages = [
     { include = "hopes/" },
 ]
@@ -29,6 +29,7 @@ boto3 = "^1.34.74"
 dataclasses-json = "0.6.7"
 tabulate = "0.9.0"
 onnxruntime = "1.18.1"
+onnx = "^1.20.1"
 
 [tool.poetry.dev-dependencies]
 coverage = { version = "7.6.0", extras = ["toml"] }

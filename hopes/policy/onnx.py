@@ -1,11 +1,16 @@
+import logging
 import os
+import tempfile
 from pathlib import Path
 
 import numpy as np
+import onnx
 import onnxruntime as rt
+from onnx import numpy_helper
 
 from hopes.dev_utils import override
 from hopes.policy.policies import Policy
+from hopes.policy.utils import log_softmax
 
 
 class OnnxModelBasedPolicy(Policy):
@@ -179,8 +184,8 @@ class OnnxModelBasedPolicy(Policy):
     def output_names(self) -> list[str]:
         """The names of the outputs of the ONNX model.
 
-        By default, returns all output names. It can be overridden to return a subset of
-        output names.
+        :return: by default, the list of output names. It can be overridden to return a
+            subset of output names.
         """
         return [output.name for output in self.session.get_outputs()]
 
@@ -234,6 +239,12 @@ class OnnxModelBasedPolicy(Policy):
 
     @override(Policy)
     def log_probabilities(self, obs: np.ndarray) -> np.ndarray:
+        """Compute the log-probabilities of actions given the observations by feeding them through
+        the ONNX model.
+
+        :param obs: the observations for which to compute the log-probabilities.
+        :return: the log-probabilities of the actions given the observations.
+        """
         # get the output of the ONNX model
         output = self.session.run(input_feed=self.map_inputs(obs), output_names=self.output_names)
 
@@ -274,3 +285,269 @@ class OnnxModelBasedPolicy(Policy):
             action_dist_inputs = np.array(output[dist_index]).squeeze()
             log_probs = action_dist_inputs - np.logaddexp.reduce(action_dist_inputs, axis=-1)
             return log_probs.reshape(1, -1)
+
+
+class OnnxRunner:
+    """A lightweight ONNX inference wrapper used to replay a recurrent policy on logged
+    trajectories.
+
+    This helper is designed for *offline replay*: given a sequence of observations from a logged episode,
+    it runs an exported ONNX policy step-by-step and returns action log-probabilities (and optionally
+    probabilities for all actions). This is typically used to compute importance sampling ratios for
+    OPE estimators (e.g., IS / WIS / DR), where the target policy must be evaluated on the same states
+    visited by the behavior policy.
+
+    This class is intentionally lower-level than :class:`~hopes.policy.onnx.OnnxModelBasedPolicy`:
+    it exposes explicit control of the recurrent state buffer and the previous-actions buffer
+    (common for RLlib attention/RNN exports), and provides a single-step method returning
+    log-probabilities.
+
+    Assumptions / conventions
+    -------------------------
+    - The ONNX model exposes inputs for:
+        * observations (``obs``)
+        * a recurrent/attention state tensor (``state_in``)
+        * sequence lengths (``seq_lens``)
+        * a buffer of previous actions (``prev_actions``)
+    - The model exposes outputs for:
+        * action distribution inputs (logits) OR action probabilities/log-probabilities
+        * updated recurrent/attention state (``state_out``)
+    - The runner maintains:
+        * an internal recurrent state tensor (``self.state``)
+        * an internal previous-actions buffer (``self.prev_actions``)
+      which are reset at the start of each episode.
+
+    Exploration handling
+    --------------------
+    Some exported policies include an additional ``is_exploring`` input. When present,
+    the runner forces exploration OFF by feeding a ``False``/``0`` value, ensuring
+    deterministic evaluation during offline replay.
+
+    Typical usage
+    -------------
+    .. code-block:: python
+
+        runner = OnnxRunner(
+            onnx_path="policy.onnx",
+            T=10,
+            obs_dim=16,
+            act_dim=2,
+        )
+
+        # obs_batches: list[np.ndarray] with shapes [(T_ep, obs_dim), ...]
+        # act_batches: list[np.ndarray] with shapes [(T_ep,), ...]
+        probs, logp_taken = probs_from_runner(runner, obs_batches, act_batches)
+
+        # probs shape: (sum_t over all episodes, act_dim)
+        # logp_taken shape: (sum_t over all episodes,)
+
+    Notes
+    -----
+    - The exact input/output node names are model-specific. This implementation uses
+      opinionated defaults (RLlib-style export names). If your model differs, consider
+      making these names configurable via constructor arguments or a small config object.
+    - ``step_log_probs`` returns log-probabilities for *all* actions at a single timestep.
+      To match the original execution context for recurrent models, callers should update
+      ``prev_actions`` with the *logged* action after each step.
+    """
+
+    def __init__(
+        self,
+        onnx_path: str,
+        T: int = 10,
+        obs_dim: int = 16,
+        act_dim: int = 2,
+        prev_n_actions: int | None = None,
+        attention_dim: int = 32,
+    ) -> None:
+        """Initialize the ONNX runner.
+
+        :param onnx_path: the path to the ONNX model file.
+        :param T: the sequence length for the recurrent state and previous actions buffer.
+        :param obs_dim: the dimensionality of the observation space.
+        :param act_dim: the dimensionality of the action space.
+        :param prev_n_actions: the number of previous actions to maintain in the buffer.
+        :param attention_dim: the dimensionality of the attention/recurrent state.
+        """
+        self.sess = rt.InferenceSession(onnx_path, providers=["CPUExecutionProvider"])
+        self.T = T
+        self.obs_dim = obs_dim
+        self.act_dim = act_dim
+        self.prev_n_actions = T if prev_n_actions is None else prev_n_actions
+        self.attention_dim = attention_dim
+
+        self.obs_name = "default_policy/obs:0"
+        self.state_in_name = "default_policy/state_in_0:0"
+        self.seq_lens_name = "default_policy/seq_lens:0"
+        self.prev_actions_name = "default_policy/prev_actions:0"
+
+        self.logits_name = "default_policy/model_2/dense_6/BiasAdd:0"
+        self.state_out_name = "default_policy/Reshape_5:0"
+
+        self.input_names = {i.name for i in self.sess.get_inputs()}
+        self.is_exploring_name = None
+        self.is_exploring_dtype = None
+
+        for inp in self.sess.get_inputs():
+            if "is_exploring" in inp.name:
+                self.is_exploring_name = inp.name
+                self.is_exploring_dtype = inp.type
+                break
+
+        self.reset()
+
+    def reset(self) -> None:
+        self.state = np.zeros((1, self.T, self.attention_dim), dtype=np.float32)
+        self.prev_actions = np.zeros((1, self.prev_n_actions), dtype=np.int64)
+        self.seq_lens = np.array([self.T], dtype=np.int32)
+
+    # The runner feeds observations and recurrent state to the exported policy, retrieves action logits,
+    # and converts them into log-probabilities while updating the internal RNN state and previous-action buffer.
+    # The runner maintains the recurrent hidden state and the prev_actions buffer
+    # to match the original policy execution context during offline replay
+    def step_log_probs(self, obs_t: np.ndarray) -> np.ndarray:
+        """Run a single step of the ONNX model given the current observation and internal state,
+        and return the log-probabilities of all actions.
+
+        :param obs_t: the current observation, expected shape (obs_dim,).
+        :return: the log-probabilities of all actions, shape (1, act_dim).
+        """
+        obs_t = np.asarray(obs_t, dtype=np.float32).reshape(1, self.obs_dim)
+
+        feed = {
+            self.obs_name: obs_t,
+            self.state_in_name: self.state,
+            self.seq_lens_name: self.seq_lens,
+            self.prev_actions_name: self.prev_actions,
+        }
+
+        # Force exploration to OFF
+        if self.is_exploring_name is not None:
+            if self.is_exploring_dtype == "tensor(bool)":
+                feed[self.is_exploring_name] = np.array(False, dtype=np.bool_)
+            else:
+                # fallback to int
+                feed[self.is_exploring_name] = np.array([0], dtype=np.int64)
+
+        logits, state_out = self.sess.run([self.logits_name, self.state_out_name], feed)
+
+        logits = np.asarray(logits, dtype=np.float32).reshape(1, self.act_dim)
+        logp = log_softmax(logits, axis=1)
+
+        state_out = np.asarray(state_out, dtype=np.float32)
+
+        if state_out.ndim == 3 and state_out.shape[2] == self.attention_dim:
+            self.state = state_out
+        elif state_out.ndim == 2 and state_out.shape[1] == self.attention_dim:
+            self.state = np.concatenate(
+                [self.state[:, 1:, :], state_out.reshape(1, 1, self.attention_dim)], axis=1
+            )
+        else:
+            raise RuntimeError(f"Unexpected state_out shape: {state_out.shape}")
+
+        return logp
+
+    def update_prev_actions(self, a_t: int) -> None:
+        """Update the previous actions buffer with the logged action at the current timestep.
+
+        :param a_t: the logged action at the current timestep.
+        """
+        a = np.array([[a_t]], dtype=np.int64)
+        self.prev_actions = np.concatenate([self.prev_actions[:, 1:], a], axis=1)
+
+
+def probs_from_runner(
+    runner: OnnxRunner, obs_batches, act_batches
+) -> tuple[np.ndarray, np.ndarray]:
+    """Evaluating the new policy on the logged trajectories to compute its action probabilities in
+    the same states visited by the behavior policy. For each timestep, it extracts the full action
+    distribution and the probability assigned by the new policy to the logged action, which are
+    later used by IS- and DR-based OPE estimators.
+
+    :param runner: the OnnxRunner instance used to compute log-probabilities.
+    :param obs_batches: list of np.ndarray with shapes [(T_ep, obs_dim), ...] containing the observations for each episode.
+    :param act_batches: list of np.ndarray with shapes [(T_ep,), ...] containing the logged actions for each episode.
+    :return: a tuple (probs_all, logp_taken_all) where:
+        - probs_all is a np.ndarray of shape (sum_t over all episodes, act_dim) containing the action probabilities for all actions at each timestep.
+        - logp_taken_all is a np.ndarray of shape (sum_t over all episodes) containing the log-probability assigned by the new policy to the logged action at each timestep.
+    """
+    probs_all = []
+    logp_taken_all = []
+
+    for obs_ep, act_ep in zip(obs_batches, act_batches):
+        assert obs_ep.shape[0] == act_ep.shape[0], "obs/actions length mismatch in episode"
+
+        # The runner is reset at the beginning of each episode to ensure consistent recurrent state
+        runner.reset()
+
+        # prev_actions is updated with the logged action to match the original execution context
+        for t in range(obs_ep.shape[0]):
+            lp = runner.step_log_probs(obs_ep[t])[0]  # log π(.|s_t, prev_actions_buffer)
+            probs = np.exp(lp).astype(np.float32)
+
+            # 1) save action probability for logged actions (for IS/DR)
+            a_logged = int(act_ep[t])
+            probs_all.append(probs)
+            logp_taken_all.append(float(lp[a_logged]))
+
+            # update prev_actions with the LOGGED action
+            runner.update_prev_actions(a_logged)
+
+    return np.vstack(probs_all), np.array(logp_taken_all, dtype=np.float32)
+
+
+def remove_onnx_model_initializer(model: onnx.ModelProto, name: str) -> bool:
+    """Remove initializer with given name from ONNX model and add it as model input if not already
+    present.
+
+    :param model: the ONNX model from which to remove the initializer.
+    :param name: the name (or substring of the name) of the initializer to remove.
+    :return: True if the initializer was found and removed, False otherwise.
+    """
+    for i, init in enumerate(model.graph.initializer):
+        if name in init.name:
+            old_value = numpy_helper.to_array(init)
+            logging.info(
+                f"[ONNX model prep] Found initializer '{name}' with shape {old_value.shape}, dtype {old_value.dtype} and value {old_value}"
+            )
+
+            # Move initializer to model input so it can be provided at runtime.
+            if not any(inp.name == init.name for inp in model.graph.input):
+                value_info = onnx.helper.make_tensor_value_info(
+                    init.name, init.data_type, list(old_value.shape)
+                )
+                model.graph.input.append(value_info)
+
+            del model.graph.initializer[i]
+            logging.info(f"[ONNX model prep] Converted initializer '{name}' to model input")
+            return True
+    return False
+
+
+def prepare_onnx_model(model_in: str, model_out: str) -> None:
+    """Utility to prepare ONNX model by zeroing out specific initializers.
+
+    :param model_in: path to the input ONNX model file.
+    :param model_out: path to the output ONNX model file after preparation.
+    """
+    model = onnx.load(model_in)
+    targets = ["is_exploring"]
+    for name in targets:
+        if remove_onnx_model_initializer(model, name):
+            logging.info(f"[ONNX model prep] initializer '{name}' now expected as model input")
+        else:
+            raise ValueError(f"[ONNX model prep] initializer '{name}' not found in the model")
+
+    onnx.save(model, model_out)
+
+
+def write_onnx_bytes(model_bytes: bytes, name: str) -> str:
+    """Write ONNX model bytes to a temporary file and return the file path.
+
+    :param model_bytes: the ONNX model content as bytes.
+    :param name: the name to use for the temporary ONNX file (without extension).
+    :return: the file path to the temporary ONNX file.
+    """
+    p = Path(tempfile.gettempdir()) / f"{name}.onnx"
+    p.write_bytes(model_bytes)
+    return str(p)
