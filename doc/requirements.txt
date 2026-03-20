@@ -5,3 +5,4 @@ sphinx-design==0.6.1
 # however, it causes issues with union types PEP 604 support
 # ie fails with TypeError: unsupported operand type(s) for |: 'ndarray' and 'NoneType'
 numpy==1.26.4
+onnx==1.20.1
