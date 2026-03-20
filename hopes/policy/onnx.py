@@ -3,7 +3,6 @@ import os
 import tempfile
 from pathlib import Path
 
-import boto3
 import numpy as np
 import onnx
 import onnxruntime as rt
@@ -12,8 +11,6 @@ from onnx import numpy_helper
 from hopes.dev_utils import override
 from hopes.policy.policies import Policy
 from hopes.policy.utils import log_softmax
-
-s3 = boto3.client("s3")
 
 
 class OnnxModelBasedPolicy(Policy):
