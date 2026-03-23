@@ -1067,3 +1067,219 @@ class SelfNormalizedPerDecisionImportanceSampling(PerDecisionImportanceSampling)
         den = float(np.sum(W_b))
 
         return float(num / np.maximum(den, self.eps))
+
+
+class SequentialDoublyRobust(BaseEstimator):
+    r"""Sequential Doubly Robust estimator.
+
+    This estimator computes a per-decision doubly robust estimate using a
+    temporal-difference-style formulation. It combines model-based predictions
+    with cumulative importance weights built from behavior and target policy
+    action probabilities.
+
+    The per-episode estimate is computed as:
+
+    .. math::
+        \hat{V}_{\mathrm{DR}}^{(i)} =
+        \hat{V}(s_{i,0}) +
+        \sum_{t=0}^{T-1}
+        W_{i,t}
+        \left(
+            r_{i,t}
+            + \gamma \hat{V}(s_{i,t+1})
+            - \hat{Q}(s_{i,t}, a_{i,t})
+        \right)
+
+    where:
+
+    .. math::
+        W_{i,t} = \prod_{k=0}^{t} \rho_{i,k}
+
+    and
+
+    .. math::
+        \rho_{i,t} =
+        \frac{\pi_e(a_{i,t} \mid s_{i,t})}{\pi_b(a_{i,t} \mid s_{i,t})}
+
+    with:
+
+    - :math:`i` denoting the episode index,
+    - :math:`t` denoting the timestep index,
+    - :math:`r_{i,t}` the observed reward at timestep :math:`t`,
+    - :math:`\hat{Q}(s_{i,t}, a_{i,t})` the estimated action-value for the logged action,
+    - :math:`\hat{V}(s_{i,t})` the estimated state value under the target policy,
+    - :math:`\gamma` the discount factor,
+    - :math:`\pi_e` the target policy,
+    - :math:`\pi_b` the behavior policy.
+
+    If precomputed step-wise importance ratios are provided, they are used directly.
+    Otherwise, the ratios are constructed from the target and behavior policy action
+    probabilities and the logged actions.
+
+    Stickiness handling, when needed, must be applied upstream during preprocessing.
+    """
+
+    def __init__(
+        self,
+        *,
+        steps_per_episode: int,
+        discount_factor: float = 1.0,
+        eps: float = 1e-12,
+        clip: float | None = None,
+    ) -> None:
+        """Initialize the Sequential Doubly Robust estimator.
+
+        :param steps_per_episode: Number of timesteps in each episode.
+        :param discount_factor: Discount factor
+        :math:`\\gamma` used in the TD correction term. Must be in
+        :math:`[0, 1]`.
+        :param eps: Numerical stabilizer used in importance-ratio computation to avoid
+            division by zero.
+        :param clip: Optional symmetric clipping threshold applied to step-wise importance
+            ratios as
+        :math:`\rho_t \\leftarrow \\mathrm{clip}(\rho_t, 1 / c, c)`. When provided, it must
+            satisfy
+        :math:`c \\geq 1`.
+        """
+        super().__init__()
+
+        assert steps_per_episode > 0, "The number of steps per episode must be positive."
+        assert 0 <= discount_factor <= 1, "The discount factor must be in [0, 1]."
+
+        self.steps_per_episode = steps_per_episode
+        self.discount_factor = discount_factor
+        self.eps = eps
+        self.clip = clip
+
+        self.logged_actions: np.ndarray | None = None
+        self.q_values: np.ndarray | None = None
+
+    def set_logged_actions(self, logged_actions: np.ndarray) -> None:
+        """Set logged actions.
+
+        :param logged_actions: Logged action indices with shape `(n_samples,)`.
+        """
+        self.logged_actions = np.asarray(logged_actions, dtype=np.int64).reshape(-1)
+
+    def set_model_predictions(self, *, q_values: np.ndarray) -> None:
+        r"""Set model-based predictions used by the sequential DR estimator.
+
+        :param q_values: Estimated action-values for all actions, shape `(n_samples,
+            n_actions)`. Each row must contain the estimated action-values
+        :math:`[\hat{Q}(s_t, a)]_{a \in \mathcal{A}}` for the corresponding state.
+        """
+        self.q_values = np.asarray(q_values, dtype=np.float32)
+
+    @override(BaseEstimator)
+    def short_name(self) -> str:
+        return "SDR"
+
+    @override(BaseEstimator)
+    def check_parameters(self) -> None:
+        """Check if the estimator parameters are valid."""
+        super().check_parameters()
+
+        if self.eps <= 0:
+            raise ValueError("eps must be > 0.")
+
+        if self.clip is not None and self.clip < 1.0:
+            raise ValueError("clip must be >= 1.0 when provided.")
+
+        n_samples = self.rewards.shape[0]
+        n_actions = self.target_policy_action_probabilities.shape[1]
+
+        if n_samples % self.steps_per_episode != 0:
+            raise ValueError("The number of samples must be divisible by steps_per_episode.")
+
+        if self.q_values is None:
+            raise ValueError("q_values not set. Call set_model_predictions(...).")
+
+        if self.q_values.ndim != 2:
+            raise ValueError("q_values must be a 2D array of shape (n_samples, n_actions).")
+
+        if self.q_values.shape != (n_samples, n_actions):
+            raise ValueError(
+                "q_values must have shape (n_samples, n_actions), matching "
+                "target_policy_action_probabilities."
+            )
+
+        if self.logged_actions is None:
+            raise ValueError("logged_actions must be provided.")
+
+        if self.logged_actions.shape[0] != n_samples:
+            raise ValueError("logged_actions length must match rewards length.")
+
+        if np.any(self.logged_actions < 0) or np.any(self.logged_actions >= n_actions):
+            raise ValueError("logged_actions contains invalid action indices.")
+
+    def _get_stepwise_importance_ratios(self) -> np.ndarray:
+        """Get the step-wise importance ratios.
+
+        :return: Step-wise importance ratios, shape `(n_episodes, steps_per_episode)`.
+        """
+
+        n_samples = self.rewards.shape[0]
+        n_episodes = n_samples // self.steps_per_episode
+
+        if self.importance_ratios is not None:
+            rho = np.asarray(self.importance_ratios, dtype=np.float32)
+            if rho.ndim == 1:
+                rho = rho.reshape(n_episodes, self.steps_per_episode)
+            return rho
+
+        idx = np.arange(n_samples, dtype=np.int64)
+        actions = np.asarray(self.logged_actions, dtype=np.int64).reshape(-1)
+
+        p_e_taken = self.target_policy_action_probabilities[idx, actions].astype(np.float32)
+        p_b_taken = self.behavior_policy_action_probabilities[idx, actions].astype(np.float32)
+
+        rho = p_e_taken / np.maximum(p_b_taken, self.eps)
+
+        if self.clip is not None:
+            rho = np.clip(rho, 1.0 / self.clip, self.clip)
+
+        return rho.reshape(n_episodes, self.steps_per_episode)
+
+    @override(BaseEstimator)
+    def estimate_weighted_rewards(self) -> np.ndarray:
+        """Estimate episode-level sequential DR contributions.
+
+        :return: Episode-level DR estimates, shape `(n_episodes, 1)`.
+        """
+        self.check_parameters()
+
+        rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
+        q_values = np.asarray(self.q_values, dtype=np.float32)
+        rho = self._get_stepwise_importance_ratios()
+
+        n_episodes, horizon = rewards.shape
+        n_samples = n_episodes * horizon
+
+        logged_actions = np.asarray(self.logged_actions, dtype=np.int64).reshape(-1)
+        idx = np.arange(n_samples, dtype=np.int64)
+
+        q_logged = q_values[idx, logged_actions].reshape(n_episodes, horizon)
+
+        v_values = np.sum(
+            self.target_policy_action_probabilities * q_values,
+            axis=1,
+        ).reshape(n_episodes, horizon)
+
+        v_next = np.zeros_like(v_values)
+        v_next[:, :-1] = v_values[:, 1:]
+        v_next[:, -1] = 0.0
+
+        cumulative_weights = np.cumprod(rho, axis=1)
+
+        episode_estimates = v_values[:, 0].copy()
+
+        for t in range(horizon):
+            td_correction = rewards[:, t] + self.discount_factor * v_next[:, t] - q_logged[:, t]
+            episode_estimates += cumulative_weights[:, t] * td_correction
+
+        return episode_estimates.reshape(-1, 1).astype(np.float32)
+
+    @override(BaseEstimator)
+    def estimate_policy_value(self) -> float:
+        """Estimate the value of the target policy."""
+        return float(np.mean(self.estimate_weighted_rewards()))

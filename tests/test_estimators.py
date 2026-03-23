@@ -11,9 +11,10 @@ from hopes.ope.estimators import (
     SelfNormalizedInverseProbabilityWeighting,
     SelfNormalizedPerDecisionImportanceSampling,
     SelfNormalizedTrajectoryWiseImportanceSampling,
+    SequentialDoublyRobust,
     TrajectoryWiseImportanceSampling,
 )
-from hopes.rew.rewards import RegressionBasedRewardModel
+from hopes.rew.rewards import RegressionBasedRewardModel, RTGQModelHGBoost
 
 
 class TestEstimators(unittest.TestCase):
@@ -589,3 +590,258 @@ class TestEstimators(unittest.TestCase):
             behavior_policy_action_probabilities,
             rewards,
         )
+
+    def test_sdr(self):
+        steps_per_episode = 4
+        num_episodes = 20
+        num_actions = 3
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(0)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+        logged_actions = rng.integers(0, num_actions, size=n_samples, dtype=np.int64)
+        q_values = rng.random((n_samples, num_actions), dtype=np.float32)
+
+        sdr = SequentialDoublyRobust(
+            steps_per_episode=steps_per_episode,
+            discount_factor=0.99,
+        )
+        sdr.set_logged_actions(logged_actions)
+        sdr.set_model_predictions(q_values=q_values)
+        sdr.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rewards,
+        )
+
+        wrew = sdr.estimate_weighted_rewards()
+        self.assertIsInstance(wrew, np.ndarray)
+        self.assertEqual(wrew.shape, (num_episodes, 1))
+
+        policy_value = sdr.estimate_policy_value()
+        self.assertIsInstance(policy_value, float)
+
+        self._test_ci(sdr)
+
+    def test_sdr_with_precomputed_importance_ratios_identity(self):
+        steps_per_episode = 5
+        num_episodes = 10
+        num_actions = 3
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(1)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+        logged_actions = rng.integers(0, num_actions, size=n_samples, dtype=np.int64)
+
+        q_values = np.zeros((n_samples, num_actions), dtype=np.float32)
+        rho = np.ones(n_samples, dtype=np.float32)
+
+        sdr = SequentialDoublyRobust(
+            steps_per_episode=steps_per_episode,
+            discount_factor=1.0,
+        )
+        sdr.set_logged_actions(logged_actions)
+        sdr.set_model_predictions(q_values=q_values)
+        sdr.set_importance_ratios(rho)
+        sdr.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rewards,
+        )
+
+        value = sdr.estimate_policy_value()
+        expected = float(np.mean(rewards.reshape(num_episodes, steps_per_episode).sum(axis=1)))
+
+        self.assertAlmostEqual(value, expected, places=6)
+
+    def test_sdr_with_clipped_importance_ratios(self):
+        steps_per_episode = 4
+        num_episodes = 8
+        num_actions = 2
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(2)
+
+        target = np.tile(np.array([[0.99, 0.01]], dtype=np.float32), (n_samples, 1))
+        behavior = np.tile(np.array([[0.01, 0.99]], dtype=np.float32), (n_samples, 1))
+        rewards = rng.random(n_samples, dtype=np.float32)
+        logged_actions = np.zeros(n_samples, dtype=np.int64)
+        q_values = rng.random((n_samples, num_actions), dtype=np.float32)
+
+        sdr = SequentialDoublyRobust(
+            steps_per_episode=steps_per_episode,
+            discount_factor=0.9,
+            clip=2.0,
+        )
+        sdr.set_logged_actions(logged_actions)
+        sdr.set_model_predictions(q_values=q_values)
+        sdr.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rewards,
+        )
+
+        wrew = sdr.estimate_weighted_rewards()
+        self.assertEqual(wrew.shape, (num_episodes, 1))
+        self.assertTrue(np.all(np.isfinite(wrew)))
+
+    def test_sdr_raises_if_q_values_not_set(self):
+        steps_per_episode = 4
+        num_episodes = 5
+        num_actions = 3
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(3)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+        logged_actions = rng.integers(0, num_actions, size=n_samples, dtype=np.int64)
+
+        sdr = SequentialDoublyRobust(
+            steps_per_episode=steps_per_episode,
+            discount_factor=0.99,
+        )
+        sdr.set_logged_actions(logged_actions)
+
+        with self.assertRaises(ValueError):
+            sdr.set_parameters(
+                target_policy_action_probabilities=target,
+                behavior_policy_action_probabilities=behavior,
+                rewards=rewards,
+            )
+
+    def test_sdr_raises_if_logged_actions_not_set(self):
+        steps_per_episode = 4
+        num_episodes = 5
+        num_actions = 3
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(4)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+        q_values = rng.random((n_samples, num_actions), dtype=np.float32)
+
+        sdr = SequentialDoublyRobust(
+            steps_per_episode=steps_per_episode,
+            discount_factor=0.99,
+        )
+        sdr.set_model_predictions(q_values=q_values)
+
+        with self.assertRaises(ValueError):
+            sdr.set_parameters(
+                target_policy_action_probabilities=target,
+                behavior_policy_action_probabilities=behavior,
+                rewards=rewards,
+            )
+
+    def test_sdr_raises_on_invalid_q_values_shape(self):
+        steps_per_episode = 4
+        num_episodes = 5
+        num_actions = 3
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(5)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+        logged_actions = rng.integers(0, num_actions, size=n_samples, dtype=np.int64)
+
+        bad_q_values = rng.random((n_samples, num_actions + 1), dtype=np.float32)
+
+        sdr = SequentialDoublyRobust(
+            steps_per_episode=steps_per_episode,
+            discount_factor=0.99,
+        )
+        sdr.set_logged_actions(logged_actions)
+        sdr.set_model_predictions(q_values=bad_q_values)
+
+        with self.assertRaises(ValueError):
+            sdr.set_parameters(
+                target_policy_action_probabilities=target,
+                behavior_policy_action_probabilities=behavior,
+                rewards=rewards,
+            )
+
+    def test_sdr_raises_on_invalid_logged_actions(self):
+        steps_per_episode = 4
+        num_episodes = 5
+        num_actions = 3
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(6)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        rewards = rng.random(n_samples, dtype=np.float32)
+        q_values = rng.random((n_samples, num_actions), dtype=np.float32)
+
+        logged_actions = np.full(n_samples, num_actions, dtype=np.int64)
+
+        sdr = SequentialDoublyRobust(
+            steps_per_episode=steps_per_episode,
+            discount_factor=0.99,
+        )
+        sdr.set_logged_actions(logged_actions)
+        sdr.set_model_predictions(q_values=q_values)
+
+        with self.assertRaises(ValueError):
+            sdr.set_parameters(
+                target_policy_action_probabilities=target,
+                behavior_policy_action_probabilities=behavior,
+                rewards=rewards,
+            )
+
+    def test_sdr_with_rtg_q_model(self):
+        steps_per_episode = 4
+        num_episodes = 10
+        num_actions = 3
+        obs_dim = 5
+        n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(7)
+
+        obs = rng.random((n_samples, obs_dim), dtype=np.float32)
+        act = rng.integers(0, num_actions, size=n_samples, dtype=np.int64)
+        rew = rng.random(n_samples, dtype=np.float32)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+
+        q_model = RTGQModelHGBoost(
+            steps_per_episode=steps_per_episode,
+            num_actions=num_actions,
+            discount_factor=0.99,
+            random_state=0,
+        )
+        q_model.fit(
+            obs_flat=obs,
+            act_flat=act,
+            rew_flat=rew,
+        )
+        q_values = q_model.predict_q_values(obs_flat=obs)
+
+        sdr = SequentialDoublyRobust(
+            steps_per_episode=steps_per_episode,
+            discount_factor=0.99,
+        )
+        sdr.set_logged_actions(act)
+        sdr.set_model_predictions(q_values=q_values)
+        sdr.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rew,
+        )
+
+        value = sdr.estimate_policy_value()
+        self.assertIsInstance(value, float)
+        self.assertTrue(np.isfinite(value))
