@@ -1127,19 +1127,19 @@ class SequentialDoublyRobust(BaseEstimator):
         eps: float = 1e-12,
         clip: float | None = None,
     ) -> None:
-        """Initialize the Sequential Doubly Robust estimator.
+        r"""Initialize the Sequential Doubly Robust estimator.
 
         :param steps_per_episode: Number of timesteps in each episode.
         :param discount_factor: Discount factor
-        :math:`\\gamma` used in the TD correction term. Must be in
+        :math:`\gamma` used in the TD correction term. Must be in
         :math:`[0, 1]`.
         :param eps: Numerical stabilizer used in importance-ratio computation to avoid
             division by zero.
         :param clip: Optional symmetric clipping threshold applied to step-wise importance
             ratios as
-        :math:`\rho_t \\leftarrow \\mathrm{clip}(\rho_t, 1 / c, c)`. When provided, it must
+        :math:`\rho_t \leftarrow \mathrm{clip}(\rho_t, 1 / c, c)`. When provided, it must
             satisfy
-        :math:`c \\geq 1`.
+        :math:`c \geq 1`.
         """
         super().__init__()
 
