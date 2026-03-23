@@ -175,7 +175,7 @@ class RegressionBasedRewardModel(RewardModel):
 
 
 class RTGQModelHGBoost(RewardModel):
-    """Train a regression model approximating Q(s, a) from logged trajectories.
+    r"""Train a regression model approximating Q(s, a) from logged trajectories.
 
     The model uses logged trajectories as features and predicts
     return-to-go (RTG) targets. It can then estimate Q-values for specific (obs, act)
@@ -185,13 +185,13 @@ class RTGQModelHGBoost(RewardModel):
 
     .. math::
 
-        RTG_t = \\sum_{k=t}^{T-1} r_k
+        RTG_t = \sum_{k=t}^{T-1} r_k
 
     Features used for regression:
 
     .. math::
 
-        X = [obs, step\\_idx, action]
+        X = [obs, step\_idx, action]
 
     where:
 
@@ -204,7 +204,7 @@ class RTGQModelHGBoost(RewardModel):
 
     .. math::
 
-        Q(s,a) \\in \\mathbb{R}^{N \times A}
+        Q(s,a) \in \mathbb{R}^{N \times A}
 
     where:
 
