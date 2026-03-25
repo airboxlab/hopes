@@ -185,7 +185,9 @@ class RTGQModelHGBoost(RewardModel):
 
     .. math::
 
-        RTG_t = \sum_{k=t}^{T-1} r_k
+        RTG_t = \sum_{k=t}^{T-1} \gamma^{k-t} r_k
+
+        where :math:`\gamma \in [0, 1]` is the discount factor.
 
     Features used for regression:
 
@@ -225,7 +227,7 @@ class RTGQModelHGBoost(RewardModel):
 
         :param steps_per_episode: Number of timesteps per episode.
         :param num_actions: Number of discrete actions.
-        :model_params: Optional parameters for `HistGradientBoostingRegressor`.
+        :param model_params: Optional parameters for `HistGradientBoostingRegressor`.
         :param random_state: Random seed.
         """
         super().__init__()
