@@ -6,7 +6,7 @@ import scipy
 
 from hopes.assert_utils import check_array
 from hopes.dev_utils import override
-from hopes.rew.rewards import RegressionBasedRewardModel
+from hopes.rew.rewards import RegressionBasedRewardModel, RTGQModelHGBoost
 
 
 class BaseEstimator(ABC):
@@ -45,8 +45,8 @@ class BaseEstimator(ABC):
         stickiness correction outside the estimator.
 
         param importance_ratios: Precomputed importance ratios for the logged actions.
-            Supported shapes are ``(n_samples,)`` or ``(n_episodes, steps_per_episode)``.
-        :raises ValueError: If the shape of ``importance_ratios`` is invalid.
+            Supported shapes are `(n_samples,)` or `(n_episodes, steps_per_episode)`.
+        :raises ValueError: If the shape of `importance_ratios` is invalid.
         """
 
         if importance_ratios is None:
@@ -619,17 +619,17 @@ class TrajectoryPerDecisionMixin(ABC):
         step-wise ratios directly instead of recomputing them from policy probabilities.
 
         :param target_policy_action_probabilities: Target policy action probabilities,
-            shape ``(n_samples, n_actions)``.
+            shape `(n_samples, n_actions)`.
         :param behavior_policy_action_probabilities: Behavior policy action probabilities,
-            shape ``(n_samples, n_actions)``.
-        :param rewards: Logged rewards, shape ``(n_samples,)``.
+            shape `(n_samples, n_actions)`.
+        :param rewards: Logged rewards, shape `(n_samples,)`.
         :param steps_per_episode: Number of steps per episode.
-        :param discount_factor: Discount factor in ``[0, 1]``.
+        :param discount_factor: Discount factor in `[0, 1]`.
         :param is_per_decision: Whether to compute per-decision or trajectory-wise weighting.
         :param importance_ratios: Optional precomputed step-wise importance ratios for the
-            logged actions. Supported shapes are ``(n_samples,)`` or
-            ``(n_episodes, steps_per_episode)``.
-        :return: Weighted rewards per episode, shape ``(n_episodes, 1)``.
+            logged actions. Supported shapes are `(n_samples,)` or
+            `(n_episodes, steps_per_episode)`.
+        :return: Weighted rewards per episode, shape `(n_episodes, 1)`.
         """
 
         # rewards, shape: (n, T)
@@ -1117,6 +1117,7 @@ class SequentialDoublyRobust(BaseEstimator):
     probabilities and the logged actions.
 
     Stickiness handling, when needed, must be applied upstream during preprocessing.
+    Reference paper: https://arxiv.org/abs/1511.03722
     """
 
     def __init__(
@@ -1169,6 +1170,55 @@ class SequentialDoublyRobust(BaseEstimator):
         :math:`[\hat{Q}(s_t, a)]_{a \in \mathcal{A}}` for the corresponding state.
         """
         self.q_values = np.asarray(q_values, dtype=np.float32)
+
+    def fit(
+        self,
+        *,
+        obs_flat: np.ndarray,
+        act_flat: np.ndarray,
+        rew_flat: np.ndarray,
+        num_actions: int,
+        q_model_params: dict | None = None,
+        random_state: int = 0,
+    ) -> RTGQModelHGBoost:
+        """Fit an internal :class:`~hopes.rew.rewards.RTGQModelHGBoost` Q model from raw
+        logged data, then populate :attr:`q_values` and :attr:`logged_actions` automatically.
+
+        This mirrors the design of :meth:`DirectMethod.fit`: rather than building and fitting
+        the Q model externally and injecting the predictions via
+        :meth:`set_model_predictions`, you can pass the raw trajectory data directly and let
+        the estimator handle the model training.  The two workflows remain interchangeable —
+        :meth:`set_model_predictions` is still available for cases where Q-values come from
+        an external source.
+
+        :param obs_flat: Observations, shape `(n_samples, obs_dim)`.
+        :param act_flat: Discrete action indices, shape `(n_samples,)`.
+        :param rew_flat: Rewards, shape `(n_samples,)`.
+        :param num_actions: Total number of discrete actions.
+        :param q_model_params: Optional hyper-parameters forwarded to
+            :class:`~hopes.rew.rewards.RTGQModelHGBoost`.
+        :param random_state: Random seed for the underlying gradient-boosting model.
+        :return: The fitted :class:`~hopes.rew.rewards.RTGQModelHGBoost` instance.
+        """
+        obs_flat = np.asarray(obs_flat, dtype=np.float32)
+        act_flat = np.asarray(act_flat, dtype=np.int64).reshape(-1)
+        rew_flat = np.asarray(rew_flat, dtype=np.float32).reshape(-1)
+
+        q_model = RTGQModelHGBoost(
+            steps_per_episode=self.steps_per_episode,
+            num_actions=num_actions,
+            discount_factor=self.discount_factor,
+            model_params=q_model_params or {},
+            random_state=random_state,
+        )
+        q_model.fit(obs_flat=obs_flat, act_flat=act_flat, rew_flat=rew_flat)
+
+        # Populate q_values for all (state, action) pairs and store logged actions
+        q_values = q_model.predict_q_values(obs_flat=obs_flat)  # shape: (n_samples, num_actions)
+        self.set_model_predictions(q_values=q_values)
+        self.set_logged_actions(act_flat)
+
+        return q_model
 
     @override(BaseEstimator)
     def short_name(self) -> str:
@@ -1248,35 +1298,56 @@ class SequentialDoublyRobust(BaseEstimator):
         """
         self.check_parameters()
 
+        # shape: (n_episodes, horizon)
         rewards = np.asarray(self.rewards, dtype=np.float32).reshape(-1, self.steps_per_episode)
+        # shape: (n_samples, n_actions)
         q_values = np.asarray(self.q_values, dtype=np.float32)
+        # shape: (n_episodes, horizon)
         rho = self._get_stepwise_importance_ratios()
 
         n_episodes, horizon = rewards.shape
         n_samples = n_episodes * horizon
 
-        logged_actions = np.asarray(self.logged_actions, dtype=np.int64).reshape(-1)
-        idx = np.arange(n_samples, dtype=np.int64)
+        # flat index arrays used for advanced indexing into q_values
+        logged_actions = np.asarray(self.logged_actions, dtype=np.int64).reshape(
+            -1
+        )  # shape: (n_samples,)
+        idx = np.arange(n_samples, dtype=np.int64)  # shape: (n_samples,)
 
+        # Q-value of the action actually taken at each (episode, timestep)
+        # shape: (n_episodes, horizon)
         q_logged = q_values[idx, logged_actions].reshape(n_episodes, horizon)
 
+        # V(s) = Σ_a π_e(a|s) * Q(s, a) — expected value under the target policy
+        # shape: (n_episodes, horizon)
         v_values = np.sum(
             self.target_policy_action_probabilities * q_values,
             axis=1,
         ).reshape(n_episodes, horizon)
 
+        # V(s_{t+1}): shift v_values one step forward; terminal step gets 0
+        # shape: (n_episodes, horizon)
         v_next = np.zeros_like(v_values)
         v_next[:, :-1] = v_values[:, 1:]
         v_next[:, -1] = 0.0
 
+        # W_{i,t} = Π_{k=0}^{t} ρ_{i,k} — cumulative importance weights up to each timestep
+        # shape: (n_episodes, horizon)
         cumulative_weights = np.cumprod(rho, axis=1)
 
+        # Initialise each episode's estimate with V(s_0), the model's prediction at the initial state
+        # shape: (n_episodes,)
         episode_estimates = v_values[:, 0].copy()
 
+        # Accumulate TD-style correction terms across timesteps:
+        #   δ_t = r_t + γ * V(s_{t+1}) - Q(s_t, a_t)   (residual / advantage at step t)
+        #   episode_estimate += W_{i,t} * δ_t            (weighted by cumulative IS ratio)
         for t in range(horizon):
+            # shape: (n_episodes,)
             td_correction = rewards[:, t] + self.discount_factor * v_next[:, t] - q_logged[:, t]
             episode_estimates += cumulative_weights[:, t] * td_correction
 
+        # shape: (n_episodes, 1)
         return episode_estimates.reshape(-1, 1).astype(np.float32)
 
     @override(BaseEstimator)

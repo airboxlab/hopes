@@ -801,12 +801,60 @@ class TestEstimators(unittest.TestCase):
                 rewards=rewards,
             )
 
-    def test_sdr_with_rtg_q_model(self):
+    def test_sdr_fit(self):
+        """Test that SequentialDoublyRobust.fit() mirrors DirectMethod.fit():
+
+        raw trajectory data is passed directly and the estimator handles Q-model training
+        internally.
+        """
         steps_per_episode = 4
         num_episodes = 10
         num_actions = 3
         obs_dim = 5
         n_samples = steps_per_episode * num_episodes
+
+        rng = np.random.default_rng(42)
+
+        obs = rng.random((n_samples, obs_dim), dtype=np.float32)
+        act = rng.integers(0, num_actions, size=n_samples, dtype=np.int64)
+        rew = rng.random(n_samples, dtype=np.float32)
+
+        target = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+        behavior = generate_action_probs(traj_length=n_samples, num_actions=num_actions)
+
+        sdr = SequentialDoublyRobust(
+            steps_per_episode=steps_per_episode,
+            discount_factor=0.99,
+        )
+
+        # fit() should internally build and train RTGQModelHGBoost,
+        # then populate q_values and logged_actions — no external model setup needed
+        q_model = sdr.fit(
+            obs_flat=obs,
+            act_flat=act,
+            rew_flat=rew,
+            num_actions=num_actions,
+            random_state=0,
+        )
+
+        self.assertIsNotNone(q_model)
+        self.assertIsNotNone(sdr.q_values)
+        self.assertEqual(sdr.q_values.shape, (n_samples, num_actions))
+        self.assertIsNotNone(sdr.logged_actions)
+        self.assertEqual(sdr.logged_actions.shape, (n_samples,))
+
+        sdr.set_parameters(
+            target_policy_action_probabilities=target,
+            behavior_policy_action_probabilities=behavior,
+            rewards=rew,
+        )
+
+        value = sdr.estimate_policy_value()
+        self.assertIsInstance(value, float)
+        self.assertTrue(np.isfinite(value))
+
+        wrew = sdr.estimate_weighted_rewards()
+        self.assertEqual(wrew.shape, (num_episodes, 1))
 
         rng = np.random.default_rng(7)
 

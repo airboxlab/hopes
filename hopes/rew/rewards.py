@@ -60,7 +60,23 @@ class RewardFunctionModel(RewardModel):
 
 
 class RegressionBasedRewardModel(RewardModel):
-    """A reward model that uses a fitted regression model to estimate rewards."""
+    """A general-purpose reward model that fits a user-selected regression model to estimate
+    rewards.
+
+    Unlike more specialised subclasses (e.g. :class:`RTGQModelHGBoost`, which is tied to
+    return-to-go targets and a fixed ``HistGradientBoostingRegressor`` backend), this class
+    is agnostic to the regression algorithm and supports multiple backends:
+
+    - "linear" – sklearn :class:`~sklearn.linear_model.LinearRegression`.
+    - "polynomial" – polynomial feature expansion followed by
+      :class:`~sklearn.linear_model.LinearRegression`.
+    - "random_forest"`` – sklearn :class:`~sklearn.ensemble.RandomForestRegressor`.
+    - "mlp" – a simple two-layer feed-forward network trained with PyTorch (MSE loss,
+      Adam optimiser).
+
+    The regression target is always the **immediate reward** `r(s, a)`, making this model
+    suitable for direct reward approximation from logged data.
+    """
 
     def __init__(
         self,
@@ -395,7 +411,6 @@ class RTGQModelHGBoost(RewardModel):
         q = np.asarray(self.model.predict(x_sa), dtype=np.float32)
         return self._scale(q)
 
-    # prediction of Q-values for all actions
     def predict_q_values(self, *, obs_flat: np.ndarray) -> np.ndarray:
         """Predict Q-values for all actions given observations.
 
