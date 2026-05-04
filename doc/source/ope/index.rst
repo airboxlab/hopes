@@ -11,7 +11,7 @@ Roadmap
 - [x] Implement Self-Normalized Trajectory-wise Importance Sampling (SNTIS) estimator
 - [x] Implement Per-Decision Importance Sampling (PDIS) estimator
 - [x] Implement Self-Normalized Per-Decision Importance Sampling (SNPDIS) estimator
-- [ ] Implement Doubly Robust (DR) estimator
+- [x] Implement Doubly Robust (DR) estimator
 
 Implemented estimators
 -----------------------
@@ -29,6 +29,7 @@ Currently, the following estimators are implemented:
    hopes.ope.estimators.SelfNormalizedTrajectoryWiseImportanceSampling
    hopes.ope.estimators.PerDecisionImportanceSampling
    hopes.ope.estimators.SelfNormalizedPerDecisionImportanceSampling
+   hopes.ope.estimators.SequentialDoublyRobust
 
 Estimators documentation
 ------------------------
@@ -39,11 +40,6 @@ Estimators documentation
     :show-inheritance:
 
 .. autoclass:: hopes.ope.estimators.SelfNormalizedInverseProbabilityWeighting
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. autoclass:: hopes.ope.estimators.DirectMethod
     :members:
     :undoc-members:
     :show-inheritance:
@@ -64,6 +60,16 @@ Estimators documentation
     :show-inheritance:
 
 .. autoclass:: hopes.ope.estimators.SelfNormalizedPerDecisionImportanceSampling
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. autoclass:: hopes.ope.estimators.DirectMethod
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. autoclass:: hopes.ope.estimators.SequentialDoublyRobust
     :members:
     :undoc-members:
     :show-inheritance:
