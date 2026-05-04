@@ -1165,9 +1165,12 @@ class SequentialDoublyRobust(BaseEstimator):
     def set_model_predictions(self, *, q_values: np.ndarray) -> None:
         r"""Set model-based predictions used by the sequential DR estimator.
 
-        :param q_values: Estimated action-values for all actions, shape `(n_samples,
-            n_actions)`. Each row must contain the estimated action-values
-        :math:`[\hat{Q}(s_t, a)]_{a \in \mathcal{A}}` for the corresponding state.
+        This can be used to inject Q-value predictions from an external model, or to set the predictions
+        after fitting an internal model via :meth:`fit`. The provided Q-values must be aligned with the logged data,
+        meaning each row corresponds to the estimated action-values for the state at the same index in the logged data
+        as in :math:`[\hat{Q}(s_t, a)]_{a \in \mathcal{A}}`.
+
+        :param q_values: Estimated action-values for all actions, shape `(n_samples, n_actions)`. Each row must contain the estimated action-values for the corresponding state.
         """
         self.q_values = np.asarray(q_values, dtype=np.float32)
 
