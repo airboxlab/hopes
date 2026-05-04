@@ -64,13 +64,13 @@ class RegressionBasedRewardModel(RewardModel):
     rewards.
 
     Unlike more specialised subclasses (e.g. :class:`RTGQModelHGBoost`, which is tied to
-    return-to-go targets and a fixed ``HistGradientBoostingRegressor`` backend), this class
+    return-to-go targets and a fixed `HistGradientBoostingRegressor` backend), this class
     is agnostic to the regression algorithm and supports multiple backends:
 
     - "linear" – sklearn :class:`~sklearn.linear_model.LinearRegression`.
     - "polynomial" – polynomial feature expansion followed by
       :class:`~sklearn.linear_model.LinearRegression`.
-    - "random_forest"`` – sklearn :class:`~sklearn.ensemble.RandomForestRegressor`.
+    - "random_forest" - sklearn :class:`~sklearn.ensemble.RandomForestRegressor`.
     - "mlp" – a simple two-layer feed-forward network trained with PyTorch (MSE loss,
       Adam optimiser).
 
