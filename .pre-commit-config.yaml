@@ -8,7 +8,7 @@ ci:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
       # list of supported hooks: https://pre-commit.com/hooks.html
       - id: trailing-whitespace
@@ -24,7 +24,7 @@ repos:
           )$
 
   - repo: https://github.com/python-poetry/poetry
-    rev: "1.7.1"
+    rev: "1.8.4"
     hooks:
       - id: poetry-check
       # too slow
@@ -55,7 +55,7 @@ repos:
 
   # ref: https://github.com/microsoft/vscode-isort]
   - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
+    rev: 6.0.1
     hooks:
       - id: isort
         name: isort (python)
@@ -63,21 +63,21 @@ repos:
 
   # python docstring formatting
   - repo: https://github.com/myint/docformatter
-    rev: v1.7.3
+    rev: v1.7.8
     hooks:
       - id: docformatter
         args: [--in-place, --wrap-summaries, "99", --wrap-descriptions, "92"]
 
   # yaml formatting
   - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.0-alpha.9-for-vscode
+    rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
         types: [yaml]
 
   # markdown formatting
   - repo: https://github.com/executablebooks/mdformat
-    rev: 0.7.16
+    rev: 0.7.22
     hooks:
       - id: mdformat
         additional_dependencies:
