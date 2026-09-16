@@ -363,16 +363,16 @@
 <p>Example with a synthetic, random, dataset.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create the behavior policy</span>
 <span class="n">behavior_policy</span> <span class="o">=</span> <span class="n">ClassificationBasedPolicy</span><span class="p">(</span>
-    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">&quot;logistic&quot;</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">"logistic"</span>
 <span class="p">)</span>
 <span class="n">behavior_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 
 <span class="c1"># create the target policies</span>
-<span class="n">target_policy_1</span> <span class="o">=</span> <span class="n">RandomPolicy</span><span class="p">(</span><span class="n">num_actions</span><span class="o">=</span><span class="n">num_actions</span><span class="p">)</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">&quot;p1&quot;</span><span class="p">)</span>
-<span class="n">target_policy_2</span> <span class="o">=</span> <span class="n">RandomPolicy</span><span class="p">(</span><span class="n">num_actions</span><span class="o">=</span><span class="n">num_actions</span><span class="p">)</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">&quot;p2&quot;</span><span class="p">)</span>
+<span class="n">target_policy_1</span> <span class="o">=</span> <span class="n">RandomPolicy</span><span class="p">(</span><span class="n">num_actions</span><span class="o">=</span><span class="n">num_actions</span><span class="p">)</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">"p1"</span><span class="p">)</span>
+<span class="n">target_policy_2</span> <span class="o">=</span> <span class="n">RandomPolicy</span><span class="p">(</span><span class="n">num_actions</span><span class="o">=</span><span class="n">num_actions</span><span class="p">)</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">"p2"</span><span class="p">)</span>
 <span class="n">target_policy_3</span> <span class="o">=</span> <span class="n">ClassificationBasedPolicy</span><span class="p">(</span>
-    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span>
-<span class="p">)</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">&quot;p3&quot;</span><span class="p">)</span>
+    <span class="n">obs</span><span class="o">=</span><span class="n">obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">"random_forest"</span>
+<span class="p">)</span><span class="o">.</span><span class="n">with_name</span><span class="p">(</span><span class="s2">"p3"</span><span class="p">)</span>
 <span class="n">target_policy_3</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 
 <span class="c1"># initialize the estimators</span>
@@ -388,7 +388,7 @@
     <span class="n">behavior_policy</span><span class="o">=</span><span class="n">behavior_policy</span><span class="p">,</span>
     <span class="n">estimators</span><span class="o">=</span><span class="n">estimators</span><span class="p">,</span>
     <span class="n">fail_fast</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">ci_method</span><span class="o">=</span><span class="s2">&quot;t-test&quot;</span><span class="p">,</span>
+    <span class="n">ci_method</span><span class="o">=</span><span class="s2">"t-test"</span><span class="p">,</span>
     <span class="n">ci_significance_level</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -398,7 +398,7 @@
 <span class="p">]</span>
 
 <span class="c1"># select the top k policies based on lower bound (confidence interval +-90%)</span>
-<span class="n">top_k_results</span> <span class="o">=</span> <span class="n">OffPolicySelection</span><span class="o">.</span><span class="n">select_top_k</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;lower_bound&quot;</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">top_k_results</span> <span class="o">=</span> <span class="n">OffPolicySelection</span><span class="o">.</span><span class="n">select_top_k</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s2">"lower_bound"</span><span class="p">,</span> <span class="n">top_k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">top_k_results</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -430,7 +430,7 @@ implementation details for more information.</p>
 <p>Off-Policy evaluation of a target policy using a behavior policy and a set of estimators.</p>
 <p>Example usage:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create the behavior policy</span>
-<span class="n">behavior_policy</span> <span class="o">=</span> <span class="n">ClassificationBasedPolicy</span><span class="p">(</span><span class="n">obs</span><span class="o">=</span><span class="n">collected_obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">collected_act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">&quot;logistic&quot;</span><span class="p">)</span>
+<span class="n">behavior_policy</span> <span class="o">=</span> <span class="n">ClassificationBasedPolicy</span><span class="p">(</span><span class="n">obs</span><span class="o">=</span><span class="n">collected_obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">collected_act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">"logistic"</span><span class="p">)</span>
 <span class="n">behavior_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 
 <span class="c1"># create the target policy</span>
@@ -523,17 +523,17 @@ The confidence interval is then computed as:</p>
     <span class="n">rewards</span><span class="o">=</span><span class="n">rewards</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">metrics</span> <span class="o">=</span> <span class="n">ipw</span><span class="o">.</span><span class="n">estimate_policy_value_with_confidence_interval</span><span class="p">(</span>
-    <span class="n">method</span><span class="o">=</span><span class="s2">&quot;bootstrap&quot;</span><span class="p">,</span> <span class="n">significance_level</span><span class="o">=</span><span class="mf">0.05</span>
+    <span class="n">method</span><span class="o">=</span><span class="s2">"bootstrap"</span><span class="p">,</span> <span class="n">significance_level</span><span class="o">=</span><span class="mf">0.05</span>
 <span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Should output something like:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
-    <span class="s2">&quot;lower_bound&quot;</span><span class="p">:</span> <span class="mf">10.2128</span><span class="p">,</span>
-    <span class="s2">&quot;upper_bound&quot;</span><span class="p">:</span> <span class="mf">10.6167</span><span class="p">,</span>
-    <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="mf">10.4148</span><span class="p">,</span>
-    <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">6.72408</span><span class="p">,</span>
+    <span class="s2">"lower_bound"</span><span class="p">:</span> <span class="mf">10.2128</span><span class="p">,</span>
+    <span class="s2">"upper_bound"</span><span class="p">:</span> <span class="mf">10.6167</span><span class="p">,</span>
+    <span class="s2">"mean"</span><span class="p">:</span> <span class="mf">10.4148</span><span class="p">,</span>
+    <span class="s2">"std"</span><span class="p">:</span> <span class="mf">6.72408</span><span class="p">,</span>
 <span class="p">}</span>
 </pre></div>
 </div>

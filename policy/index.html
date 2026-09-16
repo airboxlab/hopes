@@ -392,7 +392,7 @@ of (obs, act) pairs that would have been collected offline.</p>
 <p>It currently supports logistic regression, random forest and MLP models.</p>
 <p>Example usage:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># train a classification-based policy</span>
-<span class="n">reg_policy</span> <span class="o">=</span> <span class="n">ClassificationBasedPolicy</span><span class="p">(</span><span class="n">obs</span><span class="o">=</span><span class="n">train_obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">train_act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">&quot;random_forest&quot;</span><span class="p">)</span>
+<span class="n">reg_policy</span> <span class="o">=</span> <span class="n">ClassificationBasedPolicy</span><span class="p">(</span><span class="n">obs</span><span class="o">=</span><span class="n">train_obs</span><span class="p">,</span> <span class="n">act</span><span class="o">=</span><span class="n">train_act</span><span class="p">,</span> <span class="n">classification_model</span><span class="o">=</span><span class="s2">"random_forest"</span><span class="p">)</span>
 <span class="n">fit_stats</span> <span class="o">=</span> <span class="n">reg_policy</span><span class="o">.</span><span class="n">fit</span><span class="p">()</span>
 
 <span class="c1"># compute action probabilities for new observations</span>
@@ -477,22 +477,22 @@ of the underlying model:</p>
 <p>Example of usage, based on a pre-trained model in Ray RLlib, saved using <code class="xref py py-meth docutils literal notranslate"><span class="pre">ray.rllib.algorithms.algorithm.Algorithm.export_policy_model()</span></code>.
 This model uses an Attention-based Transformer model and passes 10 previous actions as inputs to the model. The action
 log probabilities are computed from the action distribution inputs output.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">onnx_file_path</span> <span class="o">=</span> <span class="s2">&quot;model.onnx&quot;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">onnx_file_path</span> <span class="o">=</span> <span class="s2">"model.onnx"</span>
 <span class="n">policy</span> <span class="o">=</span> <span class="n">OnnxModelBasedPolicy</span><span class="p">(</span>
     <span class="n">onnx_model_path</span><span class="o">=</span><span class="n">onnx_file_path</span><span class="p">,</span>
-    <span class="n">obs_input</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;default_policy/obs:0&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+    <span class="n">obs_input</span><span class="o">=</span><span class="p">(</span><span class="s2">"default_policy/obs:0"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
     <span class="n">state_dim</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">32</span><span class="p">),</span>  <span class="c1"># (num_transformers, memory, attention_dim)</span>
     <span class="n">seq_len</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
     <span class="n">prev_n_actions</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
     <span class="n">prev_n_rewards</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="n">state_input</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;default_policy/state_in_0:0&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
-    <span class="n">seq_len_input</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;default_policy/seq_lens:0&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
-    <span class="n">prev_actions_input</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;default_policy/prev_actions:0&quot;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
-    <span class="n">state_output_name</span><span class="o">=</span><span class="s2">&quot;default_policy/Reshape_5:0&quot;</span><span class="p">,</span>
-    <span class="n">action_output_name</span><span class="o">=</span><span class="s2">&quot;default_policy/cond_1/Merge:0&quot;</span><span class="p">,</span>
+    <span class="n">state_input</span><span class="o">=</span><span class="p">(</span><span class="s2">"default_policy/state_in_0:0"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+    <span class="n">seq_len_input</span><span class="o">=</span><span class="p">(</span><span class="s2">"default_policy/seq_lens:0"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="n">prev_actions_input</span><span class="o">=</span><span class="p">(</span><span class="s2">"default_policy/prev_actions:0"</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+    <span class="n">state_output_name</span><span class="o">=</span><span class="s2">"default_policy/Reshape_5:0"</span><span class="p">,</span>
+    <span class="n">action_output_name</span><span class="o">=</span><span class="s2">"default_policy/cond_1/Merge:0"</span><span class="p">,</span>
     <span class="n">action_probs_output_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">action_log_probs_output_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">action_dist_inputs_output_name</span><span class="o">=</span><span class="s2">&quot;default_policy/model_2/dense_6/BiasAdd:0&quot;</span><span class="p">,</span>
+    <span class="n">action_dist_inputs_output_name</span><span class="o">=</span><span class="s2">"default_policy/model_2/dense_6/BiasAdd:0"</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">policy</span><span class="o">.</span><span class="n">log_probabilities</span><span class="p">(</span><span class="n">obs</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">15</span><span class="p">))</span>
